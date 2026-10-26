@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/microsoft/Managed-Apps/main/schemas/ms.config.schema.json",
+  "version": "0.0",
+  "appId": "<app-id>",
+  "appDisplayName": "Mindforge Wiki",
+  "environmentId": "<environment-id>",
+  "description": "Mindforge personal knowledge graph and article index",
+  "repoType": "native",
+  "cloud": "public",
+  "buildPath": "./dist",
+  "buildCommand": "npm run build",
+  "buildEntryPoint": "index.html",
+  "repositoryId": "<repository-id>",
+  "connectionReferences": {},
+  "appSettings": {
+    "showHeader": true
+  }
+}
