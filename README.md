@@ -39,6 +39,8 @@ ms.config.example.json Managed Runtime 应用配置模板（真实 ms.config.jso
 
 Managed Runtime 不能绑定个人 GitHub 仓库，所以源码推到两处：GitHub 存档，平台仓库负责构建。
 
+`ms.config.json` 含租户内的应用 ID 与环境 ID，不进 GitHub；但平台构建要求它在仓库里（缺失时报 `ms.config.json is required to pack an app`）。所以 `release.sh` 每次在 GitHub 的 `main` 之上临时生成一个只加了 `ms.config.json` 的提交，强制推到平台仓库的 `main` 并部署这个提交。平台仓库的 `main` 因此总是"GitHub main + 1 个配置提交"，不要直接在平台仓库上开发。
+
 ## 内容同步
 
 `scripts/sync-content.py` 浅克隆 mindforge 到 `.cache/mindforge`（已 gitignore），只取 git 跟踪的文件：
