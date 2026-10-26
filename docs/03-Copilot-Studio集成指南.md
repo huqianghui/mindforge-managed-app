@@ -156,8 +156,7 @@ Connector 还暴露了 agent 评测：`GetAgentMakerEvaluationTestSets`、`RunAg
 
 - [ ] agent 已在同一环境发布，测试面板里回答带引用
 - [ ] `ms connector list-actions` 显示 `ExecuteCopilotAsyncV2` 为 Allow
-- [ ] `ms app add data-source` 后 `ms.config.example.json` 已同步结构（占位符）
-- [ ] 生成代码已检查、已提交到 GitHub；`ms.config.json` 未提交
+- [ ] `ms app add data-source` 后，`ms.config.json` 与生成代码都已检查并提交
 - [ ] `ms app dev` 下能问答；`npm run dev` 下问答页显示"需在宿主中运行"而不是白屏
 - [ ] 多轮对话：第二问能引用第一问的上下文（`conversationId` 生效）
 - [ ] 至少一条引用能跳到应用内原文

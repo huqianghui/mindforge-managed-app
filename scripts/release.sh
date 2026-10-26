@@ -2,13 +2,12 @@
 # Sync content from mindforge, then publish to GitHub and the managed app.
 # Usage: scripts/release.sh [commit message]
 #
-# ms.config.json is not tracked (it holds tenant-specific IDs), but the platform
-# build requires it in the tree. So the platform remote gets GitHub's main plus
-# one extra commit that adds the config; that commit is rebuilt on every release.
+# The platform remote mirrors GitHub's main. It is force-pushed because older
+# releases left a platform-only config commit on top that main does not contain.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-[ -f ms.config.json ] || { echo "ms.config.json missing: copy ms.config.example.json and fill in your IDs (or run ms app init)"; exit 1; }
+[ -f ms.config.json ] || { echo "ms.config.json missing: run ms app init"; exit 1; }
 ms auth status >/dev/null
 
 python3 scripts/sync-content.py
@@ -22,14 +21,5 @@ else
   git commit -m "${1:-Sync content from mindforge@$(git -C .cache/mindforge rev-parse --short HEAD)}"
 fi
 git push github main
-
-# Build "main + ms.config.json" with a throwaway index, leaving the working tree alone
-index=$(mktemp -u)
-GIT_INDEX_FILE=$index git read-tree HEAD
-GIT_INDEX_FILE=$index git update-index --add --cacheinfo "100644,$(git hash-object -w ms.config.json),ms.config.json"
-tree=$(GIT_INDEX_FILE=$index git write-tree)
-rm "$index"
-deploy_commit=$(git commit-tree "$tree" -p HEAD -m "Add Managed Runtime app config (platform remote only)")
-
-git push platform "+$deploy_commit:refs/heads/main"
-ms app deploy --commit "$deploy_commit"
+git push platform +main:refs/heads/main
+ms app deploy --commit "$(git rev-parse HEAD)"

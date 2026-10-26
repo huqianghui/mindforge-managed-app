@@ -29,7 +29,7 @@ scripts/
 public/
   content/             同步生成：文章、图片（哈希命名）与 manifest.json
   wiki-graph.json      同步生成：图谱数据
-ms.config.example.json Managed Runtime 应用配置模板（真实 ms.config.json 不入库）
+ms.config.json         Managed Runtime 应用配置（appId、环境 ID、connectionReferences）
 ```
 
 ## 两个远端
@@ -41,7 +41,7 @@ ms.config.example.json Managed Runtime 应用配置模板（真实 ms.config.jso
 
 Managed Runtime 不能绑定个人 GitHub 仓库，所以源码推到两处：GitHub 存档，平台仓库负责构建。
 
-`ms.config.json` 含租户内的应用 ID 与环境 ID，不进 GitHub；但平台构建要求它在仓库里（缺失时报 `ms.config.json is required to pack an app`）。所以 `release.sh` 每次在 GitHub 的 `main` 之上临时生成一个只加了 `ms.config.json` 的提交，强制推到平台仓库的 `main` 并部署这个提交。平台仓库的 `main` 因此总是"GitHub main + 1 个配置提交"，不要直接在平台仓库上开发。
+`ms.config.json` 随源码入库：平台构建要求它在仓库里（缺失时报 `ms.config.json is required to pack an app`），而它只含应用、环境、连接的标识，不含凭据，访问仍需 Entra 登录和授权。`release.sh` 把同一个 `main` 推到两个远端，平台仓库是 GitHub 的镜像（强制推送），不要直接在平台仓库上开发。
 
 ## 内容同步
 
@@ -61,8 +61,7 @@ Managed Runtime 不能绑定个人 GitHub 仓库，所以源码推到两处：Gi
 npm install
 ms auth login
 
-# 首次：已有应用就复制模板填入 ID；没有应用就 ms app init 新建
-cp ms.config.example.json ms.config.json
+# ms.config.json 已在仓库里；换成自己的应用时用 ms app init 重新生成
 
 python3 scripts/sync-content.py   # 同步内容
 npm run dev                       # 本地预览

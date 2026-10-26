@@ -124,11 +124,10 @@ ms app add data-source --connector commondataserviceforapps --as action \
 
 | 文件 | 进 GitHub？ | 理由 |
 |---|---|---|
-| `ms.config.json` | 否 | 含 appId、environmentId、connectionId |
-| `ms.config.example.json` | 是 | 加数据源后要同步结构，把 ID 换成占位符 |
-| 生成的 TypeScript | 是 | 构建要用；里面是 Connector 元数据，不是凭据。提交前仍要看一眼确认没有租户内 ID |
+| `ms.config.json` | 是 | 平台构建必需。`connectionReferences` 里是 apiId、connectionId、数据集 / 表名等标识；凭据（OAuth 令牌、API key）存在 Power Platform 的连接对象里，不进文件。使用连接仍需 Entra 登录且连接对该用户可用 |
+| 生成的 TypeScript | 是 | 构建要用；里面是 Connector 元数据，不是凭据 |
 
-`release.sh` 的"平台仓库 = GitHub main + 1 个配置提交"机制无需改动。
+注意：给某些 Connector（例如 Azure OpenAI）建连接时要填 API key，key 存在连接对象里，不会写进 `ms.config.json`；但不要把 key 写进代码或 `appSettings`。
 
 ## 本租户里与后续功能相关的 Connector
 
