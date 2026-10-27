@@ -6,6 +6,48 @@
 
 **测试地址**：<https://play.preview.managedapps.cloud.microsoft/apps/9ae71e53-dd54-4a36-90ac-0815fd93f03c>（需 Entra 登录，且应用已分享给你）
 
+## 功能一览
+
+顶部四个标签页：**文章导航**、**知识图谱**、**洞察**、**演进**。截图来自 2026-10-27 的本地版本（`mindforge@8f2aa16`）。
+
+### 文章导航 `#/doc/<path>`
+
+左侧是由同步路径自动生成的目录树：每个大类（笔记、Azure、论文、读书、产品、Wiki）有自己的图标与数量，当前文章所在的目录自动展开高亮；输入关键词时切换为全文标题搜索。右侧渲染 Markdown，站内链接、wikilink、图片都改写成应用内地址。
+
+![文章导航](docs/images/screenshots/docs.png)
+
+### 知识图谱 `#/graph`
+
+wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点类型、关系类型筛选，点节点看论断（Claim）、关联节点与原文。这是**相关性**维度。
+
+![知识图谱](docs/images/screenshots/graph.png)
+
+### 洞察 `#/insights`
+
+把 806 条 Claim 展平后多维筛选：类型、状态、置信度、分类、标签、更新月份、关键词，筛选条件写进地址栏便于分享。四张图（分类 × 状态、置信度分布、按月更新、关系类型）**点柱子即筛选**；下方从节点钻取到 Claim，再跳回来源文章（77% 的 Claim 能匹配到原文）。
+
+![洞察](docs/images/screenshots/insights.png)
+
+### 演进 `#/timeline`：知识之树
+
+**时间**维度。一棵按固定种子生成的树从小苗开始，每翻过一个有内容的日子（右侧台历，共 106 页，含差距报告的日子）就长高、分叉一点，知识越多长得越快；文章和 wiki 节点是叶子，12 期知识差距报告是花。可选 1×–10× 速度。
+
+![知识之树](docs/images/screenshots/tree.png)
+
+鼠标移到树上即暂停并进入交互：叶子换成知识类别的颜色，悬停看标题，点击看详情与相关节点。
+
+![知识之树：交互模式](docs/images/screenshots/tree-knowledge.png)
+
+### 演进 `#/timeline`：时间轴
+
+切换到时间轴视图：横轴是 GitHub commit 日期，每条泳道一类知识，红圈是差距报告；可播放、拖动到任意一天。选中一个节点会把相关性叠加回来——连线到相关节点和贡献它的文章。
+
+![时间轴](docs/images/screenshots/timeaxis.png)
+
+下方还有按 commit 时间统计的累计增长（竖线标出 G1–G12 差距报告）、每周活动、Claims 健康度、分类成长，以及每期差距报告的建议（标出沿袭上期的建议）。
+
+![演进图表](docs/images/screenshots/timeline-charts.png)
+
 ## 和 GitHub Pages 版本的区别
 
 | | GitHub Pages（mindforge 仓库） | 本项目（Managed Runtime） |
