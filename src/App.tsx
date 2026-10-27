@@ -11,14 +11,16 @@ import DocsPage from './docs/DocsPage';
 import { HOME_DOC } from './docs/content';
 import './docs/markdown.css';
 
-// 图表库只在演进页用到，单独拆包
+// 图表库只在洞察页和演进页用到，单独拆包
 const TimelinePage = lazy(() => import('./timeline/TimelinePage'));
+const InsightsPage = lazy(() => import('./insights/InsightsPage'));
 
-type Route = { view: 'graph' } | { view: 'timeline' } | { view: 'doc'; path: string; anchor?: string };
+type Route = { view: 'graph' } | { view: 'insights' } | { view: 'timeline' } | { view: 'doc'; path: string; anchor?: string };
 
 // hash 路由：宿主以 iframe 加载应用，hash 不依赖服务端的路径回退规则
 function parseHash(hash: string): Route {
   if (hash.startsWith('#/graph')) return { view: 'graph' };
+  if (hash.startsWith('#/insights')) return { view: 'insights' };
   if (hash.startsWith('#/timeline')) return { view: 'timeline' };
   const m = hash.match(/^#\/doc\/([^?]+)(?:\?a=(.*))?$/);
   if (m) return { view: 'doc', path: decodeURIComponent(m[1]), anchor: m[2] ? decodeURIComponent(m[2]) : undefined };
@@ -43,10 +45,16 @@ export default function App() {
           <Tabs value={route.view} sx={{ minHeight: 44, '& .MuiTab-root': { minHeight: 44 } }}>
             <Tab value="doc" label="文章导航" component="a" href={`#/doc/${HOME_DOC}`} />
             <Tab value="graph" label="知识图谱" component="a" href="#/graph" />
+            <Tab value="insights" label="洞察" component="a" href="#/insights" />
             <Tab value="timeline" label="演进" component="a" href="#/timeline" />
           </Tabs>
         </Box>
         {route.view === 'graph' && <GraphPage />}
+        {route.view === 'insights' && (
+          <Suspense fallback={null}>
+            <InsightsPage />
+          </Suspense>
+        )}
         {route.view === 'timeline' && (
           <Suspense fallback={null}>
             <TimelinePage />

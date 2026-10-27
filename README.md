@@ -19,10 +19,11 @@
 
 ```text
 src/
-  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/timeline）
+  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/timeline）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写
   components/          图谱的筛选栏、节点面板、图例
+  insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
   timeline/            演进页：知识之树（分形树随有内容的日子自动生长、台历翻页、鼠标移入看知识）、时间轴回放（泳道蜂群图）、累计增长、每周活动、Claims 健康度、分类成长、差距报告与建议（Recharts，按需加载）
 scripts/
   sync-content.py      从 mindforge 拉取内容到 public/content/
@@ -87,7 +88,7 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 | 阶段 | 功能 | 学习点 | 状态 |
 |---|---|---|---|
 | 0 | README 导航、文章阅读、知识图谱 | `ms app init / build / deploy / share`、平台仓库与凭据 | ✅ |
-| 1 | 洞察页：按分类/类型/标签/置信度/状态/时间筛选；分类 → 节点 → Claim → 原文钻取；分布与趋势图表 | 纯前端；Recharts；筛选状态与图表联动 | ⬜ |
+| 1 | 洞察页：按分类/类型/标签/置信度/状态/时间筛选；分类 → 节点 → Claim → 原文钻取；分布与趋势图表（`#/insights`，Claim 来源 77% 可跳回原文） | 纯前端；Recharts；筛选状态与图表联动 | ✅ |
 | 2 | 建议卡片：低置信度、stale/冲突 Claim、孤立节点、薄弱分类、近期更新 | 基于数据的规则，可解释、可复现 | ⬜ |
 | 3 | 文档统计：文章与节点的提交时间线、Claims 健康度趋势、分类成长、差距报告与建议（演进页 `#/timeline`，已完成）；字数、标签分布、系列完成度、链接健康度（待做） | 构建期预计算 vs 运行期计算 | 🟡 |
 | 4 | 个性化：读取登录用户，记录阅读进度与收藏 | SDK `getUser()`；Dataverse 表作为数据源 | ⬜ |
