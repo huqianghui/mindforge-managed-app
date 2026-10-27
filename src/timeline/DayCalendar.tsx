@@ -72,11 +72,13 @@ const cardSx = {
  * 台历：当前这一天是最上面一张，有新增的日子翻页时上一张向上翻走；
  * 后面叠着之前几张有内容的日子，露出边缘。
  */
-export default function DayCalendar({ page, previous, totals, animate }: {
+export default function DayCalendar({ page, previous, totals, animate, flipMs = 600 }: {
   page: DayPage;
   previous: DayPage[];
   totals: string;
   animate: boolean;
+  /** 翻页动画时长；倍速高时要比每页停留时间短，否则前后两页会叠在一起 */
+  flipMs?: number;
 }) {
   return (
     <Box sx={{ position: 'relative', height: CARD_H + 36, perspective: 900, mt: 1 }}>
@@ -103,7 +105,7 @@ export default function DayCalendar({ page, previous, totals, animate }: {
           height: CARD_H,
           zIndex: 10,
           transformOrigin: 'top center',
-          animation: animate ? 'mfFlipIn .6s cubic-bezier(.2,.8,.3,1)' : undefined,
+          animation: animate ? `mfFlipIn ${flipMs}ms cubic-bezier(.2,.8,.3,1)` : undefined,
           '@keyframes mfFlipIn': {
             from: { transform: 'rotateX(-80deg)', opacity: 0.2 },
             to: { transform: 'rotateX(0deg)', opacity: 1 },

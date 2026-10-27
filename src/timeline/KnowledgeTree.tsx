@@ -326,7 +326,7 @@ export default function KnowledgeTree({ history, index, graph }: { history: Hist
             <Detail item={selected} history={history} related={related} contributes={contributes} onSelect={setSelectedKey} onClose={() => setSelectedKey(null)} />
           </Box>
         ) : (
-          <DayCalendar page={page} previous={previous} totals={totals} animate />
+          <DayCalendar page={page} previous={previous} totals={totals} animate flipMs={Math.min(600, Math.round((DAY_MS / speed) * 0.7))} />
         )}
       </Box>
     </Box>

@@ -215,7 +215,7 @@ export default function InsightsPage() {
               <BarChart data={byCategory} layout="vertical" margin={{ left: 8, right: 16 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
                 <XAxis type="number" fontSize={11} />
-                <YAxis type="category" dataKey="name" width={130} fontSize={11} />
+                <YAxis type="category" dataKey="name" width={130} fontSize={11} interval={0} />
                 <Tooltip />
                 <Legend />
                 <Bar dataKey="active" stackId="s" fill={ACTIVE} cursor="pointer" onClick={(d) => set({ categories: toggle(f.categories, (d as unknown as { name: string }).name) })} />
