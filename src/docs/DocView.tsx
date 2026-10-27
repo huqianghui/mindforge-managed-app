@@ -161,6 +161,7 @@ export default function DocView({ index, path, anchor }: DocViewProps) {
             {path} ·{' '}
             <Link href={REPO_BLOB + path} target="_blank" rel="noreferrer">在 GitHub 查看</Link>
           </Typography>
+          <Button size="small" href={`#/ask?doc=${encodeURIComponent(path)}`}>就这篇提问</Button>
           {showResume && (
             <Button size="small" variant="outlined" onClick={() => scrollRef.current?.scrollTo({ top: saved.scroll * scrollable(), behavior: 'smooth' })}>
               上次读到 {Math.round(saved.scroll * 100)}% · 继续阅读

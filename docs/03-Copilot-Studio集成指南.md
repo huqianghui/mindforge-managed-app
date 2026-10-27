@@ -1,6 +1,7 @@
 # 03 Copilot Studio 集成指南
 
 > 对应路线图第 5 阶段 "Ask Copilot"。依据：Copilot Studio Connector 官方参考（<https://learn.microsoft.com/en-us/connectors/microsoftcopilotstudio/>，2026-07-11 版）与本租户 `ms connector list-actions` 结果。
+> **现状**：阶段 5 已先用 Work IQ Copilot MCP + 本地检索实现（不需要建 agent，见 [04 · 阶段 5](04-新功能开发指南.md#阶段-5ask-copilotwork-iq--本地检索)）。本文是接入 Copilot Studio agent 这第二种后端的指南。
 > 标 **〔待实测〕** 的地方是文档没写清楚、需要在租户里跑一次才能确认的行为。
 
 ## 整体链路

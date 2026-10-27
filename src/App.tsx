@@ -17,12 +17,14 @@ const TimelinePage = lazy(() => import('./timeline/TimelinePage'));
 const InsightsPage = lazy(() => import('./insights/InsightsPage'));
 const SuggestionsPage = lazy(() => import('./suggestions/SuggestionsPage'));
 const StatsPage = lazy(() => import('./stats/StatsPage'));
+const AskPage = lazy(() => import('./ask/AskPage'));
 
 type Route =
   | { view: 'graph' }
   | { view: 'insights' }
   | { view: 'suggestions' }
   | { view: 'stats' }
+  | { view: 'ask'; q?: string; doc?: string }
   | { view: 'timeline' }
   | { view: 'doc'; path: string; anchor?: string };
 
@@ -32,6 +34,10 @@ function parseHash(hash: string): Route {
   if (hash.startsWith('#/insights')) return { view: 'insights' };
   if (hash.startsWith('#/suggestions')) return { view: 'suggestions' };
   if (hash.startsWith('#/stats')) return { view: 'stats' };
+  if (hash.startsWith('#/ask')) {
+    const qs = new URLSearchParams(hash.split('?')[1] ?? '');
+    return { view: 'ask', q: qs.get('q') ?? undefined, doc: qs.get('doc') ?? undefined };
+  }
   if (hash.startsWith('#/timeline')) return { view: 'timeline' };
   const m = hash.match(/^#\/doc\/([^?]+)(?:\?a=(.*))?$/);
   if (m) return { view: 'doc', path: decodeURIComponent(m[1]), anchor: m[2] ? decodeURIComponent(m[2]) : undefined };
@@ -61,6 +67,7 @@ export default function App() {
             <Tab value="suggestions" label="建议" component="a" href="#/suggestions" />
             <Tab value="stats" label="统计" component="a" href="#/stats" />
             <Tab value="timeline" label="演进" component="a" href="#/timeline" />
+            <Tab value="ask" label="问答" component="a" href="#/ask" />
           </Tabs>
           {user && (
             <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary' }}>{user.fullName}</Typography>
@@ -70,6 +77,11 @@ export default function App() {
         {route.view === 'insights' && (
           <Suspense fallback={null}>
             <InsightsPage />
+          </Suspense>
+        )}
+        {route.view === 'ask' && (
+          <Suspense fallback={null}>
+            <AskPage key={`${route.q}|${route.doc}`} initialQuestion={route.q} pinned={route.doc} />
           </Suspense>
         )}
         {route.view === 'stats' && (

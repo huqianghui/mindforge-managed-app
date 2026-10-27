@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import history
+import search
 import stats
 
 DOC_ROOTS = ("Notes/", "Azure/", "paper/", "book/", "product/", "wiki/")
@@ -110,6 +111,7 @@ def main() -> None:
     shutil.copyfile(vault / "wiki" / "wiki-graph.json", APP_ROOT / "public" / "wiki-graph.json")
     history.build(vault, docs, OUT / "history.json")
     stats.build(vault, docs, tracked_set, OUT / "stats.json")
+    search.build(vault, docs, OUT / "search.json")
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
     print(f"{len(doc_entries)} docs, {len(assets)} images, {size // 1024} KB from mindforge@{commit} -> {OUT}")
 

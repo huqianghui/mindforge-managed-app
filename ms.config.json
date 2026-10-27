@@ -11,7 +11,17 @@
   "buildCommand": "npm run build",
   "buildEntryPoint": "index.html",
   "repositoryId": "78b6bc15-fe62-49f3-be9d-ca12660c1a52",
-  "connectionReferences": {},
+  "connectionReferences": {
+    "f2a1c490-4d35-4155-b8cb-9909b844aaf1": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_a365copilotchatmcp",
+      "displayName": "Work IQ Copilot MCP",
+      "dataSources": [
+        "a365copilotchatmcp"
+      ],
+      "authenticationType": "certOauth",
+      "dataSets": {}
+    }
+  },
   "appSettings": {
     "showHeader": true
   },

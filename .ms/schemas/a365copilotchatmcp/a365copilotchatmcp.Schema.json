@@ -1,0 +1,266 @@
+{
+  "name": "shared_a365copilotchatmcp",
+  "id": "/providers/Microsoft.PowerApps/apis/shared_a365copilotchatmcp",
+  "type": "Microsoft.PowerApps/apis",
+  "properties": {
+    "displayName": "Work IQ Copilot MCP",
+    "iconUri": "https://static.powerapps.com/resource/ppcr/releases/v1.0.1827/1.0.1827.4902/a365copilotchatmcp/icon.png",
+    "iconBrandColor": "#e22228",
+    "apiEnvironment": "Shared",
+    "isCustomApi": false,
+    "blobUrisAreProxied": false,
+    "connectionParameterSets": {
+      "uiDefinition": {
+        "displayName": "Authentication type",
+        "description": "Type of authentication to be used"
+      },
+      "values": [
+        {
+          "name": "certOauth",
+          "uiDefinition": {
+            "displayName": "Login with Microsoft Entra ID",
+            "description": "Provide Microsoft Entra ID credentials using PFX certificate and password"
+          },
+          "parameters": {
+            "Token": {
+              "type": "oauthSetting",
+              "oAuthSettings": {
+                "identityProvider": "aadcertificate",
+                "clientId": "822f7873-1b52-48f2-8f56-9458c3fac264",
+                "scopes": [],
+                "redirectMode": "GlobalPerConnector",
+                "redirectUrl": "https://global.consent.azure-apim.net/redirect/a365copilotchatmcp",
+                "properties": {
+                  "IsFirstParty": "True",
+                  "AzureActiveDirectoryResourceId": "ea9ffc3e-8a23-4a7d-836d-234d7c7565c1",
+                  "IsOnbehalfofLoginSupported": true
+                },
+                "customParameters": {
+                  "LoginUri": {
+                    "value": "https://login.windows.net"
+                  },
+                  "LoginUriAAD": {
+                    "value": "https://login.windows.net"
+                  },
+                  "ResourceUri": {
+                    "value": "ea9ffc3e-8a23-4a7d-836d-234d7c7565c1"
+                  },
+                  "enableOnbehalfOfLogin": {
+                    "value": "true"
+                  }
+                }
+              },
+              "uiDefinition": {
+                "displayName": "Login with your Microsoft Entra ID Credentials",
+                "description": "Login with your Microsoft Entra ID Credentials",
+                "tooltip": "Provide  Microsoft Entra ID credentials",
+                "constraints": {
+                  "required": "true"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "allowSharing": false
+          }
+        }
+      ]
+    },
+    "connectionParameters": {
+      "Token": {
+        "type": "oauthSetting",
+        "oAuthSettings": {
+          "identityProvider": "aadcertificate",
+          "clientId": "822f7873-1b52-48f2-8f56-9458c3fac264",
+          "scopes": [],
+          "redirectMode": "GlobalPerConnector",
+          "redirectUrl": "https://global.consent.azure-apim.net/redirect/a365copilotchatmcp",
+          "properties": {
+            "IsFirstParty": "True",
+            "AzureActiveDirectoryResourceId": "ea9ffc3e-8a23-4a7d-836d-234d7c7565c1",
+            "IsOnbehalfofLoginSupported": true
+          },
+          "customParameters": {
+            "LoginUri": {
+              "value": "https://login.windows.net"
+            },
+            "LoginUriAAD": {
+              "value": "https://login.windows.net"
+            },
+            "ResourceUri": {
+              "value": "ea9ffc3e-8a23-4a7d-836d-234d7c7565c1"
+            },
+            "enableOnbehalfOfLogin": {
+              "value": "true"
+            }
+          }
+        },
+        "uiDefinition": {
+          "displayName": "Login with your Microsoft Entra ID Credentials",
+          "description": "Login with your Microsoft Entra ID Credentials",
+          "tooltip": "Provide  Microsoft Entra ID credentials",
+          "constraints": {
+            "required": "true"
+          }
+        }
+      }
+    },
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "Work IQ Copilot MCP",
+        "description": "Work IQ MCP server for Microsoft Copilot Search operations. This feature is in preview and is part of the Work IQ tools, providing shared work intelligence and actions for agents. Availability and capabilities are subject to change. Learn more: https://aka.ms/AboutWorkIQ",
+        "version": "1.0",
+        "contact": {
+          "name": "Microsoft",
+          "url": "https://support.microsoft.com"
+        },
+        "x-ms-api-annotation": {
+          "status": "Preview"
+        }
+      },
+      "x-ms-delegated-permissions": {
+        "resourceId": "822f7873-1b52-48f2-8f56-9458c3fac264",
+        "scopes": [
+          {
+            "id": "b8f6353f-252d-497d-993a-8236b41b135b",
+            "value": "Operations.Execute.All"
+          }
+        ]
+      },
+      "host": "0b768ed1f103e3748a5806c623794b.19.environment.api.powerplatform.com",
+      "basePath": "/connectors/runtime/invoke/scalegroups/firstrelease/scaleunits/firstrelease-001/apis/a365copilotchatmcp/connections/",
+      "schemes": [
+        "https"
+      ],
+      "consumes": [],
+      "produces": [],
+      "paths": {
+        "/{connectionId}/servers/mcp_m365copilot": {
+          "post": {
+            "summary": "Work IQ Copilot (Preview)",
+            "description": "Work IQ MCP server for Microsoft Copilot Search operations. This feature is in preview and is part of the Work IQ tools, providing shared work intelligence and actions for agents. Availability and capabilities are subject to change. Learn more: https://aka.ms/AboutWorkIQ",
+            "operationId": "mcp_m365copilot",
+            "tags": [
+              "WorkIQTool",
+              "Agentic",
+              "McpStreamable"
+            ],
+            "x-ms-name-for-model": "M365CopilotMCP",
+            "x-ms-description-for-model": "Use this MCP server to for Microsoft 365 Copilot and search operations.",
+            "x-ms-agentic-protocol": "mcp-streamable-1.0",
+            "produces": [
+              "application/json"
+            ],
+            "responses": {
+              "default": {
+                "description": "default",
+                "schema": {}
+              }
+            },
+            "externalDocs": {
+              "url": "https://docs.microsoft.com/connectors/a365copilotchatmcp/#work-iq-copilot-(preview)"
+            },
+            "parameters": [
+              {
+                "name": "connectionId",
+                "in": "path",
+                "required": true,
+                "x-ms-visibility": "internal",
+                "type": "string"
+              },
+              {
+                "in": "header",
+                "name": "Mcp-Session-Id",
+                "required": false,
+                "type": "string",
+                "description": "This is the session Id",
+                "x-ms-summary": "Session Id"
+              },
+              {
+                "in": "body",
+                "name": "queryRequest",
+                "required": false,
+                "schema": {
+                  "$ref": "#/definitions/QueryRequest"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "x-ms-connector-metadata": [
+        {
+          "propertyName": "Website",
+          "propertyValue": "https://www.microsoft.com/en-us/microsoft-365/copilot"
+        },
+        {
+          "propertyName": "Privacy policy",
+          "propertyValue": "https://privacy.microsoft.com/"
+        },
+        {
+          "propertyName": "Categories",
+          "propertyValue": "Productivity"
+        }
+      ],
+      "externalDocs": {
+        "url": "https://docs.microsoft.com/connectors/a365copilotchatmcp"
+      },
+      "definitions": {
+        "QueryRequest": {
+          "type": "object",
+          "properties": {
+            "jsonrpc": {
+              "type": "string"
+            },
+            "id": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "params": {
+              "type": "object"
+            },
+            "result": {
+              "type": "object"
+            },
+            "error": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "runtimeUrls": [
+      "https://0b768ed1f103e3748a5806c623794b.19.environment.api.powerplatform.com/connectors/runtime/invoke/scalegroups/firstrelease/scaleunits/firstrelease-001/apis/a365copilotchatmcp/connections/"
+    ],
+    "primaryRuntimeUrl": "https://0b768ed1f103e3748a5806c623794b.19.environment.api.powerplatform.com/connectors/runtime/invoke/scalegroups/firstrelease/scaleunits/firstrelease-001/apis/a365copilotchatmcp/connections/",
+    "doNotUseApiHubNetRuntimeUrl": "https://0b768ed1-f103-e374-8a58-06c623794b19.firstrelease-001.firstrelease.azure-apihub.net/apim/a365copilotchatmcp",
+    "metadata": {
+      "source": "marketplace",
+      "brandColor": "#e22228",
+      "useNewApimVersion": "true",
+      "version": {
+        "previous": "releases/v1.0.1826\\1.0.1826.4868",
+        "current": "releases/v1.0.1827\\1.0.1827.4902"
+      }
+    },
+    "capabilities": [
+      "actions"
+    ],
+    "interfaces": {},
+    "description": "Work IQ MCP server for Microsoft Copilot Search operations. This feature is in preview and is part of the Work IQ tools, providing shared work intelligence and actions for agents. Availability and capabilities are subject to change. Learn more: https://aka.ms/AboutWorkIQ",
+    "createdTime": "2026-03-07T19:03:45.6401782Z",
+    "changedTime": "2026-08-28T01:29:54.4691872Z",
+    "releaseTag": "Preview",
+    "tier": "Premium",
+    "publisher": "Microsoft",
+    "scopes": {
+      "will": [],
+      "wont": []
+    },
+    "rateLimit": 0,
+    "apiVersion": "None"
+  }
+}

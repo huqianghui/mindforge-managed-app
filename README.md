@@ -8,7 +8,7 @@
 
 ## 功能一览
 
-顶部六个标签页：**文章导航**、**知识图谱**、**洞察**、**建议**、**统计**、**演进**，右侧显示登录用户。截图来自 2026-10-27 的本地版本（`mindforge@8f2aa16`）。
+顶部七个标签页：**文章导航**、**知识图谱**、**洞察**、**建议**、**统计**、**演进**、**问答**，右侧显示登录用户。截图来自 2026-10-27 的本地版本（`mindforge@8f2aa16`）。
 
 ### 文章导航 `#/doc/<path>`
 
@@ -70,6 +70,14 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ![演进图表](docs/images/screenshots/timeline-charts.png)
 
+### 问答 `#/ask`
+
+先在应用内检索：同步时生成的 `search.json`（每篇的标题、描述、标签、各级标题、开头一段）按"英文词 + 中文二元组"打分，取前 5 篇，再拉正文挑出最相关的段落并编号。然后经 **Work IQ Copilot MCP** connector，以当前用户的身份交给 Microsoft 365 Copilot，要求只根据这些段落作答，用 `[n]` 标注出处，最后一行写 `RELATED: 1, 3`。应用把 `[n]` 和引用标签都渲染成应用内原文链接；用到的来源是实心标签，检索到但没用上的是空心标签。文章页的"就这篇提问"会把当前文章固定为第一条资料。
+
+不需要建 Copilot Studio agent，引用也是结构化的（来源由应用检索决定），一次回答通常 15–20 秒。实现与返回格式的细节见 [04 · 阶段 5](docs/04-新功能开发指南.md#阶段-5ask-copilotwork-iq--本地检索)。
+
+![问答](docs/images/screenshots/ask.png)
+
 ## 和 GitHub Pages 版本的区别
 
 | | GitHub Pages（mindforge 仓库） | 本项目（Managed Runtime） |
@@ -83,10 +91,11 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ```text
 src/
-  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline）
+  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline、#/ask?q=&doc=）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写；收藏、继续阅读、我的收藏 / 最近阅读
-  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）
+  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析）
+  ask/                 问答页：retrieve.ts（本地检索与段落摘录）、prompt.ts（提示词与 RELATED 解析）、AskPage.tsx
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
   suggestions/         建议页：rules.ts 里的固定规则与阈值生成"依据 + 动作"卡片，分行动/核查/提示三级，可跳到洞察页对应筛选
@@ -96,12 +105,15 @@ scripts/
   sync-content.py      从 mindforge 拉取内容到 public/content/
   history.py           由 sync-content 调用：从 git 提交历史生成 history.json
   stats.py             由 sync-content 调用：字数、标签、系列、链接健康度 → stats.json
+  search.py            由 sync-content 调用：问答用的每篇摘要索引 → search.json（也可单独运行）
   release.sh           同步 → 本地构建 → 提交 → 推送 GitHub 与平台仓库 → deploy
   setup-dataverse.py   阶段 4 的 Dataverse 对比实验：幂等创建发布者 mf、解决方案 Mindforge 与表 mf_readingstate
   keep-env-active.sh   刷新开发者环境的"最近活动"，防止因不活动被禁用（可装成每周定时任务）
 public/
   content/             同步生成：文章、图片（哈希命名）、manifest.json 与 history.json
   wiki-graph.json      同步生成：图谱数据
+generated/             ms app add data-source 生成的 Connector 数据源描述与 Service（不要手改）
+.ms/schemas/           同上，CLI 缓存的 Connector schema
 state/
   schema.json          App state 的集合定义（ms project state add 生成，perUser 需手改）
   generated-typescript/  ms project state generate-code 生成的模型、校验与 Service（不要手改）
@@ -164,5 +176,5 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 | 2 | 建议卡片：高置信却过时、大部分过时的节点、整体过时的分类、沿袭未落地的差距建议、低置信度、单一来源、未分类、样本太少的分类、孤立节点、近期更新（`#/suggestions`）；冲突 Claim 需语义判断，留给阶段 5/6 | 基于数据的规则，可解释、可复现 | ✅ |
 | 3 | 文档统计：文章与节点的提交时间线、Claims 健康度趋势、分类成长、差距报告与建议（演进页 `#/timeline`）；字数、标签分布、系列完成度、链接健康度（统计页 `#/stats`） | 构建期预计算 vs 运行期计算 | ✅ |
 | 4 | 个性化：读取登录用户，记录阅读进度与收藏，左栏我的收藏 / 最近阅读 | SDK `getUser()`；App state（按用户隔离）；Dataverse 表作对比，写入被租户 DLP 屏蔽 | ✅ |
-| 5 | Ask Copilot：在 Copilot Studio 中以文章为知识建 agent，应用经 Connector 调用并展示带引用的回答 | Copilot Studio agent 开发；`ms app add data-source`；连接身份与 DLP | ⬜ |
+| 5 | Ask Copilot：本地检索 + Work IQ Copilot MCP 回答，`[n]` 与 RELATED 引用跳回原文；文章页"就这篇提问"（`#/ask`）。Copilot Studio agent 作为第二种后端待接入 | `ms app add data-source`；MCP JSON-RPC；提示词约定输出协议；连接与首次授权 | 🟡 |
 | 6 | 对比：同样的问答改用 Azure OpenAI Connector + 前端检索 | 两种 AI 接入方式的取舍 | ⬜ |
