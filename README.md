@@ -26,6 +26,7 @@ src/
 scripts/
   sync-content.py      从 mindforge 拉取内容到 public/content/
   release.sh           同步 → 本地构建 → 提交 → 推送 GitHub 与平台仓库 → deploy
+  keep-env-active.sh   刷新开发者环境的"最近活动"，防止因不活动被禁用（可装成每周定时任务）
 public/
   content/             同步生成：文章、图片（哈希命名）与 manifest.json
   wiki-graph.json      同步生成：图谱数据

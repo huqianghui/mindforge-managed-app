@@ -10,6 +10,7 @@
 | [06 托管位置与连接链路](06-托管位置与连接链路.md) | managed app 的域名、区域；CSP 是什么、本应用的 CSP；宿主为何用 iframe 装应用却不让应用再嵌 iframe；宿主 JSON-RPC 方法表；三种 harness 各自跑在哪；应用到 agent 的每一跳；实验性的 Cowork 通道 | 想知道"为什么这条路走不通"时 |
 | [07 Agent、Workflow、App 协作模式](07-Agent-Workflow-App协作模式.md) | 三者的定位与调用关系；共享数据、同步调用、触发 workflow 三种模式；按场景选择 | 设计一个功能要用到 agent 或 workflow 时 |
 | [08 Connector 全景](08-Connector全景.md) | Connector 与连接的区别、连接引用、数据源；在哪里看和配置；属性与费用；本租户可用目录；app、agent、workflow 用法的区别；参考应用只用两个 Connector 的实例；附 Copilot Studio 与 Power Platform 的关系 | 选数据源或 AI 接入方式之前 |
+| [09 环境与自定义 Connector](09-环境与自定义Connector.md) | 环境的概念、类型、本项目环境的实况与不活动清理规则、创建与 ALM；用自定义 Connector 接自己的 API（本租户被阻止） | 要分开发 / 生产，或要接自己的后端时 |
 
 文中 **〔待实测〕** 标记的是官方文档没写清、需要在租户里跑一次才能确认的行为；实测后请把结论回填，去掉标记。
 
