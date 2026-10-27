@@ -23,6 +23,7 @@ interface Conversation {
 // copilot_chat 的文本是一层 JSON：{ conversationId, reply, rawResponse, message }，末尾再跟一行
 // "CorrelationId: …, TimeStamp: …"。reply 实测为空；rawResponse 是 Graph copilotConversation 的 JSON 字符串，
 // messages[0] 是我们发的提示词，最后一条才是回答。解析不了时退回原文。
+// 外层另有 fileUris / autoExtractedFileUris：工具会自动把提示词里出现的网址取出来当 grounding 资料。
 function answerOf(text: string, prompt: string): string {
   const body = text.replace(/\s*CorrelationId:[^\n]*$/, '').trim();
   try {
@@ -37,13 +38,14 @@ function answerOf(text: string, prompt: string): string {
   return body;
 }
 
-export async function askCopilot(message: string): Promise<string> {
+/** agentId：交给指定的 Microsoft 365 Copilot agent 回答（copilot_chat 的可选参数）；不传则由 M365 Copilot 本体回答 */
+export async function askCopilot(message: string, agentId?: string): Promise<string> {
   const id = crypto.randomUUID();
   const res = await WorkIQ.mcp_m365copilot(undefined, {
     jsonrpc: '2.0',
     id,
     method: 'tools/call',
-    params: { name: 'copilot_chat', arguments: { message } },
+    params: { name: 'copilot_chat', arguments: agentId ? { message, agentId } : { message } },
   });
   // SDK 不抛异常，失败体现在 success 上
   if (!res.success) throw res.error ?? new Error('Work IQ Copilot 调用失败');

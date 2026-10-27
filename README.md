@@ -78,6 +78,10 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ![问答](docs/images/screenshots/ask.png)
 
+页面顶部可切换到 **Copilot Studio agent** 后端：同样的检索结果和提示词，交给在 Copilot Studio 里建的 Standard harness agent「Mindforge Ask」。它可以在 agent 里选模型，开着 Web Search：资料里没有答案时会去公开网络查，并以"知识库里没有相关内容，以下来自公开网络："开头，网页引用和知识库 `[n]` 引用分开显示。它不是经 Copilot Studio Connector 调用的（那个动作要求回调地址，浏览器里收不到），而是发布到 Microsoft 365 Copilot 后，经 Work IQ 的 `agentId` 调用。过程见 [03 · 实测](docs/03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)。
+
+![问答：Copilot Studio agent 后端](docs/images/screenshots/ask-agent.png)
+
 ## 和 GitHub Pages 版本的区别
 
 | | GitHub Pages（mindforge 仓库） | 本项目（Managed Runtime） |
@@ -94,7 +98,7 @@ src/
   App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline、#/ask?q=&doc=）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写；收藏、继续阅读、我的收藏 / 最近阅读
-  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析）
+  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析，可带 agentId）、agent.ts（Copilot Studio agent 的 agentId）
   ask/                 问答页：retrieve.ts（本地检索与段落摘录）、prompt.ts（提示词与 RELATED 解析）、AskPage.tsx
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
@@ -177,5 +181,5 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 | 3 | 文档统计：文章与节点的提交时间线、Claims 健康度趋势、分类成长、差距报告与建议（演进页 `#/timeline`）；字数、标签分布、系列完成度、链接健康度（统计页 `#/stats`） | 构建期预计算 vs 运行期计算 | ✅ |
 | 4 | 个性化：读取登录用户，记录阅读进度与收藏，左栏我的收藏 / 最近阅读 | SDK `getUser()`；App state（按用户隔离）；Dataverse 表作对比，写入被租户 DLP 屏蔽 | ✅ |
 | 5a | Ask Copilot（Work IQ）：本地检索 + Work IQ Copilot MCP 回答，`[n]` 与 RELATED 引用跳回原文；文章页"就这篇提问"（`#/ask`） | `ms app add data-source`；MCP JSON-RPC；提示词约定输出协议；连接与首次授权 | ✅ |
-| 5b | Ask Copilot（Copilot Studio agent）：Standard harness agent 作为第二种后端，问答页可切换对比 | Copilot Studio agent 开发；`ExecuteCopilotAsyncV2`；harness 选择 | ⬜ |
+| 5b | Ask Copilot（Copilot Studio agent）：Standard harness agent「Mindforge Ask」作为第二种后端，可选模型、资料外的问题查公开网络并标明；问答页切换对比 | 建 Standard agent、解决方案与 schema name、发布需渠道；Copilot Studio Connector 是回调式不可用，改走 Work IQ `copilot_chat` + `agentId` | ✅ |
 | 6 | 对比：同样的问答改用 Azure OpenAI Connector + 前端检索 | 两种 AI 接入方式的取舍 | ⬜ |

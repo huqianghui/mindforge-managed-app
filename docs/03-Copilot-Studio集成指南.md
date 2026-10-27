@@ -1,7 +1,7 @@
 # 03 Copilot Studio 集成指南
 
 > 对应路线图第 5 阶段 "Ask Copilot"。依据：Copilot Studio Connector 官方参考（<https://learn.microsoft.com/en-us/connectors/microsoftcopilotstudio/>，2026-07-11 版）与本租户 `ms connector list-actions` 结果。
-> **现状**：阶段 5 已先用 Work IQ Copilot MCP + 本地检索实现（不需要建 agent，见 [04 · 阶段 5](04-新功能开发指南.md#阶段-5ask-copilotwork-iq--本地检索)）。本文是接入 Copilot Studio agent 这第二种后端的指南。
+> **现状（2026-10-28）**：阶段 5 已实现两个后端：Work IQ（M365 Copilot 本体）与 Copilot Studio Standard agent「Mindforge Ask」。**下文「第二步：在应用里接 Connector」的方案实测走不通**（`ExecuteCopilotAsyncV2` 要求回调地址），保留作记录；实际可用的做法见文末[实测：从 managed app 调用 Standard agent](#实测从-managed-app-调用-standard-agent2026-10-28)。
 > 标 **〔待实测〕** 的地方是文档没写清楚、需要在租户里跑一次才能确认的行为。
 
 ## 整体链路
@@ -42,6 +42,29 @@
 - 指令（Instructions）建议写清三件事：只根据知识源回答；回答用中文；找不到就明确说"知识库里没有"，不要编。
 - 关掉"使用通用知识"（General knowledge / Web search），否则无法判断回答是否来自 mindforge。
 
+### 1.1 创建对话框里的 Solution 与 Schema name
+
+New agent →（Standard）后会弹出 "Name your agent"。展开 **Agent settings (Optional)**，有三项：
+
+| 项 | 是什么 | 本项目怎么填 |
+|---|---|---|
+| Language | agent 的主语言，决定内置 topics 和语言理解用哪种语言 | 保持 English (United States)，回答语言由提示词"按提问语言作答"控制 |
+| **Solution** | Power Platform 的**解决方案**：一个装组件的容器（agent、Dataverse 表、flow、连接引用……），整体导出、导入，就是在环境之间搬运（开发 → 测试 → 生产）的单位。每个解决方案属于一个**发布者**（publisher），发布者决定组件名的前缀 | 选 **Mindforge**（阶段 4 用 `scripts/setup-dataverse.py` 建的，发布者 `mindforge`，前缀 `mf`）。agent 和 `mf_readingstate` 表在同一个解决方案里，可以一起导出或删除。不选就进 Default Solution，前缀是 `new_` |
+| **Schema name** | agent 在 Dataverse `bot` 表里的**唯一逻辑名**，自动拼成 `<前缀>_<名字>`。**创建后不能改**；显示名可以随时改。程序调用时认的就是它：Copilot Studio Connector 的 `ExecuteCopilotAsyncV2` 的 `Copilot` 参数要填 schema name | 默认根据名字生成：`mf_MindforgeAsk` |
+
+切换 Solution 时，schema name 的前缀会跟着变（Default Solution 是 `new_`，Mindforge 是 `mf_`）。
+
+**为什么 agent 在 Dataverse 里、为什么另要一个 schema name。** Copilot Studio 没有自己的数据库，它的存储层就是环境的 Dataverse：agent 是 `bot` 表的一行，topics、指令、知识源、工具是 `botcomponent` 表的行。所以解决方案、安全角色、审计、备份、与 Power Automate 共用，这些都是现成的。本环境实测（2026-10-27，Web API 查询 `bots` 与 `botcomponents`）：
+
+| 显示名 | schema name |
+|---|---|
+| Mindforge Ask | `mf_MindforgeAsk`（新建时自带 14 个组件，如 `mf_MindforgeAsk.topic.ConversationStart`、`.topic.Fallback`、`.topic.Signin`） |
+| 代理 | `cr7a3_KU0LYNlCqWa0cg64-ikSQ` |
+| cs-agent-demo01 | `cr7a3_csagentdemo01_YqSLPn` |
+| Agent / Agent 1 / Agent 2 / Agent 3 | `cr7a3_agent`、`cr7a3_agent1`…… |
+
+显示名不唯一（默认就叫 Agent）、可以随时改、可以是中文；逻辑名必须唯一、不可变、只用 ASCII，并带上发布者前缀，这样不同发布者的解决方案导入同一个环境时不会撞名。中文名会被换成随机串。子组件名也以 schema name 开头，这是它创建后不能改的原因之一。
+
 ### 2. 加知识源
 
 mindforge 是公开 GitHub 仓库，可选做法：
@@ -62,6 +85,8 @@ mindforge 是公开 GitHub 仓库，可选做法：
 - 记下 agent 的 **schema name**（形如 `cr123_mindforgeAsk`），Connector 的 `Copilot` 参数要用它 〔待实测：参数接受 schema name 还是 bot id，生成代码里会有说明〕。
 
 ## 第二步：在应用里接 Connector
+
+> ⚠️ 实测不可用：`ExecuteCopilotAsyncV2` 的 body 里 `notificationUrl` 为必填（`x-ms-notification-url`，响应只有 201 Accepted），这是 Power Automate 用的 webhook 回调式等待；managed app 是浏览器里的前端，收不到回调。不传 `notificationUrl` 返回 400 "Invalid request body"。以下内容按原计划保留。
 
 ```bash
 npm i @microsoft/managed-apps
@@ -163,3 +188,88 @@ Connector 还暴露了 agent 评测：`GetAgentMakerEvaluationTestSets`、`RunAg
 - [ ] 多轮对话：第二问能引用第一问的上下文（`conversationId` 生效）
 - [ ] 至少一条引用能跳到应用内原文
 - [ ] 用另一个账号（只有 play 权限）验证首次连接提示与失败提示
+
+## 实测：从 managed app 调用 Standard agent（2026-10-28）
+
+### 1. 建 agent
+
+Agents 页 → **New agent** 右侧下拉 → **Agent（Standard）**（首页的三张卡片都是 GitHub Copilot harness，见 [05](05-Copilot-Studio-Harness对比.md)）。名称 `Mindforge Ask`；Agent settings 里解决方案选 **Mindforge**，schema name 因此是 `mf_MindforgeAsk`。
+
+![Standard agent 概览：模型、指令、知识、Web Search](images/copilot-studio-standard-overview.png)
+
+| 设置 | 取值 | 说明 |
+|---|---|---|
+| 模型 | **GPT Chat Latest**（默认） | Standard agent **可以选模型**，这是 Work IQ 后端做不到的。下拉里有 GPT-5 Chat / Auto / Reasoning、GPT-4.1、GPT-5.5 Chat、GPT Chat Latest、Claude Sonnet 4.6、Claude Opus 4.6 / 4.7 / 4.8、Grok 4.2（Experimental）。存储里 GPT Chat Latest 记为 `modelNameHint: GPT56Chat` |
+| 指令 | 只依据消息里的 SOURCES 作答并用 [n] 标注；SOURCES 没有答案时才查公开网络，并以"知识库里没有相关内容，以下来自公开网络："开头；最后一行 RELATED | 应用发来的消息自带资料与规则，指令只定基调 |
+| 知识源 | 不挂 | 资料由应用检索后写进消息，与 Work IQ 后端用同一份检索结果，对比才公平 |
+| Web Search | **开** | Bing（Grounding with Bing Search）。开关就是 gpt 组件里的 `gptCapabilities.webBrowsing: true` |
+| 认证 | Microsoft（Entra） | 页面标题旁显示 "Securely authenticated with Microsoft" |
+
+![模型下拉](images/copilot-studio-standard-models.png)
+
+测试面板里能看到网页兜底的过程：编排器先把问题改写成一句短英文查询（"Refining knowledge query"，所以 Bing 请求 2048 字符的上限不成问题），检索 1–2 秒，回答附编号引用与 URL。但这一步走的是 Copilot Studio 自带的"生成式回答"流程，**指令里的输出格式只部分生效**：在测试面板里直接提问时，曾用英文回答，也没有 RELATED 行。经应用调用时（消息里带完整规则），格式遵守得很好，见下文。
+
+![测试面板：网页搜索的检索过程与引用](images/copilot-studio-standard-web-search-test.png)
+
+### 2. 一个坑：脚本改指令把配置写坏了
+
+用浏览器自动化往指令编辑器（富文本 contenteditable）里"全选再键入"之后，界面显示指令为空。查 Dataverse 才发现：agent 的配置存在 `botcomponent` 表里 schema name 为 `mf_MindforgeAsk.gpt.default` 的一行（componenttype 15），`data` 列是一段 YAML。指令被写成了上千个按字符编号的键（`0: k`、`1: i`……），而不是 `instructions: |-` 下的一段文本。修法是直接 PATCH 这一行的 `data`：
+
+```yaml
+kind: GptComponentMetadata
+instructions: |-
+  You are the answering backend of Mindforge, ...
+gptCapabilities:
+  webBrowsing: true
+
+aISettings:
+  model:
+    modelNameHint: GPT56Chat
+```
+
+刷新门户后指令正常显示。经验：门户里手工编辑没问题；要用程序改，直接改 `gpt.default` 的 YAML 更可靠（格式可参考环境里其他 agent 的同一组件）。
+
+### 3. 发布前必须有渠道
+
+Publish 按钮是灰的，悬停提示 "You need to configure at least one channel"。agent 用 Microsoft 认证时，只有 Teams + Microsoft 365 和 SharePoint 渠道可选，本租户里 SharePoint、Demo website 等其余渠道被策略禁用。
+
+![发布需要渠道](images/copilot-studio-publish-needs-channel.png)
+![渠道页：Microsoft 认证下只有 Teams / M365 / SharePoint 可选](images/copilot-studio-standard-channels.png)
+
+添加 "Microsoft 365 and Microsoft Teams" 渠道，默认勾选 "Make agent available in Microsoft 365 Copilot"。agent 只对自己可见，**分享给别人或经管理员批准后**别人才能用。添加时界面一直转 "Turning on Teams…"，6 分钟后刷新页面才发现其实已经加好，Publish 也可点了。发布后 Dataverse `bots.publishedon` 有值（`2026-10-27T15:45:49Z`），以它为准。
+
+![添加 Teams / M365 渠道](images/copilot-studio-add-teams-channel.png)
+
+### 4. 调用：Copilot Studio Connector 走不通
+
+`ms app add data-source --connector shared_microsoftcopilotstudio --as action --use-sso` 生成 `ExecuteCopilotAsyncV2(Copilot, body, x-ms-conversation-id?, environmentId?)`。
+
+| 情况 | 结果 |
+|---|---|
+| agent 未发布 | connector 运行时把请求**重定向到门户里该 agent 的页面**（`copilotstudio.microsoft.com/.../bots/<id>`），浏览器跟随重定向后被 CORS 拦截；SDK 却返回 `success: true, data: null` |
+| 已发布，body 为 `{ message, locale }` | **400** `"Invalid request body"`：schema 里 `notificationUrl` 为必填（`x-ms-notification-url`，响应定义只有 201 Accepted）。这是给 Power Automate 用的 webhook 回调式等待，浏览器里的 managed app 提供不了回调地址 |
+
+所以已从应用里移除这个数据源（`ms app remove data-source --name microsoftcopilotstudio`），免得用户首次打开时多一个授权项。
+
+### 5. 调用：Work IQ `copilot_chat` + `agentId` 可行
+
+发布时勾选了 "Make agent available in Microsoft 365 Copilot"，agent 就成了 M365 Copilot 里的一个 agent。渠道面板 "See agent in Teams" 打开的链接是 `https://teams.microsoft.com/l/app/?titleId=T_c7f66753-0f26-f573-96fc-f7e374b762a3`，把这个 `T_…` titleId 当 `agentId` 传给 `copilot_chat`：
+
+```ts
+params: { name: 'copilot_chat', arguments: { message: prompt, agentId: 'T_c7f66753-0f26-f573-96fc-f7e374b762a3' } }
+```
+
+返回结构与不带 agentId 时相同（`rawResponse` 里的 copilotConversation），外层多回显一个 `agentId`。判断确实是 agent 在答：问"Microsoft Web IQ 是什么"这种知识库里没有的问题，回答以"知识库里没有相关内容，以下来自公开网络："开头，并引用了 learn.microsoft.com 的 Web IQ 页面。这是 Mindforge Ask 的指令和 Web Search 的效果；不带 agentId 时 M365 Copilot 本体的 `webSearchEnabled` 是 `false`，不会这样答。
+
+![问答页：Copilot Studio agent 后端，网页引用与知识库引用并存](images/screenshots/ask-agent.png)
+
+| | Work IQ（M365 Copilot 本体） | Copilot Studio agent（经 Work IQ + agentId） |
+|---|---|---|
+| 模型 | M365 Copilot 自动路由，不可选 | 在 agent 里选（当前 GPT Chat Latest） |
+| 资料外的问题 | 只能说"知识库里没有" | 查公开网络并标明，网页引用是外链数字、知识库引用是 `[n]` |
+| 实测耗时 | 15–26 秒 | 31–36 秒（多一次网页检索） |
+| 首次授权 | Work IQ 连接 | 同一个连接，不需要额外授权 |
+| 维护 | 无 | agent 在 Copilot Studio，指令、模型改完要重新发布 |
+
+另一个发现：返回的外层还有 `fileUris` / `autoExtractedFileUris`，是 Work IQ **自动从提示词里的网址**（文章摘录里的链接）提取出来、作为 grounding 资料交给 Copilot 的。这可能拖慢回答，也可能带来摘录之外的内容；如需严格只依据摘录，可在拼提示词前去掉摘录里的网址。〔待实测：去掉后的延迟与回答变化〕
+

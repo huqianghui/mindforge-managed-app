@@ -10,15 +10,22 @@ import Chip from '@mui/material/Chip';
 import Link from '@mui/material/Link';
 import Alert from '@mui/material/Alert';
 import LinearProgress from '@mui/material/LinearProgress';
+import ToggleButton from '@mui/material/ToggleButton';
+import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import { docHash, useContentIndex } from '../docs/content';
 import { useUser } from '../platform/user';
 import { askCopilot } from '../platform/copilot';
+import { askAgent } from '../platform/agent';
 import { retrieve } from './retrieve';
 import type { Source } from './retrieve';
 import { buildPrompt, parseAnswer } from './prompt';
 import type { Turn } from './prompt';
 
+type Backend = 'workiq' | 'agent';
+const BACKENDS: Record<Backend, string> = { workiq: 'Work IQ（M365 Copilot）', agent: 'Copilot Studio agent' };
+
 interface Message {
+  backend: Backend;
   question: string;
   sources: Source[];
   answer?: string;
@@ -44,6 +51,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
   const [input, setInput] = useState(initialQuestion ?? '');
   const [messages, setMessages] = useState<Message[]>([]);
   const [busy, setBusy] = useState(false);
+  const [backend, setBackend] = useState<Backend>('workiq');
   const [slow, setSlow] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const pinnedTitle = pinned ? content?.byPath.get(pinned)?.title : undefined;
@@ -64,13 +72,14 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
     let sources: Source[] = [];
     const update = (patch: Partial<Message>) =>
       setMessages((ms) => ms.map((m, i) => (i === ms.length - 1 ? { ...m, ...patch } : m)));
-    setMessages((ms) => [...ms, { question: q, sources }]);
+    setMessages((ms) => [...ms, { backend, question: q, sources }]);
     try {
       sources = await retrieve(q, content, pinned);
       update({ sources });
       // 宿主外 SDK 调用不会返回，只演示检索
       if (user === null) throw new Error('offhost');
-      const raw = await askCopilot(buildPrompt(q, sources, history));
+      const prompt = buildPrompt(q, sources, history, backend === 'agent');
+      const raw = backend === 'agent' ? await askAgent(prompt) : await askCopilot(prompt);
       const { text, related } = parseAnswer(raw, sources.length);
       update({ answer: text, related, ms: performance.now() - started });
     } catch (e) {
@@ -89,8 +98,15 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
       <Box sx={{ maxWidth: 880, mx: 'auto', px: { xs: 2, md: 4 }, py: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>问答</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-          先在本应用里检索最相关的文章段落，再交给 Microsoft 365 Copilot（Work IQ，以你的身份调用）只根据这些段落作答；[n] 与下方引用都能直接打开原文。
+          先在本应用里检索最相关的文章段落，再经 Work IQ 以你的身份交给{' '}
+          {backend === 'agent'
+            ? 'Copilot Studio agent「Mindforge Ask」（Standard harness，可选模型；资料里没有时会查公开网络并标明）'
+            : 'Microsoft 365 Copilot，只根据这些段落作答'}
+          ；[n] 与下方引用都能直接打开原文。
         </Typography>
+        <ToggleButtonGroup size="small" exclusive value={backend} onChange={(_, v: Backend | null) => v && setBackend(v)} sx={{ mb: 2 }}>
+          {(Object.keys(BACKENDS) as Backend[]).map((b) => <ToggleButton key={b} value={b} disabled={busy}>{BACKENDS[b]}</ToggleButton>)}
+        </ToggleButtonGroup>
         {offHost && (
           <Alert severity="info" sx={{ mb: 2 }}>
             问答要通过平台 Connector 调用，需在 Managed App 中运行（线上或 <code>ms app dev</code>）。这里仍可试检索：提交后会列出检索到的资料。
@@ -134,7 +150,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
                   <Box sx={{ mt: 1.5, pt: 1, borderTop: 1, borderColor: 'divider' }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       {m.answer !== undefined && m.related?.length ? '引用' : '检索到的资料'}
-                      {m.ms !== undefined && ` · ${(m.ms / 1000).toFixed(1)} 秒`}
+                      {m.ms !== undefined && ` · ${(m.ms / 1000).toFixed(1)} 秒`} · {BACKENDS[m.backend]}
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
                       {m.sources.map((s) => {
