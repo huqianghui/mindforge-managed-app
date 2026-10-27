@@ -12,6 +12,7 @@
 | [07 Agent、Workflow、App 协作模式](07-Agent-Workflow-App协作模式.md) | 三者的定位与调用关系；共享数据、同步调用、触发 workflow 三种模式；按场景选择 | 设计一个功能要用到 agent 或 workflow 时 |
 | [08 Connector 全景](08-Connector全景.md) | Connector 与连接的区别、连接引用、数据源；在哪里看和配置；属性与费用；本租户可用目录；app、agent、workflow 用法的区别；参考应用只用两个 Connector 的实例；附 Copilot Studio 与 Power Platform 的关系 | 选数据源或 AI 接入方式之前 |
 | [09 环境与自定义 Connector](09-环境与自定义Connector.md) | 环境的概念、类型、本项目环境的实况与不活动清理规则、创建与 ALM；用自定义 Connector 接自己的 API（本租户被阻止） | 要分开发 / 生产，或要接自己的后端时 |
+| [10 参考应用拆解与功能模式](10-参考应用拆解与功能模式.md) | 逐页拆解 CSU Investment Insights；Ask Copilot 经 Work IQ Copilot MCP 的完整调用链与提示词结构；九个可复用模式及其在本项目的对应 | 设计具体页面和 AI 问答之前 |
 
 文中 **〔待实测〕** 标记的是官方文档没写清、需要在租户里跑一次才能确认的行为；实测后请把结论回填，去掉标记。
 
