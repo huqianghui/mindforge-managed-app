@@ -190,6 +190,8 @@ def build(vault: Path, doc_paths: list, out: Path) -> None:
             "gapReports": len(gaps),
         },
         "weeks": weekly_series(first, commit_days, articles, nodes),
+        # [day, commits] for days with at least one commit, oldest first
+        "days": sorted(Counter(commit_days).items()),
         "graph": graph,
         "gaps": gaps,
         # path -> [first commit date, number of commits touching it]

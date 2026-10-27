@@ -24,8 +24,9 @@ import {
 } from 'recharts';
 import { docHash, useContentIndex } from '../docs/content';
 import { NODE_COLORS } from '../theme';
-import { graphAt, useHistory } from './history';
+import { graphAt, useHistory, useWikiGraph } from './history';
 import type { GapReport, History } from './history';
+import TimeAxis from './TimeAxis';
 
 const ARTICLE_COLOR = '#5c6bc0';
 const ACTIVE_COLOR = '#66bb6a';
@@ -231,6 +232,8 @@ function DocLists({ history }: { history: History }) {
 
 export default function TimelinePage() {
   const { history, failed } = useHistory();
+  const index = useContentIndex();
+  const graph = useWikiGraph();
 
   if (failed) {
     return <Typography sx={{ p: 4 }}>缺少演进数据：运行 <code>python3 scripts/sync-content.py</code> 生成 history.json。</Typography>;
@@ -252,6 +255,10 @@ export default function TimelinePage() {
           mindforge 从 {history.firstCommit} 到 {history.lastCommit}。所有时间都是 GitHub 上的 commit 时间；
           G1–G{history.gaps.length} 是各期知识差距分析报告提交的时间点。
         </Typography>
+
+        <Section title="时间轴回放" note="知识图谱看的是知识之间的相关性；这里看的是它们在时间上怎么一天天长出来。点 ▶ 播放，或拖动滑块到任意一天。">
+          {index && graph ? <TimeAxis history={history} index={index} graph={graph} /> : <CircularProgress size={24} />}
+        </Section>
 
         <Kpis history={history} />
 
