@@ -1,21 +1,21 @@
 import { useEffect, useState } from 'react';
 
-export const SPEEDS = { slow: 140, normal: 60, fast: 20 } as const;
+const BASE_MS = 140; // 1× 时每天的间隔，speed 倍时除以倍数
 
 export interface Playback {
   cursor: number;
   setCursor: (d: number) => void;
   playing: boolean;
   setPlaying: (p: boolean) => void;
-  speed: keyof typeof SPEEDS;
-  setSpeed: (s: keyof typeof SPEEDS) => void;
+  speed: number;
+  setSpeed: (s: number) => void;
 }
 
 /** 播放：光标一天一天往前走，走到最后一天自动停 */
 export function usePlayback(totalDays: number): Playback {
   const [cursor, setCursor] = useState(totalDays);
   const [playing, setPlaying] = useState(false);
-  const [speed, setSpeed] = useState<keyof typeof SPEEDS>('normal');
+  const [speed, setSpeed] = useState(3);
   useEffect(() => {
     if (!playing) return;
     const t = window.setInterval(() => {
@@ -26,7 +26,7 @@ export function usePlayback(totalDays: number): Playback {
         }
         return c + 1;
       });
-    }, SPEEDS[speed]);
+    }, BASE_MS / speed);
     return () => window.clearInterval(t);
   }, [playing, speed, totalDays]);
   return { cursor, setCursor, playing, setPlaying, speed, setSpeed };

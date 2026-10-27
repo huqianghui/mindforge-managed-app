@@ -7,6 +7,7 @@ import type { WikiGraph } from '../types';
 import type { History } from './history';
 import Detail from './Detail';
 import DayCalendar from './DayCalendar';
+import SpeedSelect from './SpeedSelect';
 import type { DayPage } from './DayCalendar';
 import { buildEntries, dateOf, GROUPS, GROUP_BY_KEY, relatedOf } from './knowledge';
 import type { Entry } from './knowledge';
@@ -20,7 +21,7 @@ const VIEW_H = 680;
 const GROUND = 640;
 const TRUNK_LEN = 150;
 const MAX_DEPTH = 7;
-const DAY_MS = 1300; // 每个有内容的日子停留的时间，够看清台历上这一天长了什么
+const DAY_MS = 1300; // 1× 时每个有内容的日子停留的时间，够看清台历上这一天长了什么；n× 时除以 n
 const REST_MS = 7000; // 长满后停一会儿再从头长
 const GREENS = ['#7cb342', '#689f38', '#8bc34a', '#558b2f', '#9ccc65', '#33691e'];
 
@@ -96,15 +97,15 @@ function buildTree(cx: number) {
 }
 
 // 只走有内容的日子（新增文章、wiki 节点或差距报告），没有新增的日子直接跳过
-function useGrowth(entries: Entry[], paused: boolean) {
+function useGrowth(entries: Entry[], paused: boolean, speed: number) {
   const days = useMemo(() => [...new Set(entries.map((e) => e.day))].sort((a, b) => a - b), [entries]);
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (paused) return;
     const atEnd = idx >= days.length - 1;
-    const t = window.setTimeout(() => setIdx((i) => (i >= days.length - 1 ? 0 : i + 1)), atEnd ? REST_MS : DAY_MS);
+    const t = window.setTimeout(() => setIdx((i) => (i >= days.length - 1 ? 0 : i + 1)), atEnd ? REST_MS : DAY_MS / speed);
     return () => window.clearTimeout(t);
-  }, [idx, paused, days.length]);
+  }, [idx, paused, days.length, speed]);
   return { cursor: days[Math.min(idx, days.length - 1)] ?? 0, step: idx, steps: days.length };
 }
 
@@ -128,7 +129,8 @@ export default function KnowledgeTree({ history, index, graph }: { history: Hist
   const [hovering, setHovering] = useState(false);
   const [hover, setHover] = useState<Entry | null>(null);
   const [selectedKey, setSelectedKey] = useState<string | null>(null);
-  const { cursor, step, steps } = useGrowth(entries, hovering || selectedKey !== null);
+  const [speed, setSpeed] = useState(1);
+  const { cursor, step, steps } = useGrowth(entries, hovering || selectedKey !== null, speed);
   const knowledgeMode = hovering || selectedKey !== null;
 
   // 树在世界坐标里固定，宽度只影响左右留白
@@ -315,6 +317,10 @@ export default function KnowledgeTree({ history, index, graph }: { history: Hist
       </Box>
 
       <Box sx={{ width: 300, flexShrink: 0 }}>
+        {/* 倍速放在树外面：鼠标进树就会暂停生长 */}
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+          <SpeedSelect value={speed} onChange={setSpeed} />
+        </Box>
         {selected ? (
           <Box sx={{ height: VIEW_H }}>
             <Detail item={selected} history={history} related={related} contributes={contributes} onSelect={setSelectedKey} onClose={() => setSelectedKey(null)} />

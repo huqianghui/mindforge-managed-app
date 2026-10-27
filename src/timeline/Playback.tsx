@@ -2,8 +2,6 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import Slider from '@mui/material/Slider';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import PlayArrowRounded from '@mui/icons-material/PlayArrowRounded';
 import PauseRounded from '@mui/icons-material/PauseRounded';
@@ -12,6 +10,7 @@ import type { History } from './history';
 import { dateOf, dayIndex } from './knowledge';
 import type { Entry, Kind } from './knowledge';
 import type { Playback } from './usePlayback';
+import SpeedSelect from './SpeedSelect';
 
 const COUNTS: [Kind, string, string][] = [
   ['article', '文章', '#5c6bc0'],
@@ -51,11 +50,7 @@ export function PlaybackBar({ pb, history, entries, totalDays, onSelect }: {
           {playing ? <PauseRounded /> : <PlayArrowRounded />}
         </IconButton>
         <IconButton size="small" onClick={() => { setCursor(0); setPlaying(true); }} title="从头播放"><ReplayRounded /></IconButton>
-        <ToggleButtonGroup size="small" exclusive value={speed} onChange={(_, v) => v && setSpeed(v)}>
-          <ToggleButton value="slow" sx={{ px: 1.2, py: 0.3 }}>慢</ToggleButton>
-          <ToggleButton value="normal" sx={{ px: 1.2, py: 0.3 }}>中</ToggleButton>
-          <ToggleButton value="fast" sx={{ px: 1.2, py: 0.3 }}>快</ToggleButton>
-        </ToggleButtonGroup>
+        <SpeedSelect value={speed} onChange={setSpeed} />
         <Box sx={{ ml: 1 }}>
           <Typography sx={{ fontWeight: 800, fontSize: 22, fontVariantNumeric: 'tabular-nums', lineHeight: 1 }}>{currentDate}</Typography>
           <Typography variant="caption" sx={{ color: 'text.secondary' }}>
