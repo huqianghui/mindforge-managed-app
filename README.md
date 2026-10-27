@@ -72,6 +72,8 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 
 ## 开发文档
 
+找不到 Copilot Studio、连接、自定义 Connector、环境等页面时，看 [入口速查](docs/00-入口速查.md)。
+
 基于本项目开发新功能前，先读 [docs/](docs/README.md)：项目现状剖析、Managed Runtime 与 SDK 参考、Copilot Studio 集成指南、新功能开发指南。
 
 ## 学习路线

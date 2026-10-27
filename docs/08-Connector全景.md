@@ -93,6 +93,28 @@ Connector 没有一个统一的"配置页"，入口按用途分散在几个产�
 | **允许 / 阻止**某个 Connector（DLP） | Power Platform admin center <https://admin.powerplatform.microsoft.com>（Preview 版界面 <https://admin.preview.powerplatform.microsoft.com>） | 左侧一级导航 **Security**（盾牌图标）→ **Data and privacy** → **Data policy** 卡片，地址 `/security/dataprotection/dlp`（2026-10-27 在 Preview 版界面实测）。旧版界面是 **Policies → Data policies**。需要 Power Platform 管理员或租户管理员 |
 | 看 managed app 的清单、使用情况、费用 | Microsoft 365 admin center <https://admin.microsoft.com> | **Apps**（managed apps 清单）、**Copilot → Cost management**（Credits）。这里**没有** Connector 策略 |
 
+#### 为什么连接在制作者门户，不在 admin center
+
+**连接是个人的，admin center 管的是规则。** 连接里存的是某个用户的登录令牌（"我以 qiah@... 登录了 SharePoint"），由用户在用到时自己创建；admin center 管的是租户和环境级的规则（"这个环境允许 SharePoint，禁止自定义 Connector"）。好比手机上登录的微信账号是你自己的，公司 MDM 只管能不能装微信，不会列出你的聊天记录。
+
+历史上，Connections 页最早就在 Power Apps / Power Automate 的制作者门户（两边看到的是同一份列表）；Copilot Studio 后来加入，复用了这套机制，但没在自己的首页放 Connections 菜单。
+
+#### 用户怎么"到达"连接
+
+**大多数时候不需要专门去建——连接是在用到的地方当场创建的**〔实测〕：
+
+| 场景 | 连接怎么来 | 证据 |
+|---|---|---|
+| 制作者给 agent 加工具 | 添加 Work IQ 工具时当场登录，连接自动建好 | `shared_workiqmcp` 连接创建于 2026-10-27，正是建 agent 当天 |
+| 用户第一次打开 managed app | 宿主弹出同意框，列出所需 Connector，点 Allow 即建好 | 参考应用 "Allow CSU Investment Insights to access your data?" |
+| agent 设为每个用户用自己的账号 | 用户第一次触发工具时弹出 Connect 卡片 | agent 连接页 "Work IQ MCP — Missing connection — Connect" |
+
+Copilot Studio 还有**自己的**连接管理页：工具详情面板的 "Manage connections" 指向 `copilotstudio.../cliagent/<agent>/channels/pva-studio/user-connections`，不会跳到 make.powerapps.com。
+
+**需要去 make.powerapps.com → Connections 的情况**：一次看全部连接；修复过期连接（红叉 + Reconnect）；共享连接；删除连接；创建自定义 Connector（Custom connectors）。
+
+这确实是 Power Platform 的体验短板：入口分散在 Power Apps、Power Automate、Copilot Studio、admin center，没有统一引导。记住一条：**平时在用的地方当场建，出问题去 make.powerapps.com → Connections 统一处理。**
+
 几点说明：
 
 - **Connections 页列的是"连接"，不是"Connector"。** 每行第一行是连接的显示名（常常是账号，例如你的邮箱），第二行是它属于哪个 Connector（Office 365 Outlook、SharePoint……）。同一个 Connector 可以有多个连接。要浏览 Connector 目录，点页面顶部的 **New connection**。

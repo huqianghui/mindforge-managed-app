@@ -173,26 +173,76 @@ isBlocked:   True      ← 被阻止
 - **在公司租户里，这条路目前走不通**，除非 IT 为你的环境单独放行。
 - **想动手实验，用你自己有管理员权限的测试租户**（你的账号列表里有两个 MngEnvMCAP 租户）。在那里你可以自己设 DLP，把自定义 Connector 放到允许的分组。
 
-### 2.3 怎么做（在允许的租户里）
+### 2.3 Custom connectors 页面在哪〔实测〕
 
-1. **部署你的 API**：Azure Container Apps 或 App Service，HTTPS，有 OpenAPI（Swagger）描述。
-2. **决定认证方式**：
+**不在 Connections → New connection 里。** 那里是 Connector 目录，用来"拿现成的 Connector 建连接"；在那里搜 "Custom" 只会搜到名字里带 Custom 的 Connector。
 
-   | 方式 | 效果 | 适合 |
-   |---|---|---|
-   | **OAuth 2.0（Microsoft Entra ID）** | 每个用户用自己的身份调用，API 收到用户的令牌，可以按人做权限 | 推荐，和 managed app "每个用户用自己的连接"一致 |
-   | API key | 所有人共用一个 key | 简单的内部服务 |
-   | 无认证 | 不推荐 | — |
+自定义 Connector 是左侧导航的**独立页面**，默认不显示：
 
-   用 Entra ID 时：为 API 注册一个应用（暴露 scope），再为 Connector 注册一个客户端应用（申请这个 scope），Connector 里填客户端 ID、密钥、资源 URL。
-3. **创建自定义 Connector**：make.powerapps.com → 选环境 → **Custom connectors** → New，可以导入 OpenAPI 文件或 URL；也有命令行工具（`paconn`、`pac connector`）。
-4. **测试**：Connector 页面里的 Test 标签，建一个连接试调。
-5. **在各处使用**：
-   - managed app：`ms connector list` 找到它的 id → `ms app add data-source --connector <id> --as action`〔待实测：CLI 对自定义 Connector 的代码生成〕
-   - agent：Build → Tools → 添加 Connector
-   - workflow：添加动作时选它
+- 左侧 **More** → 面板底部的 **Discover all** → 在完整列表里找 **Custom connectors**，点图钉固定到导航。注意 More 面板本身**只列已固定的项目**，即使全部展开也看不到 Custom connectors；
+- 或者直接访问 `https://make.powerapps.com/environments/<环境ID>/customconnectors`（Preview 版把域名换成 `make.preview.powerapps.com`）。
 
-### 2.4 网络与运维要点
+页面内容其实是嵌入的 **Power Automate 组件**（`make.powerautomate.com/.../connections/custom`）——Power Apps 和 Power Automate 共用同一套自定义 Connector。本环境里能看到以前建的 **Swagger Petstore**（Published by Qianghui Hu），操作有 Create connection、Download、Edit。
+
+![Custom connectors 页面与 New custom connector 菜单](images/custom-connectors-new-menu.png)
+
+右上角 **New custom connector** 的六种创建方式（2026-10-27 截图）：
+
+| 选项 | 适合 |
+|---|---|
+| Create from blank | 手工逐个定义操作 |
+| **Create from Azure Service (Preview)** | API 在 Azure 上（Functions、API Management 等），直接从 Azure 资源生成 |
+| Import an OpenAPI file | 手上有 OpenAPI 2.0 文件 |
+| **Import an OpenAPI from URL** | API 自己暴露描述地址，例如 Container Apps 上的 `https://<app>/openapi.json`（需为 2.0） |
+| Import a Postman collection | 已经用 Postman 测过 |
+| Import from GitHub | 从微软的开源 Connector 仓库导入 |
+
+固定 Custom connectors 后，左侧导航还会多出同一组里的 **Gateways**（本地数据网关）和 **Publishers**（发布者，自定义 Connector 的前缀如 `cr7a3` 就来自这里）。
+
+### 2.4 怎么接 Container Apps 里的应用（在允许自定义 Connector 的租户里）
+
+```text
+你的 API（Container Apps，外部 ingress，HTTPS）
+   ├─ /openapi.json  ← 描述
+   └─ 校验 Entra ID 令牌（Container Apps 内置认证，或代码里校验 JWT）
+          ▲
+          │ API Hub 以用户身份调用（OAuth 2.0 委托令牌）
+自定义 Connector（OpenAPI 2.0 + 安全设置）
+          ▲
+managed app / agent / workflow
+```
+
+1. **部署 API**：Container Apps 开启**外部 ingress**，拿到 `https://<app>.<env>.<region>.azurecontainerapps.io`。App Service 同理。
+2. **准备 OpenAPI 描述**：**自定义 Connector 要求 OpenAPI 2.0（Swagger）**。FastAPI、ASP.NET 等框架默认输出 OpenAPI 3.x，需要转换成 2.0，或者在导入后手工补全。`host` 填 Container Apps 的域名，每个操作要有 `operationId`（生成的 TypeScript 方法名就来自它）。
+3. **Entra ID 注册两个应用**：
+   - **API 应用**：暴露一个 scope（例如 `api://<api-app-id>/user_impersonation`）；Container Apps 的认证或你的代码用它校验令牌的 audience。
+   - **Connector 客户端应用**：申请上面的 scope，生成客户端密钥。
+4. **创建自定义 Connector**：Custom connectors → New custom connector → 导入 OpenAPI 文件或 URL。
+   - **Security** 页：OAuth 2.0 → Identity provider 选 **Microsoft Entra ID**，填客户端应用的 Client ID / Secret，Resource URL 填 API 应用的 ID URI。
+   - 保存后页面会给出一个 **Redirect URL**，把它加到客户端应用注册的重定向 URI 里。
+5. **测试**：Test 页新建连接（会弹出登录），选一个操作试调。
+6. **在各处使用**：
+   - managed app：`ms connector list --search <名字>` 找到 id → `ms app add data-source --connector <id> --as action`〔待实测：CLI 对自定义 Connector 的代码生成〕；
+   - agent：Build → Tools → 添加 Connector；
+   - workflow：添加动作时选它。
+
+如果 API 已经挂在 **Azure API Management** 后面，APIM 提供 "Export to Power Platform"，可以直接生成自定义 Connector，省掉第 2、4 步的大部分工作。
+
+### 2.5 本租户：先换一个能用的租户
+
+上面的 Swagger Petstore 在 `ms connector list` 里是 `isBlocked: True`——**公司租户的 DLP 不允许自定义 Connector**，在这里建了也不能运行。动手实验建议用你有管理员权限的测试租户（本机 `az` 当前默认登录的就是一个 MngEnvMCAP 测试租户）：在那里建一个开发者环境，在 Power Platform admin center → Security → Data and privacy → Data policy 里把自定义 Connector 放进允许的分组，再按 2.4 操作。
+
+### 2.6 认证方式怎么选
+
+| 方式 | 效果 | 适合 |
+|---|---|---|
+| **OAuth 2.0（Microsoft Entra ID）** | 每个用户用自己的身份调用，API 收到用户的令牌，可以按人做权限 | 推荐，和 managed app "每个用户用自己的连接"一致 |
+| API key | 所有人共用一个 key | 简单的内部服务 |
+| 无认证 | 不推荐 | — |
+
+除了网页向导，也可以用命令行工具（`paconn`、`pac connector`）创建和更新自定义 Connector，适合放进 CI。
+
+### 2.7 网络与运维要点
 
 | 点 | 说明 |
 |---|---|
@@ -203,7 +253,7 @@ isBlocked:   True      ← 被阻止
 | 流式 | Connector 不能把流式响应交给调用方，要一次性返回 |
 | 计费 | 每次调用照常按 Managed Runtime 的 API 调用计（0.1 Credits，Premium 用户计入请求额度）；自定义 Connector 属于 Premium |
 
-### 2.5 和 MCP 的关系
+### 2.8 和 MCP 的关系
 
 Copilot Studio 的 agent 也能把你自己的 **MCP 服务器**（同样可以部署在 Container Apps）通过自定义 Connector 接进来作为工具；[08](08-Connector全景.md) 里参考应用用的 Work IQ Copilot MCP 就是微软做好的 MCP Connector。所以"自己写服务 → 包成 Connector → app 和 agent 共用"是一条通用的扩展路径，前提仍然是租户允许自定义 Connector。
 

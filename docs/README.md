@@ -2,6 +2,7 @@
 
 | 文档 | 内容 | 什么时候看 |
 |---|---|---|
+| [00 入口速查](00-入口速查.md) | 应用、Copilot Studio、连接、自定义 Connector、环境、DLP 的实际路径与直达链接；常见"找不到"的原因 | **找不到某个页面时先看这里** |
 | [01 项目现状剖析](01-项目现状剖析.md) | 代码地图、路由、两份数据的结构与规模、内容同步、两个远端的发布机制、现状检查结果 | 第一次接手项目 |
 | [02 Managed Runtime 与 SDK 参考](02-Managed-Runtime与SDK参考.md) | CLI / SDK / 宿主三层；`getUser`、`getContext`、`DataClient` 接口；`ms app add data-source`；本租户可用的 Connector；`ms app dev` | 写任何调用平台能力的代码之前 |
 | [03 Copilot Studio 集成指南](03-Copilot-Studio集成指南.md) | 建 agent、加知识源、接 Copilot Studio Connector、引用解析、身份与费用、评测动作 | 做路线图阶段 5 |
