@@ -9,6 +9,7 @@ import { theme } from './theme';
 import GraphPage from './GraphPage';
 import DocsPage from './docs/DocsPage';
 import { HOME_DOC } from './docs/content';
+import { useUser } from './platform/user';
 import './docs/markdown.css';
 
 // 图表库只在洞察页和演进页用到，单独拆包
@@ -39,6 +40,7 @@ function parseHash(hash: string): Route {
 
 export default function App() {
   const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash));
+  const user = useUser();
 
   useEffect(() => {
     const onChange = () => setRoute(parseHash(window.location.hash));
@@ -60,6 +62,9 @@ export default function App() {
             <Tab value="stats" label="统计" component="a" href="#/stats" />
             <Tab value="timeline" label="演进" component="a" href="#/timeline" />
           </Tabs>
+          {user && (
+            <Typography variant="body2" sx={{ ml: 'auto', color: 'text.secondary' }}>{user.fullName}</Typography>
+          )}
         </Box>
         {route.view === 'graph' && <GraphPage />}
         {route.view === 'insights' && (

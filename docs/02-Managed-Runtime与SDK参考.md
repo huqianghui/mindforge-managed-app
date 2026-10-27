@@ -185,7 +185,7 @@ CLI 还会检测 `vite.config.ts` 里是否注册了名为 `managedApps` 或 `po
 
 | 能力 | 开关 | 备注 |
 |---|---|---|
-| App state（平台托管的按用户 / 共享数据） | `ms feature enable --name state`，`ms.config.json` 里 `state.enabled` | `ms project state add/alter/...` 定义 schema，`generate-code` 生成强类型服务。可替代 Dataverse 做阅读进度，但**实验性**，且不支持 `ms app dev` |
+| App state（平台托管的按用户 / 共享数据） | `ms feature enable --name state`，`ms.config.json` 里 `state.enabled` | `ms project state add/alter/...` 定义 schema，`generate-code` 生成强类型服务。按用户隔离要在 schema 里手加 `x-ms-ownership: perUser`（否则是共享集合）。走同源 `/.ms/state`，不经 Connector、不受 DLP 影响。**实验性**，`ms app dev` 里不可用。本项目阶段 4 已采用 |
 | Managed projects / 多环境部署 / 审批 | `projects`、`alm` | 一个人学习用不到 |
 
-阶段 4（个性化）建议先用 Dataverse 走通"标准做法"，再拿 state 做对比。
+阶段 4（个性化）原计划先用 Dataverse，但本租户 DLP 屏蔽了 Dataverse connector 的写入动作，最终用 App state 实现，过程与对比见 [04 · 阶段 4](04-新功能开发指南.md#阶段-4个性化sdk-getuser--app-state)。

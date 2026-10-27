@@ -8,13 +8,23 @@
 
 ## 功能一览
 
-顶部五个标签页：**文章导航**、**知识图谱**、**洞察**、**建议**、**演进**。截图来自 2026-10-27 的本地版本（`mindforge@8f2aa16`）。
+顶部六个标签页：**文章导航**、**知识图谱**、**洞察**、**建议**、**统计**、**演进**，右侧显示登录用户。截图来自 2026-10-27 的本地版本（`mindforge@8f2aa16`）。
 
 ### 文章导航 `#/doc/<path>`
 
 左侧是由同步路径自动生成的目录树：每个大类（笔记、Azure、论文、读书、产品、Wiki）有自己的图标与数量，当前文章所在的目录自动展开高亮；输入关键词时切换为全文标题搜索。右侧渲染 Markdown，站内链接、wikilink、图片都改写成应用内地址。
 
 ![文章导航](docs/images/screenshots/docs.png)
+
+### 阅读进度与收藏
+
+在 Managed App 里打开时，SDK `getUser()` 识别登录用户。文章右上角的星标用来收藏；滚动位置自动记录，再次打开时显示"上次读到 N% · 继续阅读"。左栏顶部列出**我的收藏**和**最近阅读**（各带进度），左下角显示同步状态。
+
+数据存放在平台托管的 **App state**（`state/schema.json`，集合 `readingState` 声明为 `x-ms-ownership: perUser`）。平台按登录身份隔离数据，前端不传用户 ID，也就无法读写别人的记录。浏览器本地另存一份：用 `npm run dev` 运行，或 App state 请求失败时，仍可在本机使用，并如实标明"仅保存在本机"。
+
+起初按路线图用 Dataverse 表实现，读取能走通，但公司租户的 DLP 屏蔽了 Dataverse connector 的写入动作，于是改用 App state。经过见 [04 新功能开发指南 · 阶段 4](docs/04-新功能开发指南.md#阶段-4个性化sdk-getuser--app-state)。
+
+![阅读进度与收藏](docs/images/screenshots/reading.png)
 
 ### 知识图谱 `#/graph`
 
@@ -66,7 +76,7 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 |---|---|---|
 | 访问 | 公开 | Entra 登录，按人/组分享 |
 | 内容 | README 导航 + 文章 + 知识图谱 | 同一份内容，从 mindforge 仓库同步 |
-| 能力 | 静态页面 | 可接 Connector（Copilot Studio agent、Azure OpenAI、SharePoint 等），可读取登录用户身份 |
+| 能力 | 静态页面 | 可接 Connector（Copilot Studio agent、Azure OpenAI、SharePoint 等），可读取登录用户身份，按用户保存数据（App state） |
 | 定位 | 公开知识库 | 学习与实验 Copilot Studio / Managed Runtime 开发 |
 
 ## 结构
@@ -75,7 +85,8 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 src/
   App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline）
   GraphPage.tsx        知识图谱（react-force-graph）
-  docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写
+  docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写；收藏、继续阅读、我的收藏 / 最近阅读
+  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
   suggestions/         建议页：rules.ts 里的固定规则与阈值生成"依据 + 动作"卡片，分行动/核查/提示三级，可跳到洞察页对应筛选
@@ -86,11 +97,15 @@ scripts/
   history.py           由 sync-content 调用：从 git 提交历史生成 history.json
   stats.py             由 sync-content 调用：字数、标签、系列、链接健康度 → stats.json
   release.sh           同步 → 本地构建 → 提交 → 推送 GitHub 与平台仓库 → deploy
+  setup-dataverse.py   阶段 4 的 Dataverse 对比实验：幂等创建发布者 mf、解决方案 Mindforge 与表 mf_readingstate
   keep-env-active.sh   刷新开发者环境的"最近活动"，防止因不活动被禁用（可装成每周定时任务）
 public/
   content/             同步生成：文章、图片（哈希命名）、manifest.json 与 history.json
   wiki-graph.json      同步生成：图谱数据
-ms.config.json         Managed Runtime 应用配置（appId、环境 ID、connectionReferences）
+state/
+  schema.json          App state 的集合定义（ms project state add 生成，perUser 需手改）
+  generated-typescript/  ms project state generate-code 生成的模型、校验与 Service（不要手改）
+ms.config.json         Managed Runtime 应用配置（appId、环境 ID、connectionReferences、state）
 ```
 
 ## 两个远端
@@ -148,6 +163,6 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 | 1 | 洞察页：按分类/类型/标签/置信度/状态/时间筛选；分类 → 节点 → Claim → 原文钻取；分布与趋势图表（`#/insights`，Claim 来源 77% 可跳回原文） | 纯前端；Recharts；筛选状态与图表联动 | ✅ |
 | 2 | 建议卡片：高置信却过时、大部分过时的节点、整体过时的分类、沿袭未落地的差距建议、低置信度、单一来源、未分类、样本太少的分类、孤立节点、近期更新（`#/suggestions`）；冲突 Claim 需语义判断，留给阶段 5/6 | 基于数据的规则，可解释、可复现 | ✅ |
 | 3 | 文档统计：文章与节点的提交时间线、Claims 健康度趋势、分类成长、差距报告与建议（演进页 `#/timeline`）；字数、标签分布、系列完成度、链接健康度（统计页 `#/stats`） | 构建期预计算 vs 运行期计算 | ✅ |
-| 4 | 个性化：读取登录用户，记录阅读进度与收藏 | SDK `getUser()`；Dataverse 表作为数据源 | ⬜ |
+| 4 | 个性化：读取登录用户，记录阅读进度与收藏，左栏我的收藏 / 最近阅读 | SDK `getUser()`；App state（按用户隔离）；Dataverse 表作对比，写入被租户 DLP 屏蔽 | ✅ |
 | 5 | Ask Copilot：在 Copilot Studio 中以文章为知识建 agent，应用经 Connector 调用并展示带引用的回答 | Copilot Studio agent 开发；`ms app add data-source`；连接身份与 DLP | ⬜ |
 | 6 | 对比：同样的问答改用 Azure OpenAI Connector + 前端检索 | 两种 AI 接入方式的取舍 | ⬜ |

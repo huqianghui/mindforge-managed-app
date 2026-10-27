@@ -14,5 +14,9 @@
   "connectionReferences": {},
   "appSettings": {
     "showHeader": true
+  },
+  "state": {
+    "schemaPath": "state/schema.json",
+    "enabled": true
   }
 }

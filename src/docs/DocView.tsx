@@ -9,6 +9,12 @@ import Chip from '@mui/material/Chip';
 import Link from '@mui/material/Link';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
+import Button from '@mui/material/Button';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
+import Star from '@mui/icons-material/Star';
+import StarBorder from '@mui/icons-material/StarBorder';
+import { updateReading, useReading } from '../platform/readingState';
 import type { ContentIndex } from './content';
 import { contentUrl, docHash, resolvePath, REPO_BLOB } from './content';
 
@@ -17,6 +23,10 @@ interface DocViewProps {
   path: string;
   anchor?: string;
 }
+
+// 顶部这一小段不算"读过"，回到顶部也不覆盖已有进度
+const MIN_PROGRESS = 0.02;
+const SCROLL_SAVE_MS = 600;
 
 interface FrontMatter {
   title?: string;
@@ -56,10 +66,13 @@ export default function DocView({ index, path, anchor }: DocViewProps) {
   const [error, setError] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const entry = index.byPath.get(path);
+  const reading = useReading();
+  const saved = reading.states.get(path);
+  const [ratio, setRatio] = useState(0);
+  const saveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
+  // 换文章时 DocsPage 以 key={path} 重新挂载本组件，状态无需手动重置
   useEffect(() => {
-    setText(null);
-    setError(false);
     if (!entry) return;
     fetch(contentUrl(entry.file))
       .then((res) => (res.ok ? res.text() : Promise.reject(res.status)))
@@ -73,6 +86,27 @@ export default function DocView({ index, path, anchor }: DocViewProps) {
     if (target) target.scrollIntoView();
     else scrollRef.current?.scrollTo(0, 0);
   }, [text, anchor]);
+
+  // 打开即记一次"最近阅读"
+  useEffect(() => {
+    if (text !== null) updateReading(path, {});
+  }, [text, path]);
+
+  useEffect(() => () => clearTimeout(saveTimer.current), []);
+
+  const scrollable = () => {
+    const el = scrollRef.current;
+    return el ? el.scrollHeight - el.clientHeight : 0;
+  };
+  const onScroll = () => {
+    const max = scrollable();
+    if (max <= 0 || text === null) return;
+    const r = Math.min(1, scrollRef.current!.scrollTop / max);
+    setRatio(r);
+    clearTimeout(saveTimer.current);
+    if (r >= MIN_PROGRESS) saveTimer.current = setTimeout(() => updateReading(path, { scroll: r }), SCROLL_SAVE_MS);
+  };
+  const showResume = text !== null && !anchor && saved && saved.scroll >= MIN_PROGRESS && ratio < MIN_PROGRESS;
 
   const [fm, body] = useMemo(() => (text ? splitFrontMatter(text) : [{ tags: [] }, '']), [text]);
   const source = useMemo(() => preprocess(body, index), [body, index]);
@@ -120,12 +154,24 @@ export default function DocView({ index, path, anchor }: DocViewProps) {
   }
 
   return (
-    <Box ref={scrollRef} sx={{ flex: 1, overflow: 'auto', bgcolor: '#fff' }}>
+    <Box ref={scrollRef} onScroll={onScroll} sx={{ flex: 1, overflow: 'auto', bgcolor: '#fff' }}>
       <Box sx={{ maxWidth: 960, mx: 'auto', px: { xs: 2, md: 5 }, py: 4 }}>
-        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-          {path} ·{' '}
-          <Link href={REPO_BLOB + path} target="_blank" rel="noreferrer">在 GitHub 查看</Link>
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', flex: 1 }}>
+            {path} ·{' '}
+            <Link href={REPO_BLOB + path} target="_blank" rel="noreferrer">在 GitHub 查看</Link>
+          </Typography>
+          {showResume && (
+            <Button size="small" variant="outlined" onClick={() => scrollRef.current?.scrollTo({ top: saved.scroll * scrollable(), behavior: 'smooth' })}>
+              上次读到 {Math.round(saved.scroll * 100)}% · 继续阅读
+            </Button>
+          )}
+          <Tooltip title={saved?.favorite ? '取消收藏' : '收藏'}>
+            <IconButton size="small" onClick={() => updateReading(path, { favorite: !saved?.favorite })} sx={{ color: saved?.favorite ? '#f9a825' : 'text.disabled' }}>
+              {saved?.favorite ? <Star fontSize="small" /> : <StarBorder fontSize="small" />}
+            </IconButton>
+          </Tooltip>
+        </Box>
         {fm.description && (
           <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary', lineHeight: 1.7 }}>
             {fm.description}

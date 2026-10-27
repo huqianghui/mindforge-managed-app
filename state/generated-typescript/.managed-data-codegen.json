@@ -1,0 +1,15 @@
+{
+  "generator": "@microsoft/managed-apps-codegen/managed-data",
+  "version": 1,
+  "files": [
+    ".managed-data-codegen.json",
+    "client.ts",
+    "index.ts",
+    "models/CommonModels.ts",
+    "models/ReadingStateModel.ts",
+    "query.ts",
+    "services/ReadingStateService.ts",
+    "validators/ReadingStateValidator.ts",
+    "validators/validationRuntime.ts"
+  ]
+}
