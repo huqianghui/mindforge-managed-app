@@ -8,6 +8,7 @@ import ListItemText from '@mui/material/ListItemText';
 import Typography from '@mui/material/Typography';
 import CircularProgress from '@mui/material/CircularProgress';
 import DocView from './DocView';
+import DocTree from './DocTree';
 import { docHash, HOME_DOC, useContentIndex } from './content';
 
 interface DocsPageProps {
@@ -64,6 +65,7 @@ export default function DocsPage({ path, anchor }: DocsPageProps) {
           <ListItemButton component="a" href={docHash(HOME_DOC)} selected={path === HOME_DOC}>
             <ListItemText primary="README · 文章导航" slotProps={{ primary: { sx: { fontWeight: 600 } } }} />
           </ListItemButton>
+          {!query.trim() && <DocTree docs={index.docs} current={path} />}
           {results.map((d) => (
             <ListItemButton key={d.path} component="a" href={docHash(d.path)} selected={d.path === path}>
               <ListItemText primary={d.title} secondary={d.path.split('/').slice(0, -1).join('/')} />
