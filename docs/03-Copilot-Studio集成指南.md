@@ -36,6 +36,7 @@
 
 ### 1. 建 agent
 
+- **必须选 Standard harness。** Copilot Studio Connector 的 `ExecuteCopilotAsyncV2` 只能调用 Standard harness 的 agent；2026-08 起新建 agent 默认是 GitHub Copilot harness，调用它只会拿到空的或占位的回复，且 harness 创建后不能互转。详见 [05 Harness 对比](05-Copilot-Studio-Harness对比.md#三能从-managed-app-调用哪个这一节决定方案)。
 - 环境选和应用相同的环境（不同环境也能调，`ExecuteCopilot` 有可选的 `environmentId` 参数，但同环境最省事）。
 - 指令（Instructions）建议写清三件事：只根据知识源回答；回答用中文；找不到就明确说"知识库里没有"，不要编。
 - 关掉"使用通用知识"（General knowledge / Web search），否则无法判断回答是否来自 mindforge。
@@ -154,7 +155,7 @@ Connector 还暴露了 agent 评测：`GetAgentMakerEvaluationTestSets`、`RunAg
 
 ## 验收清单
 
-- [ ] agent 已在同一环境发布，测试面板里回答带引用
+- [ ] agent 是 Standard harness，已在同一环境发布，测试面板里回答带引用
 - [ ] `ms connector list-actions` 显示 `ExecuteCopilotAsyncV2` 为 Allow
 - [ ] `ms app add data-source` 后，`ms.config.json` 与生成代码都已检查并提交
 - [ ] `ms app dev` 下能问答；`npm run dev` 下问答页显示"需在宿主中运行"而不是白屏

@@ -143,6 +143,7 @@ ms app add data-source --connector commondataserviceforapps --as action \
 | Office 365 Users | `shared_office365users` | 否 | 是 | 用户资料扩展 |
 | Azure AI Foundry Agent Service | `shared_azureagentservice` | **是** | 否 | 当前租户不可用 |
 | HTTP With Microsoft Entra ID | `shared_webcontentsv2` | **是** | 否 | 当前租户不可用，不能拿它当"万能后端" |
+| HTTP with Microsoft Entra ID (preauthorized) | `shared_webcontents` | 否 | 否 | 允许，但只能调用预先授权的资源，同样不是万能后端（见 [08](08-Connector全景.md)） |
 
 Copilot Studio Connector 的动作：
 
