@@ -23,7 +23,7 @@ src/
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写
   components/          图谱的筛选栏、节点面板、图例
-  timeline/            演进页：时间轴回放（按天播放、泳道蜂群图、点选看相关节点）、累计增长、每周活动、Claims 健康度、分类成长、差距报告与建议（Recharts，按需加载）
+  timeline/            演进页：知识之树（分形树随有内容的日子自动生长、台历翻页、鼠标移入看知识）、时间轴回放（泳道蜂群图）、累计增长、每周活动、Claims 健康度、分类成长、差距报告与建议（Recharts，按需加载）
 scripts/
   sync-content.py      从 mindforge 拉取内容到 public/content/
   history.py           由 sync-content 调用：从 git 提交历史生成 history.json
