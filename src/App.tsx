@@ -14,13 +14,20 @@ import './docs/markdown.css';
 // 图表库只在洞察页和演进页用到，单独拆包
 const TimelinePage = lazy(() => import('./timeline/TimelinePage'));
 const InsightsPage = lazy(() => import('./insights/InsightsPage'));
+const SuggestionsPage = lazy(() => import('./suggestions/SuggestionsPage'));
 
-type Route = { view: 'graph' } | { view: 'insights' } | { view: 'timeline' } | { view: 'doc'; path: string; anchor?: string };
+type Route =
+  | { view: 'graph' }
+  | { view: 'insights' }
+  | { view: 'suggestions' }
+  | { view: 'timeline' }
+  | { view: 'doc'; path: string; anchor?: string };
 
 // hash 路由：宿主以 iframe 加载应用，hash 不依赖服务端的路径回退规则
 function parseHash(hash: string): Route {
   if (hash.startsWith('#/graph')) return { view: 'graph' };
   if (hash.startsWith('#/insights')) return { view: 'insights' };
+  if (hash.startsWith('#/suggestions')) return { view: 'suggestions' };
   if (hash.startsWith('#/timeline')) return { view: 'timeline' };
   const m = hash.match(/^#\/doc\/([^?]+)(?:\?a=(.*))?$/);
   if (m) return { view: 'doc', path: decodeURIComponent(m[1]), anchor: m[2] ? decodeURIComponent(m[2]) : undefined };
@@ -46,6 +53,7 @@ export default function App() {
             <Tab value="doc" label="文章导航" component="a" href={`#/doc/${HOME_DOC}`} />
             <Tab value="graph" label="知识图谱" component="a" href="#/graph" />
             <Tab value="insights" label="洞察" component="a" href="#/insights" />
+            <Tab value="suggestions" label="建议" component="a" href="#/suggestions" />
             <Tab value="timeline" label="演进" component="a" href="#/timeline" />
           </Tabs>
         </Box>
@@ -53,6 +61,11 @@ export default function App() {
         {route.view === 'insights' && (
           <Suspense fallback={null}>
             <InsightsPage />
+          </Suspense>
+        )}
+        {route.view === 'suggestions' && (
+          <Suspense fallback={null}>
+            <SuggestionsPage />
           </Suspense>
         )}
         {route.view === 'timeline' && (
