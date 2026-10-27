@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import Box from '@mui/material/Box';
@@ -11,11 +11,15 @@ import DocsPage from './docs/DocsPage';
 import { HOME_DOC } from './docs/content';
 import './docs/markdown.css';
 
-type Route = { view: 'graph' } | { view: 'doc'; path: string; anchor?: string };
+// 图表库只在演进页用到，单独拆包
+const TimelinePage = lazy(() => import('./timeline/TimelinePage'));
+
+type Route = { view: 'graph' } | { view: 'timeline' } | { view: 'doc'; path: string; anchor?: string };
 
 // hash 路由：宿主以 iframe 加载应用，hash 不依赖服务端的路径回退规则
 function parseHash(hash: string): Route {
   if (hash.startsWith('#/graph')) return { view: 'graph' };
+  if (hash.startsWith('#/timeline')) return { view: 'timeline' };
   const m = hash.match(/^#\/doc\/([^?]+)(?:\?a=(.*))?$/);
   if (m) return { view: 'doc', path: decodeURIComponent(m[1]), anchor: m[2] ? decodeURIComponent(m[2]) : undefined };
   return { view: 'doc', path: HOME_DOC };
@@ -39,9 +43,16 @@ export default function App() {
           <Tabs value={route.view} sx={{ minHeight: 44, '& .MuiTab-root': { minHeight: 44 } }}>
             <Tab value="doc" label="文章导航" component="a" href={`#/doc/${HOME_DOC}`} />
             <Tab value="graph" label="知识图谱" component="a" href="#/graph" />
+            <Tab value="timeline" label="演进" component="a" href="#/timeline" />
           </Tabs>
         </Box>
-        {route.view === 'graph' ? <GraphPage /> : <DocsPage path={route.path} anchor={route.anchor} />}
+        {route.view === 'graph' && <GraphPage />}
+        {route.view === 'timeline' && (
+          <Suspense fallback={null}>
+            <TimelinePage />
+          </Suspense>
+        )}
+        {route.view === 'doc' && <DocsPage path={route.path} anchor={route.anchor} />}
       </Box>
     </ThemeProvider>
   );

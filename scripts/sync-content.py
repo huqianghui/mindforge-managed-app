@@ -21,6 +21,8 @@ import urllib.parse
 from datetime import datetime, timezone
 from pathlib import Path
 
+import history
+
 DOC_ROOTS = ("Notes/", "Azure/", "paper/", "book/", "product/", "wiki/")
 IMG_EXT = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp")
 RE_IMG_MD = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
@@ -53,12 +55,16 @@ def git(*args: str, cwd: Path | None = None) -> str:
 
 
 def checkout_source() -> Path:
+    # Full history without blobs: history.py needs every commit date, file contents
+    # are fetched on demand. Older caches were shallow clones, so replace those.
+    if (CACHE / ".git" / "shallow").exists():
+        shutil.rmtree(CACHE)
     if (CACHE / ".git").exists():
-        git("fetch", "--depth", "1", "origin", "main", cwd=CACHE)
+        git("fetch", "origin", "main", cwd=CACHE)
         git("reset", "--hard", "FETCH_HEAD", cwd=CACHE)
     else:
         CACHE.parent.mkdir(parents=True, exist_ok=True)
-        git("clone", "--depth", "1", SOURCE_REPO, str(CACHE))
+        git("clone", "--filter=blob:none", SOURCE_REPO, str(CACHE))
     return CACHE
 
 
@@ -101,6 +107,7 @@ def main() -> None:
     }
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
     shutil.copyfile(vault / "wiki" / "wiki-graph.json", APP_ROOT / "public" / "wiki-graph.json")
+    history.build(vault, docs, OUT / "history.json")
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
     print(f"{len(doc_entries)} docs, {len(assets)} images, {size // 1024} KB from mindforge@{commit} -> {OUT}")
 

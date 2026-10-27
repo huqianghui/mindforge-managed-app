@@ -25,3 +25,6 @@ dist-ssr
 
 # Content source cache (shallow clone of mindforge)
 .cache/
+
+# Python bytecode from scripts/
+__pycache__/
