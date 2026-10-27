@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import history
+import stats
 
 DOC_ROOTS = ("Notes/", "Azure/", "paper/", "book/", "product/", "wiki/")
 IMG_EXT = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp")
@@ -108,6 +109,7 @@ def main() -> None:
     (OUT / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
     shutil.copyfile(vault / "wiki" / "wiki-graph.json", APP_ROOT / "public" / "wiki-graph.json")
     history.build(vault, docs, OUT / "history.json")
+    stats.build(vault, docs, tracked_set, OUT / "stats.json")
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
     print(f"{len(doc_entries)} docs, {len(assets)} images, {size // 1024} KB from mindforge@{commit} -> {OUT}")
 

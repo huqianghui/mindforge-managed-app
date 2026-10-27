@@ -34,6 +34,12 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ![建议](docs/images/screenshots/suggestions.png)
 
+### 统计 `#/stats`
+
+同步时由 `scripts/stats.py` 预计算，前端只做聚合展示：总字数（中文按字、英文按词，不含代码块与链接地址）、按首次提交周分板块堆叠的字数累计、各板块篇数与篇均字数、最长的 10 篇、主题标签分布（大小写合并，去掉 wiki / concept 这类结构性标签）、**系列完成度**（文件名带"系列 NN"的文章，缺号以虚线标出，30 天内有新篇算进行中）和**链接健康度**（站内 / 外部 / 指向私有日记 / 坏链，坏链列出所在文章与目标）。
+
+![统计](docs/images/screenshots/stats.png)
+
 ### 演进 `#/timeline`：知识之树
 
 **时间**维度。一棵按固定种子生成的树从小苗开始，每翻过一个有内容的日子（右侧台历，共 106 页，含差距报告的日子）就长高、分叉一点，知识越多长得越快；文章和 wiki 节点是叶子，12 期知识差距报告是花。可选 1×–10× 速度。
@@ -67,16 +73,18 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ```text
 src/
-  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/timeline）
+  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
   suggestions/         建议页：rules.ts 里的固定规则与阈值生成"依据 + 动作"卡片，分行动/核查/提示三级，可跳到洞察页对应筛选
+  stats/               统计页：字数累计与分板块、最长文章、标签分布、系列完成度、链接健康度（读 stats.json）
   timeline/            演进页：知识之树（分形树随有内容的日子自动生长、台历翻页、鼠标移入看知识）、时间轴回放（泳道蜂群图）、累计增长、每周活动、Claims 健康度、分类成长、差距报告与建议（Recharts，按需加载）
 scripts/
   sync-content.py      从 mindforge 拉取内容到 public/content/
   history.py           由 sync-content 调用：从 git 提交历史生成 history.json
+  stats.py             由 sync-content 调用：字数、标签、系列、链接健康度 → stats.json
   release.sh           同步 → 本地构建 → 提交 → 推送 GitHub 与平台仓库 → deploy
   keep-env-active.sh   刷新开发者环境的"最近活动"，防止因不活动被禁用（可装成每周定时任务）
 public/
@@ -106,7 +114,7 @@ Managed Runtime 不能绑定个人 GitHub 仓库，所以源码推到两处：Gi
 
 文件改用路径哈希命名（避开中文文件名在打包与 URL 上的问题），`manifest.json` 记录原路径、标题和来源 commit。页面左下角显示当前内容对应的 `mindforge@<commit>`。
 
-同步时还会由 `scripts/history.py` 生成 `history.json`，**所有时间都取 GitHub 上的 commit 时间**：每篇文章 / wiki 节点的首次提交时间（跟随改名）与提交次数、按周的累计增长与活动、按周取样的 `wiki-graph.json` 快照（Claims active / stale、分类规模），以及 `wiki/knowledge-gap/` 各期报告和其中的学习建议（是否沿袭上期、点名的页面后来是否建出）。演进页 `#/timeline` 展示这些数据。首次同步需要克隆完整历史并读取约 20 个图谱快照，约一分多钟。
+同步时还会由 `scripts/history.py` 生成 `history.json`，**所有时间都取 GitHub 上的 commit 时间**：每篇文章 / wiki 节点的首次提交时间（跟随改名）与提交次数、按周的累计增长与活动、按周取样的 `wiki-graph.json` 快照（Claims active / stale、分类规模），以及 `wiki/knowledge-gap/` 各期报告和其中的学习建议（是否沿袭上期、点名的页面后来是否建出）。演进页 `#/timeline` 展示这些数据。首次同步需要克隆完整历史并读取约 20 个图谱快照，约一分多钟。随后 `scripts/stats.py` 生成 `stats.json`（约 100 KB）：每篇的字数、标签、链接统计（坏链按文章阅读器的规则解析相对链接与 wikilink，指向不公开日记的 `[[YYYY-MM-DD…]]` 单独算作私有）和系列编号，统计页 `#/stats` 展示。
 
 ## 本地开发与发布
 
@@ -139,7 +147,7 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 | 0 | README 导航、文章阅读、知识图谱 | `ms app init / build / deploy / share`、平台仓库与凭据 | ✅ |
 | 1 | 洞察页：按分类/类型/标签/置信度/状态/时间筛选；分类 → 节点 → Claim → 原文钻取；分布与趋势图表（`#/insights`，Claim 来源 77% 可跳回原文） | 纯前端；Recharts；筛选状态与图表联动 | ✅ |
 | 2 | 建议卡片：高置信却过时、大部分过时的节点、整体过时的分类、沿袭未落地的差距建议、低置信度、单一来源、未分类、样本太少的分类、孤立节点、近期更新（`#/suggestions`）；冲突 Claim 需语义判断，留给阶段 5/6 | 基于数据的规则，可解释、可复现 | ✅ |
-| 3 | 文档统计：文章与节点的提交时间线、Claims 健康度趋势、分类成长、差距报告与建议（演进页 `#/timeline`，已完成）；字数、标签分布、系列完成度、链接健康度（待做） | 构建期预计算 vs 运行期计算 | 🟡 |
+| 3 | 文档统计：文章与节点的提交时间线、Claims 健康度趋势、分类成长、差距报告与建议（演进页 `#/timeline`）；字数、标签分布、系列完成度、链接健康度（统计页 `#/stats`） | 构建期预计算 vs 运行期计算 | ✅ |
 | 4 | 个性化：读取登录用户，记录阅读进度与收藏 | SDK `getUser()`；Dataverse 表作为数据源 | ⬜ |
 | 5 | Ask Copilot：在 Copilot Studio 中以文章为知识建 agent，应用经 Connector 调用并展示带引用的回答 | Copilot Studio agent 开发；`ms app add data-source`；连接身份与 DLP | ⬜ |
 | 6 | 对比：同样的问答改用 Azure OpenAI Connector + 前端检索 | 两种 AI 接入方式的取舍 | ⬜ |
