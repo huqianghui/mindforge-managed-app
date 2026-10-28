@@ -12,11 +12,14 @@ import Alert from '@mui/material/Alert';
 import LinearProgress from '@mui/material/LinearProgress';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
+import MenuItem from '@mui/material/MenuItem';
+import Select from '@mui/material/Select';
 import { docHash, useContentIndex } from '../docs/content';
 import { useUser } from '../platform/user';
 import { askCopilot } from '../platform/copilot';
 import { askAgent } from '../platform/agent';
-import { AOAI_DEPLOYMENT, askAzureOpenAI } from '../platform/aoai';
+import { AOAI_DEFAULT, AOAI_DEPLOYMENTS, askAzureOpenAI } from '../platform/aoai';
+import type { AoaiDeployment } from '../platform/aoai';
 import { retrieve } from './retrieve';
 import type { Source } from './retrieve';
 import { buildPrompt, parseAnswer } from './prompt';
@@ -26,11 +29,24 @@ type Backend = 'workiq' | 'agent' | 'aoai';
 const BACKENDS: Record<Backend, string> = {
   workiq: 'Work IQ（M365 Copilot）',
   agent: 'Copilot Studio agent',
-  aoai: `Azure OpenAI（${AOAI_DEPLOYMENT}）`,
+  aoai: 'Azure OpenAI',
 };
+
+// 选中的部署只记在本机，读写失败（隐私模式等）时退回默认
+const DEPLOYMENT_KEY = 'mf-ask:aoai-deployment';
+function savedDeployment(): AoaiDeployment {
+  try {
+    const v = localStorage.getItem(DEPLOYMENT_KEY);
+    return (AOAI_DEPLOYMENTS as readonly string[]).includes(v ?? '') ? (v as AoaiDeployment) : AOAI_DEFAULT;
+  } catch {
+    return AOAI_DEFAULT;
+  }
+}
 
 interface Message {
   backend: Backend;
+  /** backend 为 aoai 时用的部署 */
+  deployment?: AoaiDeployment;
   question: string;
   sources: Source[];
   answer?: string;
@@ -59,6 +75,15 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
   const [messages, setMessages] = useState<Message[]>([]);
   const [busy, setBusy] = useState(false);
   const [backend, setBackend] = useState<Backend>('workiq');
+  const [deployment, setDeployment] = useState<AoaiDeployment>(savedDeployment);
+  const chooseDeployment = (d: AoaiDeployment) => {
+    setDeployment(d);
+    try {
+      localStorage.setItem(DEPLOYMENT_KEY, d);
+    } catch {
+      // 不可写时只在本次会话生效
+    }
+  };
   const [slow, setSlow] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const pinnedTitle = pinned ? content?.byPath.get(pinned)?.title : undefined;
@@ -79,7 +104,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
     let sources: Source[] = [];
     const update = (patch: Partial<Message>) =>
       setMessages((ms) => ms.map((m, i) => (i === ms.length - 1 ? { ...m, ...patch } : m)));
-    setMessages((ms) => [...ms, { backend, question: q, sources }]);
+    setMessages((ms) => [...ms, { backend, deployment: backend === 'aoai' ? deployment : undefined, question: q, sources }]);
     try {
       sources = await retrieve(q, content, pinned);
       update({ sources });
@@ -89,9 +114,9 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
       let raw: string;
       let usage: string | undefined;
       if (backend === 'aoai') {
-        const r = await askAzureOpenAI(prompt);
+        const r = await askAzureOpenAI(prompt, deployment);
         raw = r.text;
-        usage = `${r.model ?? AOAI_DEPLOYMENT} · 输入 ${r.promptTokens ?? '?'} / 输出 ${r.completionTokens ?? '?'} token`;
+        usage = `${r.model ?? deployment} · 输入 ${r.promptTokens ?? '?'} / 输出 ${r.completionTokens ?? '?'} token`;
       } else {
         raw = backend === 'agent' ? await askAgent(prompt) : await askCopilot(prompt);
       }
@@ -115,7 +140,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
           先在本应用里检索最相关的文章段落，再
           {backend === 'aoai'
-            ? `经 Azure OpenAI connector 直接调用部署 ${AOAI_DEPLOYMENT}（API Key 连接），只根据这些段落作答`
+            ? `经 Azure OpenAI connector 直接调用部署 ${deployment}（API Key 连接），只根据这些段落作答`
             : backend === 'agent'
               ? '经 Work IQ 以你的身份交给 Copilot Studio agent「Mindforge Ask」（Standard harness，可选模型；资料里没有时会查公开网络并标明）'
               : '经 Work IQ 以你的身份交给 Microsoft 365 Copilot，只根据这些段落作答'}
@@ -124,6 +149,18 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
         <ToggleButtonGroup size="small" exclusive value={backend} onChange={(_, v: Backend | null) => v && setBackend(v)} sx={{ mb: 2 }}>
           {(Object.keys(BACKENDS) as Backend[]).map((b) => <ToggleButton key={b} value={b} disabled={busy}>{BACKENDS[b]}</ToggleButton>)}
         </ToggleButtonGroup>
+        {backend === 'aoai' && (
+          <Select
+            size="small"
+            value={deployment}
+            onChange={(e) => chooseDeployment(e.target.value as AoaiDeployment)}
+            disabled={busy}
+            sx={{ ml: 1.5, mb: 2, minWidth: 180, verticalAlign: 'top' }}
+            inputProps={{ 'aria-label': 'Azure OpenAI 部署' }}
+          >
+            {AOAI_DEPLOYMENTS.map((d) => <MenuItem key={d} value={d}>{d}</MenuItem>)}
+          </Select>
+        )}
         {offHost && (
           <Alert severity="info" sx={{ mb: 2 }}>
             问答要通过平台 Connector 调用，需在 Managed App 中运行（线上或 <code>ms app dev</code>）。这里仍可试检索：提交后会列出检索到的资料。
@@ -153,7 +190,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
                   <Box sx={{ py: 1 }}>
                     <LinearProgress sx={{ mb: 1 }} />
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      {m.sources.length ? `已检索到 ${m.sources.length} 篇资料，等待 ${BACKENDS[m.backend]} 回答…` : '检索中…'}
+                      {m.sources.length ? `已检索到 ${m.sources.length} 篇资料，等待 ${BACKENDS[m.backend]}${m.deployment ? `（${m.deployment}）` : ''} 回答…` : '检索中…'}
                       {slow && i === messages.length - 1 && ' 仍在处理，经 Work IQ 的回答通常需要 15–35 秒。'}
                     </Typography>
                   </Box>
@@ -167,7 +204,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
                   <Box sx={{ mt: 1.5, pt: 1, borderTop: 1, borderColor: 'divider' }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       {m.answer !== undefined && m.related?.length ? '引用' : '检索到的资料'}
-                      {m.ms !== undefined && ` · ${(m.ms / 1000).toFixed(1)} 秒`} · {BACKENDS[m.backend]}
+                      {m.ms !== undefined && ` · ${(m.ms / 1000).toFixed(1)} 秒`} · {BACKENDS[m.backend]}{m.deployment && `（${m.deployment}）`}
                       {m.usage && ` · ${m.usage}`}
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>

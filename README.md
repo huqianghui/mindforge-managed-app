@@ -82,7 +82,7 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ![问答：Copilot Studio agent 后端](docs/images/screenshots/ask-agent.png)
 
-第三个后端 **Azure OpenAI**：经 Azure OpenAI connector 直接调用部署 `gpt-6.1-terra`，同一个问题约 5 秒（经 Work IQ 的两个后端要 15–35 秒），并显示模型版本和输入 / 输出 token。连接用 API Key（Entra 认证在本环境创建不了），部署名是每次调用的参数。对比与踩坑见 [04 · 阶段 6](docs/04-新功能开发指南.md#阶段-6azure-openai-connector直接调模型)。
+第三个后端 **Azure OpenAI**：经 Azure OpenAI connector 直接调用模型部署，旁边的下拉框可在 8 个对话部署（gpt-6.1 / gpt-6 / gpt-5.6 的 sol、terra、luna、astra）之间切换，选择记在本机。同一个问题约 4–8 秒（经 Work IQ 的两个后端要 15–35 秒），并显示模型版本和输入 / 输出 token。连接用 API Key（Entra 认证在本环境创建不了），部署名是每次调用的参数，不在连接里。对比与踩坑见 [04 · 阶段 6](docs/04-新功能开发指南.md#阶段-6azure-openai-connector直接调模型)。
 
 ![问答：Azure OpenAI 后端](docs/images/screenshots/ask-aoai.png)
 
@@ -104,7 +104,7 @@ src/
   App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline、#/ask?q=&doc=）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写；收藏、继续阅读、我的收藏 / 最近阅读
-  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析，可带 agentId）、agent.ts（Copilot Studio agent 的 agentId）、aoai.ts（Azure OpenAI 部署与 api-version）
+  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析，可带 agentId）、agent.ts（Copilot Studio agent 的 agentId）、aoai.ts（Azure OpenAI 可选部署列表与 api-version）
   ask/                 问答页：retrieve.ts（本地检索与段落摘录）、prompt.ts（提示词与 RELATED 解析）、AskPage.tsx
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
