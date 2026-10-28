@@ -38,7 +38,7 @@ function answerOf(text: string, prompt: string): string {
   return body;
 }
 
-/** agentId：交给指定的 Microsoft 365 Copilot agent 回答（copilot_chat 的可选参数）；不传则由 M365 Copilot 本体回答 */
+/** agentId：copilot_chat 的可选参数，文档说是交给指定 agent；实测被忽略，传不传都由 M365 Copilot 本体回答 */
 export async function askCopilot(message: string, agentId?: string): Promise<string> {
   const id = crypto.randomUUID();
   const res = await WorkIQ.mcp_m365copilot(undefined, {

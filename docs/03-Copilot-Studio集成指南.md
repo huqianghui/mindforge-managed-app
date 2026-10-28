@@ -1,7 +1,7 @@
 # 03 Copilot Studio 集成指南
 
 > 对应路线图第 5 阶段 "Ask Copilot"。依据：Copilot Studio Connector 官方参考（<https://learn.microsoft.com/en-us/connectors/microsoftcopilotstudio/>，2026-07-11 版）与本租户 `ms connector list-actions` 结果。
-> **现状（2026-10-28）**：阶段 5 已实现两个后端：Work IQ（M365 Copilot 本体）与 Copilot Studio Standard agent「Mindforge Ask」。**下文「第二步：在应用里接 Connector」的方案实测走不通**（`ExecuteCopilotAsyncV2` 要求回调地址），保留作记录；实际可用的做法见文末[实测：从 managed app 调用 Standard agent](#实测从-managed-app-调用-standard-agent2026-10-28)。
+> **现状（2026-10-28）**：建好并发布了 Standard agent「Mindforge Ask」，但**从 managed app 里调不到它**：下文「第二步：在应用里接 Connector」的方案要求回调地址，走不通；改用 Work IQ `copilot_chat` 传 `agentId`，复测发现 agentId 被忽略，回答其实来自 M365 Copilot 本体。过程与对照实验见文末[实测：从 managed app 调用 Standard agent](#实测从-managed-app-调用-standard-agent2026-10-28)。
 > 标 **〔待实测〕** 的地方是文档没写清楚、需要在租户里跑一次才能确认的行为。
 
 ## 整体链路
@@ -251,64 +251,38 @@ Publish 按钮是灰的，悬停提示 "You need to configure at least one chann
 
 所以已从应用里移除这个数据源（`ms app remove data-source --name microsoftcopilotstudio`），免得用户首次打开时多一个授权项。
 
-### 5. 调用：Work IQ `copilot_chat` + `agentId` 可行
+### 5. 调用：Work IQ `copilot_chat` + `agentId`：**实测不生效**（2026-10-28 更正）
 
-完整链路：
-
-```text
-问答页（选 Copilot Studio agent）
-  │ ① 应用内检索 search.json → 取 5 篇文章的相关段落，拼成提示词（带 SOURCES 和规则）
-  ▼
-Work IQ Copilot MCP connector（shared_a365copilotchatmcp，以当前用户身份）
-  │ ② JSON-RPC tools/call: copilot_chat
-  │    arguments: { message: 提示词, agentId: "T_c7f66753-…" }
-  ▼
-Graph Copilot Chat API → Microsoft 365 Copilot
-  │ ③ 看到 agentId，把这一轮交给 M365 Copilot 里的 agent「Mindforge Ask」
-  ▼
-Mindforge Ask（Copilot Studio Standard harness，模型 GPT Chat Latest）
-  │ ④ 按它的指令：先用 SOURCES 回答；没有答案才用 Web Search（Bing）上网，并标明来源
-  ▼
-返回：外层 JSON（回显 agentId）→ rawResponse 里最后一条消息就是回答
-  │ ⑤ 应用解析 [n] / RELATED，渲染成原文链接；网页引用显示为外链
-```
-
-**Work IQ 和 Web IQ 别混淆**：两者名字相近，在 5b 里分工不同。
-
-| | 在 5b 里做什么 | 谁调用 |
-|---|---|---|
-| **Work IQ**（Copilot MCP connector 的 `copilot_chat`） | 把问题**送进** Microsoft 365 Copilot，`agentId` 决定交给哪个 agent | 应用 |
-| **Web IQ / Bing**（agent 的 Web Search 开关，Grounding with Bing Search） | agent **内部**在资料里没有答案时查公开网络 | agent 自己，应用不直接调用 |
-
-**5a 与 5b 是同一个 connector、同一个工具**，代码上的唯一区别是多传一个 `agentId`（`src/platform/agent.ts`）：
-
-| | 5a：不传 agentId | 5b：传 agentId |
-|---|---|---|
-| 谁回答 | Microsoft 365 Copilot 本体 | Copilot Studio 里配置的「Mindforge Ask」 |
-| 模型 | M365 Copilot 自动路由，不可选 | 在 agent 里选 |
-| 上网 | 不（返回 `webSearchEnabled: false`） | agent 开着 Web Search |
-
-前提：发布 agent 时勾选 **"Make agent available in Microsoft 365 Copilot"**，它才会成为 M365 Copilot 里的 agent，才有 `T_…` titleId（渠道面板 "See agent in Teams" 打开的 `teams.microsoft.com/l/app/?titleId=…` 链接里取）。之所以绕道 M365 Copilot，是因为 Copilot Studio 自己的 `ExecuteCopilotAsyncV2` 是回调式的，浏览器里的 managed app 收不到回调（见上一小节）。
-
-具体做法：
-
-发布时勾选了 "Make agent available in Microsoft 365 Copilot"，agent 就成了 M365 Copilot 里的一个 agent。渠道面板 "See agent in Teams" 打开的链接是 `https://teams.microsoft.com/l/app/?titleId=T_c7f66753-0f26-f573-96fc-f7e374b762a3`，把这个 `T_…` titleId 当 `agentId` 传给 `copilot_chat`：
+最初的设想是：发布时勾选 **"Make agent available in Microsoft 365 Copilot"**，agent 就成了 M365 Copilot 里的 agent，有 `T_…` titleId（渠道面板 "See agent in Teams" 的链接、或 Dataverse `bots.applicationmanifestinformation.microsoft365.titleId` 里都能取到），再把它当 `agentId` 传给 `copilot_chat`：
 
 ```ts
 params: { name: 'copilot_chat', arguments: { message: prompt, agentId: 'T_c7f66753-0f26-f573-96fc-f7e374b762a3' } }
 ```
 
-返回结构与不带 agentId 时相同（`rawResponse` 里的 copilotConversation），外层多回显一个 `agentId`。判断确实是 agent 在答：问"Microsoft Web IQ 是什么"这种知识库里没有的问题，回答以"知识库里没有相关内容，以下来自公开网络："开头，并引用了 learn.microsoft.com 的 Web IQ 页面。这是 Mindforge Ask 的指令和 Web Search 的效果；不带 agentId 时 M365 Copilot 本体的 `webSearchEnabled` 是 `false`，不会这样答。
+2026-10-27 的判断是"可行"，依据是回答带了"知识库里没有相关内容，以下来自公开网络："和 learn.microsoft.com 引用。**这个判断错了**：那句话和 `[n]` / `RELATED` 格式都是我们自己的提示词要求的，M365 Copilot 本体照样会遵守；而且不传 agentId 时它同样会查网页（见下表），`webSearchEnabled: false` 并不代表不上网。
 
-![问答页：Copilot Studio agent 后端，网页引用与知识库引用并存](images/screenshots/ask-agent.png)
+2026-10-28 重新做了对照：用**不带任何格式要求的裸问题**，看回答里有没有只有 agent 指令才会产生的特征。
 
-| | Work IQ（M365 Copilot 本体） | Copilot Studio agent（经 Work IQ + agentId） |
+| 调用方式 | 问题 | 回答特征 |
 |---|---|---|
-| 模型 | M365 Copilot 自动路由，不可选 | 在 agent 里选（当前 GPT Chat Latest） |
-| 资料外的问题 | 只能说"知识库里没有" | 查公开网络并标明，网页引用是外链数字、知识库引用是 `[n]` |
-| 实测耗时 | 15–26 秒 | 31–36 秒（多一次网页检索） |
-| 首次授权 | Work IQ 连接 | 同一个连接，不需要额外授权 |
-| 维护 | 无 | agent 在 Copilot Studio，指令、模型改完要重新发布 |
+| M365 Copilot 网页里直接打开 agent「Mindforge Ask」 | 澳大利亚的首都是哪里？ | "澳大利亚的首都是堪培拉（Canberra）。" + **`RELATED: none`**（agent 指令要求每个回答以 RELATED 行结尾） |
+| Work IQ，`agentId: T_c7f66753-…` | 同上，3 次 | 加粗、emoji、"很多人会误以为是悉尼…"，**都没有 RELATED 行** |
+| Work IQ，`agentId: T_c7f66753-….a657ca87-…`（M365 Copilot 网页里这个 agent 的完整 id） | 同上，2 次 | 同上，没有 RELATED |
+| Work IQ，不传 agentId | 同上 | 与传 agentId 时无法区分 |
+| Work IQ，不传 / 传 agentId | Microsoft Web IQ 是什么？ | 两者都引用了 13–15 个 learn.microsoft.com 等网页链接，`webSearchEnabled` 都是 `false`，都没有 agent 指令规定的开头句和 RELATED 行 |
 
-另一个发现：返回的外层还有 `fileUris` / `autoExtractedFileUris`，是 Work IQ **自动从提示词里的网址**（文章摘录里的链接）提取出来、作为 grounding 资料交给 Copilot 的。这可能拖慢回答，也可能带来摘录之外的内容；如需严格只依据摘录，可在拼提示词前去掉摘录里的网址。〔待实测：去掉后的延迟与回答变化〕
+另外 Work IQ 对**任意** agentId 都返回成功并原样回显（包括随手编的 `T_<任意 GUID>`），不报错。所以"外层回显了 agentId"不能当作路由成功的证据。
+
+![M365 Copilot 里直接问 agent：回答以 RELATED: none 结尾](images/m365-agent-direct-related.png)
+
+**结论**：至少在本租户、当前版本，`copilot_chat` 的 `agentId` 参数被忽略，回答来自 M365 Copilot 本体，agent 的指令、模型、Web Search 设置都没有用上。问答页的"Copilot Studio agent"后端其实等于"Work IQ + 允许上网的提示词"。Copilot Chat（声明式）agent 的结果相同，见 [05](05-Copilot-Studio-Harness对比.md)。目前从浏览器里的 managed app **没有能同步调用 Copilot Studio agent 的路**：Copilot Studio Connector 是回调式（上一小节），Work IQ 忽略 agentId。
+
+**Work IQ 和 Web IQ 别混淆**：
+
+| | 做什么 | 谁调用 |
+|---|---|---|
+| **Work IQ**（Copilot MCP connector 的 `copilot_chat`） | 把问题**送进** Microsoft 365 Copilot | 应用 |
+| **Web IQ / Bing**（agent 的 Web Search 开关，Grounding with Bing Search） | agent **内部**在资料里没有答案时查公开网络 | agent 自己，应用不直接调用 |
+
+返回的外层还有 `fileUris` / `autoExtractedFileUris`：Work IQ **自动从提示词里的网址**提取 grounding 资料。实测后已在提示词里去掉摘录中的网址，见 [04 · 阶段 5 实验](04-新功能开发指南.md#实验提示词里的网址2026-10-28)。
 

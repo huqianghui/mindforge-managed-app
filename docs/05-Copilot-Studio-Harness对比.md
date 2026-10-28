@@ -22,10 +22,13 @@ Agents 页 **New agent** 右侧的下拉菜单（截图 2026-10-27，环境 Qian
 |---|---|---|---|---|
 | **Agent**（GitHub Copilot）——"Optimize your business processes"下唯一一项，也是 New agent 按钮的默认动作 | GitHub Copilot harness | Agent | 有硬币图标：Copilot Credits，构建、测试、运行都算 | ❌ |
 | **Customer Assist Agent**（Customer conversation） | **Customer Conversation harness**（预览） | Customer Assist Agent | 有硬币图标：Copilot Credits | 文档未提，〔待实测〕；它面向网站聊天和电话号码渠道 |
-| **Microsoft Copilot agent**（Copilot chat），点击后在新标签页打开 | Copilot Chat harness | 运行在 Microsoft 365 Copilot Chat 里的 agent | 包含在 M365 Copilot 许可内 | ❌（只在 Copilot Chat 里用） |
-| **Agent**（Standard）——"Other ways to build"下最后一项 | Standard harness | 经典 agent | 列表里写着 "Included with your Microsoft 365 Copilot license at no additional credit cost"，Credit usage 显示 N/A | 经 Copilot Studio Connector ❌（`ExecuteCopilotAsyncV2` 是回调式）；发布到 M365 Copilot 后经 Work IQ `copilot_chat` + `agentId` ✅，**本项目阶段 5b 用这个** |
+| **Microsoft Copilot agent**（Copilot chat），点击后在新标签页打开 | Copilot Chat harness | 运行在 Microsoft 365 Copilot Chat 里的 agent | 包含在 M365 Copilot 许可内 | ❌（只在 Copilot Chat 里用；经 Work IQ `agentId` 也实测无效） |
+| **Agent**（Standard）——"Other ways to build"下最后一项 | Standard harness | 经典 agent | 列表里写着 "Included with your Microsoft 365 Copilot license at no additional credit cost"，Credit usage 显示 N/A | 经 Copilot Studio Connector ❌（`ExecuteCopilotAsyncV2` 是回调式）；发布到 M365 Copilot 后经 Work IQ `copilot_chat` + `agentId` ❌（agentId 被忽略，回答来自 M365 Copilot 本体；2026-10-28 复测更正） |
 
-**Copilot Chat agent 的 ❌ 只指"不能经 Copilot Studio Connector 调用"。** 它是挂在 Microsoft 365 Copilot Chat 里的声明式 agent，由 M365 Copilot 的编排器执行，不在 Copilot Studio 运行时里，所以 `ExecuteCopilotAsyncV2` 调不到它。程序进入 M365 Copilot 只有 Graph Copilot Chat API 这一个入口，而阶段 5a 用的 Work IQ `copilot_chat` 包装的正是这个 API。它有一个可选参数 `agentId`（"Agent ID for the Microsoft Copilot conversation"），按道理可以经同一条链路把问题交给指定的 Copilot Chat agent：应用 → Work IQ connector → `copilot_chat`（带 agentId）→ Graph Chat API → 该 agent。2026-10-28 实测：Standard agent 发布到 Microsoft 365 Copilot 渠道后，用它的 titleId（`T_…`）作 agentId 可以调通，见 [03 · 实测](03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)；Copilot Chat agent 本身应同理，未单独验证。对本项目价值不大：这类 agent 的长处是挂 SharePoint 等企业知识，而 mindforge 内容在 GitHub、资料由应用检索后写进提示词；模型也仍由 M365 Copilot 决定。
+**Copilot Chat agent 的 ❌ 只指"不能经 Copilot Studio Connector 调用"。** 它是挂在 Microsoft 365 Copilot Chat 里的声明式 agent，由 M365 Copilot 的编排器执行，不在 Copilot Studio 运行时里，所以 `ExecuteCopilotAsyncV2` 调不到它。程序进入 M365 Copilot 只有 Graph Copilot Chat API 这一个入口，而阶段 5a 用的 Work IQ `copilot_chat` 包装的正是这个 API。它有一个可选参数 `agentId`（"Agent ID for the Microsoft Copilot conversation"），按道理可以经同一条链路把问题交给指定的 Copilot Chat agent：应用 → Work IQ connector → `copilot_chat`（带 agentId）→ Graph Chat API → 该 agent。2026-10-28 实测：**agentId 不生效**。Standard agent「Mindforge Ask」和新建的 Copilot Chat agent「Mindforge Ask Lite」（titleId `T_cbd8f8f5-…`）都试了，短 titleId 和 M365 Copilot 网页里的完整 id（`T_….<id>` / `T_….<id>.gpt.default`）都试了：调用都成功、agentId 原样回显，但回答与不传 agentId 时无法区分，agent 指令规定的输出特征（如 `RELATED` 行）只在 M365 Copilot 网页里直接用 agent 时出现。对照表见 [03 · 实测 §5](03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)。对本项目价值不大：这类 agent 的长处是挂 SharePoint 等企业知识，而 mindforge 内容在 GitHub、资料由应用检索后写进提示词；模型也仍由 M365 Copilot 决定。
+
+![Copilot Chat agent「Mindforge Ask Lite」的配置页：Instructions、Knowledge、Capabilities，没有选模型的地方](images/copilot-chat-agent-configure.png)
+
 
 **有没有专门给语音用的？** 没有单独的语音 harness。最接近的是 **Customer Assist Agent**：它的描述是 "Answer questions and resolve issues for your customers over chat and voice"，同一个 agent 既能挂到网站上聊天，也能分配电话号码接听来电，指令里可以分别写 Speech 和 Chat 两种模态的要求。架构上是一个主 agent 加若干专门的子 agent，每个子 agent 都有自己的升级路径，答不了时转人工，像联络中心的不同队列。它的定位是**面向外部客户的服务**，不是给个人做语音助手的。列表里那个叫 "Voice Assistant" 的旧 agent 是 Standard harness，名字只是名字。
 
@@ -85,9 +88,9 @@ Agents 页 **New agent** 右侧的下拉菜单（截图 2026-10-27，环境 Qian
 
 | harness | Copilot Studio Connector（`ExecuteCopilotAsyncV2`） | 其他调用方式 |
 |---|---|---|
-| Standard | ⚠️ 浏览器里的 managed app **用不了**：动作要求回调地址 `notificationUrl`（为 Power Automate 设计），不传返回 400 "Invalid request body"；草稿 agent 则被重定向到门户页面、被 CORS 拦下（2026-10-28 实测） | 发布到 M365 Copilot 后经 Work IQ `copilot_chat` 的 `agentId` ✅；Direct Line、Copilot Studio client SDK（受 CSP 与渠道策略限制） |
+| Standard | ⚠️ 浏览器里的 managed app **用不了**：动作要求回调地址 `notificationUrl`（为 Power Automate 设计），不传返回 400 "Invalid request body"；草稿 agent 则被重定向到门户页面、被 CORS 拦下（2026-10-28 实测） | 发布到 M365 Copilot 后经 Work IQ `copilot_chat` 的 `agentId`：❌ 实测被忽略；Direct Line、Copilot Studio client SDK（受 CSP 与渠道策略限制） |
 | GitHub Copilot | ❌ **不支持**。官方已在 PowerAppsCodeApps 仓库确认为已知限制，暂无时间表；Power Automate 文档也写明连接器不能调用这类 agent | 只能在 Copilot Studio **workflow** 的 agent 节点里调；社区有自建自定义连接器调用"agentic runtime"的做法，非官方支持 |
-| Copilot Chat | 不适用（它扩展的是 M365 Copilot Chat） | Work IQ `copilot_chat` 的 `agentId`（同上一行的路径，未单独验证） |
+| Copilot Chat | 不适用（它扩展的是 M365 Copilot Chat） | Work IQ `copilot_chat` 的 `agentId`：❌ 实测被忽略（2026-10-28） |
 
 ### GitHub Copilot harness 的 agent 发布到哪里
 
@@ -116,7 +119,7 @@ Agents 页 **New agent** 右侧的下拉菜单（截图 2026-10-27，环境 Qian
 结论：
 
 - **managed app 里做 Ask Copilot，如果走 Copilot Studio agent，就必须建 Standard harness 的 agent。** 而新建默认是 GitHub Copilot harness，一不留神就会建错，调用时只拿到空的或占位的回复。
-- **而且即使是 Standard，也不能经 Copilot Studio Connector 调**（回调式，见上表）。可行的路径是：发布时勾选 "Make agent available in Microsoft 365 Copilot"，再经 Work IQ `copilot_chat` 传 `agentId`。
+- **而且即使是 Standard，也不能经 Copilot Studio Connector 调**（回调式，见上表）。曾以为可以发布到 Microsoft 365 Copilot 后经 Work IQ `copilot_chat` 传 `agentId`，复测证明 agentId 被忽略。目前浏览器里的 managed app 没有同步调用 Copilot Studio agent 的路。
 - 已经写好的 [03 Copilot Studio 集成指南](03-Copilot-Studio集成指南.md) 已按这一点修正。
 
 ## 四、对本项目的意义
@@ -127,11 +130,11 @@ Agents 页 **New agent** 右侧的下拉菜单（截图 2026-10-27，环境 Qian
 |---|---|---|
 | 任务重量 | 一问一答，有边界的知识源 | Standard |
 | 可预测性 | 希望"只根据文章答，答不出就说没有" | Standard |
-| 调用路径 | 要从 managed app 里调 | **只能 Standard** |
+| 调用路径 | 要从 managed app 里调 | 实测**哪种都调不到**（Connector 回调式，Work IQ 忽略 agentId） |
 | 费用 | 个人学习，希望可控 | Standard（或 Copilot Chat） |
 | 文件生成、长任务 | 不需要 | — |
 
-**所以第 5 阶段用 Standard harness。** GitHub Copilot harness 留给以后真有"重活"时再试，比如：定时扫描 mindforge 的 stale Claim、生成一份周报 Word 文档。那时它通过 workflow 跑在后台，和 managed app 解耦。
+**所以第 5 阶段建的是 Standard harness**，但 2026-10-28 复测发现从 managed app 调不到它，应用里的问答实际只用 Work IQ 和 Azure OpenAI。 GitHub Copilot harness 留给以后真有"重活"时再试，比如：定时扫描 mindforge 的 stale Claim、生成一份周报 Word 文档。那时它通过 workflow 跑在后台，和 managed app 解耦。
 
 还有第四条路不经过 Copilot Studio agent：**直接调 Microsoft 365 Copilot / Work IQ**。截图里那个参考应用的 Ask Copilot 底部写着 "Microsoft 365 Copilot, under your own sign-in"，看起来就是这条路。它和 harness 的取舍，放到下一篇讲 Connector 时一起对比。
 

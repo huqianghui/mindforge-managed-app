@@ -13,7 +13,7 @@
 | [08 Connector 全景](08-Connector全景.md) | Connector 与连接的区别、连接引用、数据源；在哪里看和配置；属性与费用；本租户可用目录；app、agent、workflow 用法的区别；参考应用只用两个 Connector 的实例；附 Copilot Studio 与 Power Platform 的关系 | 选数据源或 AI 接入方式之前 |
 | [09 环境与自定义 Connector](09-环境与自定义Connector.md) | 环境的概念、类型、本项目环境的实况与不活动清理规则、创建与 ALM；用自定义 Connector 接自己的 API（本租户被阻止） | 要分开发 / 生产，或要接自己的后端时 |
 | [10 参考应用拆解与功能模式](10-参考应用拆解与功能模式.md) | 逐页拆解 CSU Investment Insights；Ask Copilot 经 Work IQ Copilot MCP 的完整调用链与提示词结构；九个可复用模式及其在本项目的对应 | 设计具体页面和 AI 问答之前 |
-| [11 方案讨论](11-方案讨论.md) | 问答三个后端（Work IQ / agent / Azure OpenAI）怎么选；App state 与 Dataverse；Connector 接入检查清单；哪些功能离不开平台；未定论的问题 | 做类似功能、需要在几种做法之间选择时 |
+| [11 方案讨论](11-方案讨论.md) | 问答后端怎么选（Work IQ / Azure OpenAI；Copilot Studio agent 为何调不到）；App state 与 Dataverse；Connector 接入检查清单；哪些功能离不开平台；未定论的问题 | 做类似功能、需要在几种做法之间选择时 |
 
 文中 **〔待实测〕** 标记的是官方文档没写清、需要在租户里跑一次才能确认的行为；实测后请把结论回填，去掉标记。
 

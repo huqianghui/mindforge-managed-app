@@ -145,7 +145,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
           {backend === 'aoai'
             ? `经 Azure OpenAI connector 直接调用部署 ${deployment}（API Key 连接），只根据这些段落作答`
             : backend === 'agent'
-              ? '经 Work IQ 以你的身份交给 Copilot Studio agent「Mindforge Ask」（Standard harness，可选模型；资料里没有时会查公开网络并标明）'
+              ? '经 Work IQ 发给 Microsoft 365 Copilot，并带上 Copilot Studio agent「Mindforge Ask」的 agentId；实测 agentId 被忽略，回答仍来自 M365 Copilot 本体，只是提示词允许资料外查公开网络并标明'
               : '经 Work IQ 以你的身份交给 Microsoft 365 Copilot，只根据这些段落作答'}
           ；[n] 与下方引用都能直接打开原文。
         </Typography>
