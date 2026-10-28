@@ -21,6 +21,7 @@ import {
   YAxis,
 } from 'recharts';
 import { docHash, useContentIndex } from '../docs/content';
+import { askHref } from '../ask/askLink';
 import { NODE_COLORS, NODE_TYPE_LABELS, RELATION_COLORS, RELATION_TYPE_LABELS } from '../theme';
 import { useWikiGraph } from '../timeline/history';
 import { apply, EMPTY, flatten, norm, parseFilters, stringifyFilters, toggle } from './claims';
@@ -287,6 +288,7 @@ export default function InsightsPage() {
                           ) : (
                             <Typography variant="caption" sx={{ color: 'text.secondary' }}>来源：{c.source}</Typography>
                           )}
+                          <Link href={askHref(`这条 Claim 现在还成立吗？有没有更新的证据？\n「${c.statement}」（${current.title}，来源：${c.source}，更新于 ${c.lastUpdated}）`, src)} variant="caption">问 Copilot →</Link>
                         </Box>
                       </Box>
                     );

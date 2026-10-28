@@ -10,6 +10,7 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { docHash, useContentIndex } from '../docs/content';
 import { useHistory, useWikiGraph } from '../timeline/history';
 import { stringifyFilters } from '../insights/claims';
+import { askHref } from '../ask/askLink';
 import { buildSuggestions, insightsHref } from './rules';
 import type { Level, Suggestion } from './rules';
 
@@ -18,6 +19,12 @@ const LEVELS: Record<Level, { label: string; color: string; bg: string; hint: st
   check: { label: '核查', color: '#ef6c00', bg: '#fff3e0', hint: '需要补证据或确认' },
   note: { label: '提示', color: '#1565c0', bg: '#e3f2fd', hint: '了解即可，顺手处理' },
 };
+
+// 预填到问答页的问题：建议本身 + 依据 + 前几个涉及对象，用户可改了再发
+function askQuestion(s: Suggestion): string {
+  const targets = s.targets.slice(0, 5).map((t) => t.label).join('、');
+  return `知识库给出这条建议：「${s.title}」。依据：${s.evidence}${targets ? `涉及：${targets}。` : ''}该怎么处理？先做哪一步？`;
+}
 
 function Card({ s, hrefOf }: { s: Suggestion; hrefOf: (t: Suggestion['targets'][number]) => string | null }) {
   const lv = LEVELS[s.level];
@@ -53,6 +60,7 @@ function Card({ s, hrefOf }: { s: Suggestion; hrefOf: (t: Suggestion['targets'][
       <Box sx={{ display: 'flex', gap: 1, mt: 'auto', pt: 0.5 }}>
         {s.insights && <Button size="small" variant="outlined" href={insightsHref(s.insights, stringifyFilters)}>在洞察中查看 →</Button>}
         {s.link && <Button size="small" href={s.link.href}>{s.link.label} →</Button>}
+        <Button size="small" href={askHref(askQuestion(s))}>问 Copilot →</Button>
       </Box>
     </Paper>
   );
