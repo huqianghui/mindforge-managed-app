@@ -117,7 +117,7 @@ scripts/
   stats.py             由 sync-content 调用：字数、标签、系列、链接健康度 → stats.json
   search.py            由 sync-content 调用：问答用的每篇摘要索引 → search.json（也可单独运行）
   release.sh           同步 → 本地构建 → 提交 → 推送 GitHub 与平台仓库 → deploy
-  setup-dataverse.py   阶段 4 的 Dataverse 对比实验：幂等创建发布者 mf、解决方案 Mindforge 与表 mf_readingstate
+  setup-dataverse.py   阶段 4 的 Dataverse 对比实验：幂等创建发布者 mf、解决方案 Mindforge 与表 mf_readingstate（表已于 2026-10-28 清理，重跑脚本可重建）
   keep-env-active.sh   刷新开发者环境的"最近活动"，防止因不活动被禁用（可装成每周定时任务）
 public/
   content/             同步生成：文章、图片（哈希命名）、manifest.json 与 history.json
