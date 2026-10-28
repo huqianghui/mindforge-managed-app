@@ -60,7 +60,13 @@ agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，sche
 
 **显示名截断到 100 个字符。** 4 个文件名超长被截短，其中两篇「A Survey of Context Engineering…」截断后同名。文件内容不受影响，只是引用里看起来一样；以后可以在导出脚本里缩短这类文件名。
 
-**索引耗时。** 上传完 20 多分钟后，所有文件仍是 In progress，测试面板回答 "No information was found that could help answer this."。〔待实测：405 个文件全部变成 Ready 要多久〕
+**索引一直不完成（未解决）。** 上传后两个多小时，405 个文件全是 In progress，测试面板检索返回 "No information was found that could help answer this."。排查记录：
+
+- 环境的 Dataverse search 原本是关的（`organizations.isexternalsearchindexenabled = false`）。21:33 用 Web API 改成 `true`，PPAC → Settings → Features 随即显示 "Dataverse search: On"；`GET /api/data/v9.2/copilottextdatastatus` 返回 `status: provisioned`。
+- 改完之后新传一个小文件 `zz-index-probe.md`（里面一个暗号），40 分钟后状态仍是 In progress（门户新版界面里显示 Unknown），问暗号同样检索不到。所以光开 Dataverse search 不够，至少不能马上见效。
+- 这个环境是 Developer 类型，区域是 **Preview (United States)**，门户走 `copilotstudio.preview.microsoft.com`。文件索引卡住可能和预览区域有关，〔待实测：同样的文件在正式区域的环境里多久变成 Ready〕。
+
+结论：在这个环境里，上传文件这条路暂时不可用。后备方案见"更新内容"一节末尾的 SharePoint 文档库。
 
 ## 第三步：测试
 
@@ -84,6 +90,8 @@ agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，sche
 2. **Publish**。以 Dataverse `bots.publishedon` 有值为准。
 3. 渠道面板的 **See agent in Teams** 打开自己的 Teams 测试。
 4. 给别人用：**Share** 给指定用户或组，或提交管理员批准后上架到组织的应用目录 〔待实测：本租户的审批流程〕。
+
+实际记录（2026-10-28）：新版门户里 Channels 在顶部标签的 "+2" 菜单里，不在 `/channels` 路径（那个地址打开是空白页）。点 **Add channel** 后显示 "Turning on Teams ..."，不到一分钟就弹出 "Ready to publish?"，直接 Publish；`bots.publishedon = 2026-10-28T13:31:35Z`。知识索引没完成时也能发布，发布后 agent 在 Teams 里能对话，但检索不到内容。
 
 费用：用户没有 M365 Copilot 许可证时，生成式回答消耗 Copilot Credits 〔待实测：在 admin center 的 Cost management 里核对〕。
 
