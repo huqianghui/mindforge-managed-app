@@ -44,11 +44,23 @@ python3 scripts/export-for-agent.py    # 生成 agent-knowledge/（已 gitignore
 1. Agents → **New agent** 右侧下拉 → **Agent（Standard）**。新建默认是 GitHub Copilot harness，一问一答的知识库用它会"想太多"，更慢也更费 Credits（[05](05-Copilot-Studio-Harness对比.md)）。
 2. 名称 `Mindforge Docs`；Agent settings 里解决方案选 **Mindforge**，schema name 因此是 `mf_MindforgeDocs`。
 3. **Instructions**：粘贴 [`agent/mindforge-docs-instructions.md`](../agent/mindforge-docs-instructions.md) 的全文。
-4. **Knowledge** → Add knowledge → **Upload files**，选 `agent-knowledge/` 里全部 `.md`，不要选 `export.json`。〔待实测：每个 agent 的上传文件数上限，印象中是 500，现在 405 个；`.md` 是否支持〕
-5. 关掉 **Web search** 和 **Use general knowledge**。否则资料外的问题会去查网页，就分不清回答是否来自 mindforge（阶段 5 Work IQ 误判的教训，[03 · 实测 §5](03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)）。
-6. 上传后等文件状态变成 Ready 再测试。
+4. **Knowledge** → Add knowledge → **Upload files**，选 `agent-knowledge/` 里的 `.md`，不要选 `export.json`。**每次不超过约 45 个**，见下文"上传踩坑"。
+5. Settings → Knowledge：**Allow ungrounded responses** 改成 Off（存储里是 `aISettings.useModelKnowledge: false`），**Use information from the Web** 保持 Off（新建默认就是 Off）。否则资料外的问题会用模型自身知识或网页回答，就分不清回答是否来自 mindforge（阶段 5 Work IQ 误判的教训，[03 · 实测 §5](03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)）。
+6. 上传后等文件状态从 In progress 变成 Ready 再测试。
 
 新建而不复用「Mindforge Ask」：后者的指令是给"应用把 SOURCES 写进消息"那种调用设计的，而且开着上网。
+
+### 实际创建记录（2026-10-28，浏览器自动化）
+
+agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，schema `mf_MindforgeDocs`，模型 GPT Chat Latest（`GPT56Chat`）。
+
+**上传踩坑。** 第一次把 405 个文件放在一个对话框里一起提交：`PUT .../content/botcomponents` 跑了约 115 秒后返回 412 `DuplicateRecordsFound`，门户随即自动重试，每次都是 400 `ExportKeyInvalidCreate`（`mf_MindforgeDocs.file.00-.md_FuL` 已存在），界面提示 "There was a problem creating your knowledge source."。查 Dataverse 发现第一次请求其实在服务端写完了：405 行 `componenttype = 14`（Bot File Attachment）都在，但都没有文件内容（`filedata_name` 为空），Knowledge 页也不显示。处理：用 Web API 删掉这 405 行，再按每批 45 个重传，每批约 30 秒，9 批都一次成功。可以用 `filedata_name` 是否有值判断一行是否真的传完。
+
+**指令被写坏。** 和 [03 · 一个坑](03-Copilot-Studio集成指南.md#2-一个坑脚本改指令把配置写坏了) 一样：脚本往指令编辑器里粘贴后，界面显示正常，但 `mf_MindforgeDocs.gpt.default` 的 YAML 末尾多出一百多个按字符编号的键（`0: k`、`1: i`……，拼起来是默认模板），`aISettings.model` 变成 `{}`。直接 PATCH `data` 修好。手工在门户里编辑不会这样。
+
+**显示名截断到 100 个字符。** 4 个文件名超长被截短，其中两篇「A Survey of Context Engineering…」截断后同名。文件内容不受影响，只是引用里看起来一样；以后可以在导出脚本里缩短这类文件名。
+
+**索引耗时。** 上传完 20 多分钟后，所有文件仍是 In progress，测试面板回答 "No information was found that could help answer this."。〔待实测：405 个文件全部变成 Ready 要多久〕
 
 ## 第三步：测试
 
@@ -87,6 +99,7 @@ python3 scripts/sync-content.py && python3 scripts/export-for-agent.py
 
 ## 待实测
 
-- 上传文件数与格式的上限（第二步第 4 条）。
+- 上传文件数上限：`.md` 可以上传，405 个全部接受；500 个的上限没有验证。
+- 405 个文件全部索引完成要多久（见"实际创建记录"）。
 - 引用卡片里显示的是文件名还是文章标题；如果是文件名，`__` 分隔的路径是否好认。
 - 同名文章更新后，覆盖上传与"先删后传"是否有区别。
