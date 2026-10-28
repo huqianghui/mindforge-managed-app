@@ -158,6 +158,8 @@ Managed Runtime 不能绑定个人 GitHub 仓库，所以源码推到两处：Gi
 
 文件改用路径哈希命名（避开中文文件名在打包与 URL 上的问题），`manifest.json` 记录原路径、标题和来源 commit。页面左下角显示当前内容对应的 `mindforge@<commit>`。
 
+这些内容文件每次同步都沿用同一路径，平台会按路径缓存：2026-10-28 部署后，新代码（文件名带哈希）已经生效，`manifest.json` 却还是旧的。所以 `vite.config.ts` 在构建时把 `manifest.json` 的 `generatedAt` 注入为 `__CONTENT_VERSION__`，`contentUrl()` / `publicUrl()` 给每个内容请求加上 `?v=<同步时间>`，同步一次就换一批 URL。
+
 同步时还会由 `scripts/history.py` 生成 `history.json`，**所有时间都取 GitHub 上的 commit 时间**：每篇文章 / wiki 节点的首次提交时间（跟随改名）与提交次数、按周的累计增长与活动、按周取样的 `wiki-graph.json` 快照（Claims active / stale、分类规模），以及 `wiki/knowledge-gap/` 各期报告和其中的学习建议（是否沿袭上期、点名的页面后来是否建出）。演进页 `#/timeline` 展示这些数据。首次同步需要克隆完整历史并读取约 20 个图谱快照，约一分多钟。随后 `scripts/stats.py` 生成 `stats.json`（约 100 KB）：每篇的字数、标签、链接统计（坏链按文章阅读器的规则解析相对链接与 wikilink，指向不公开日记的 `[[YYYY-MM-DD…]]` 单独算作私有）和系列编号，统计页 `#/stats` 展示。
 
 ## 本地开发与发布

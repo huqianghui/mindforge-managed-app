@@ -21,11 +21,13 @@ export interface ContentIndex extends ContentManifest {
 
 export const HOME_DOC = 'README.md';
 const CONTENT_BASE = `${import.meta.env.BASE_URL}content/`;
+// 内容文件路径固定、会被平台按路径缓存；带上同步版本号，每次同步后都取到新内容（见 vite.config.ts）
+const VERSION = `?v=${encodeURIComponent(__CONTENT_VERSION__)}`;
 
 let cached: Promise<ContentIndex> | null = null;
 
 function loadIndex(): Promise<ContentIndex> {
-  cached ??= fetch(`${CONTENT_BASE}manifest.json`)
+  cached ??= fetch(`${CONTENT_BASE}manifest.json${VERSION}`)
     .then((res) => res.json())
     .then((m: ContentManifest) => {
       const byPath = new Map(m.docs.map((d) => [d.path, d]));
@@ -48,7 +50,7 @@ export function useContentIndex(): ContentIndex | null {
 }
 
 export function contentUrl(file: string): string {
-  return CONTENT_BASE + file;
+  return CONTENT_BASE + file + VERSION;
 }
 
 /** 把文档内的相对路径解析成 vault 内路径（处理 ../ 与 %20 编码）。 */
@@ -67,3 +69,8 @@ export function docHash(path: string, anchor?: string): string {
 }
 
 export const REPO_BLOB = 'https://github.com/huqianghui/mindforge/blob/main/';
+
+/** public/ 根目录下随内容同步更新的文件（如 wiki-graph.json），同样带版本号 */
+export function publicUrl(file: string): string {
+  return `${import.meta.env.BASE_URL}${file}${VERSION}`;
+}
