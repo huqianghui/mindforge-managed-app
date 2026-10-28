@@ -82,6 +82,10 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ![问答：Copilot Studio agent 后端](docs/images/screenshots/ask-agent.png)
 
+第三个后端 **Azure OpenAI**：经 Azure OpenAI connector 直接调用部署 `gpt-6.1-terra`，同一个问题约 5 秒（经 Work IQ 的两个后端要 15–35 秒），并显示模型版本和输入 / 输出 token。连接用 API Key（Entra 认证在本环境创建不了），部署名是每次调用的参数。对比与踩坑见 [04 · 阶段 6](docs/04-新功能开发指南.md#阶段-6azure-openai-connector直接调模型)。
+
+![问答：Azure OpenAI 后端](docs/images/screenshots/ask-aoai.png)
+
 ## 和 GitHub Pages 版本的区别
 
 | | GitHub Pages（mindforge 仓库） | 本项目（Managed Runtime） |
@@ -100,7 +104,7 @@ src/
   App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline、#/ask?q=&doc=）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写；收藏、继续阅读、我的收藏 / 最近阅读
-  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析，可带 agentId）、agent.ts（Copilot Studio agent 的 agentId）
+  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析，可带 agentId）、agent.ts（Copilot Studio agent 的 agentId）、aoai.ts（Azure OpenAI 部署与 api-version）
   ask/                 问答页：retrieve.ts（本地检索与段落摘录）、prompt.ts（提示词与 RELATED 解析）、AskPage.tsx
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
@@ -184,4 +188,4 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 | 4 | 个性化：读取登录用户，记录阅读进度与收藏，左栏我的收藏 / 最近阅读 | SDK `getUser()`；App state（按用户隔离）；Dataverse 表作对比，写入被租户 DLP 屏蔽 | ✅ |
 | 5a | Ask Copilot（Work IQ）：本地检索 + Work IQ Copilot MCP 回答，`[n]` 与 RELATED 引用跳回原文；文章页"就这篇提问"（`#/ask`） | `ms app add data-source`；MCP JSON-RPC；提示词约定输出协议；连接与首次授权 | ✅ |
 | 5b | Ask Copilot（Copilot Studio agent）：Standard harness agent「Mindforge Ask」作为第二种后端，可选模型、资料外的问题查公开网络并标明；问答页切换对比 | 建 Standard agent、解决方案与 schema name、发布需渠道；Copilot Studio Connector 是回调式不可用，改走 Work IQ `copilot_chat` + `agentId` | ✅ |
-| 6 | 对比：同样的问答改用 Azure OpenAI Connector + 前端检索 | 两种 AI 接入方式的取舍 | ⬜ |
+| 6 | 对比：同样的问答改用 Azure OpenAI Connector（gpt-6.1-terra，API Key 连接），问答页第三个后端，显示 token 用量 | 连接认证方式（Entra 在本环境报 AADSTS50011）、部署是调用参数、三种后端的延迟与取舍 | ✅ |

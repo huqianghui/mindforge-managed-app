@@ -20,6 +20,16 @@
       ],
       "authenticationType": "certOauth",
       "dataSets": {}
+    },
+    "b4fc7195-2bfd-48e5-8cd1-058161ec5062": {
+      "id": "/providers/Microsoft.PowerApps/apis/shared_azureopenai",
+      "displayName": "Azure OpenAI",
+      "dataSources": [
+        "azureopenai"
+      ],
+      "authenticationType": "keyBasedAuth",
+      "sharedConnectionId": "/providers/Microsoft.PowerApps/apis/shared_azureopenai/connections/6bd1d8ab73354a8e893212c11354c2b7",
+      "dataSets": {}
     }
   },
   "appSettings": {

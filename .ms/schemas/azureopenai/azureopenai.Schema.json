@@ -1,0 +1,1850 @@
+{
+  "name": "shared_azureopenai",
+  "id": "/providers/Microsoft.PowerApps/apis/shared_azureopenai",
+  "type": "Microsoft.PowerApps/apis",
+  "properties": {
+    "displayName": "Azure OpenAI",
+    "iconUri": "https://static.powerapps.com/resource/ppcr/releases/v1.0.1829/1.0.1829.5054/azureopenai/icon.png",
+    "iconBrandColor": "#000000",
+    "apiEnvironment": "Shared",
+    "isCustomApi": false,
+    "blobUrisAreProxied": false,
+    "connectionParameterSets": {
+      "uiDefinition": {
+        "displayName": "Authentication Type",
+        "description": "Type of authentication to be used"
+      },
+      "values": [
+        {
+          "name": "keyBasedAuth",
+          "uiDefinition": {
+            "displayName": "API Key",
+            "description": "Provide Azure OpenAI resource name and API Key to access your Azure OpenAI that hosts the AI Model."
+          },
+          "parameters": {
+            "azureOpenAIResourceName": {
+              "type": "string",
+              "uiDefinition": {
+                "displayName": "Azure OpenAI resource name",
+                "description": "The name of the Azure OpenAI resource that hosts the AI model",
+                "tooltip": "Provide the Azure OpenAI resource name",
+                "constraints": {
+                  "clearText": true,
+                  "required": "true"
+                }
+              }
+            },
+            "azureOpenAIApiKey": {
+              "type": "securestring",
+              "uiDefinition": {
+                "displayName": "Azure OpenAI API key",
+                "description": "The API key to access the Azure OpenAI resource that hosts the AI model",
+                "tooltip": "Provide the Azure OpenAI API key",
+                "constraints": {
+                  "clearText": false,
+                  "required": "true"
+                }
+              }
+            },
+            "azureSearchEndpointUrl": {
+              "type": "string",
+              "uiDefinition": {
+                "displayName": "Azure Cognitive Search endpoint URL",
+                "description": "The URL of the Azure Cognitive Search endpoint indexing your data",
+                "tooltip": "Provide the Azure Cognitive Search endpoint URL",
+                "constraints": {
+                  "clearText": true,
+                  "required": "false"
+                }
+              }
+            },
+            "azureSearchApiKey": {
+              "type": "securestring",
+              "uiDefinition": {
+                "displayName": "Azure Cognitive Search API key",
+                "description": "The API key to access the Azure Cognitive Search endpoint indexing your data",
+                "tooltip": "Provide the Azure Cognitive Search API key",
+                "constraints": {
+                  "clearText": false,
+                  "required": "false"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "allowSharing": true
+          }
+        },
+        {
+          "name": "oauth",
+          "uiDefinition": {
+            "displayName": "Microsoft Entra ID Integrated",
+            "description": "Use Microsoft Entra ID to access Azure OpenAI. Each connecting user must have the Cognitive Services OpenAI User role on the Azure OpenAI resource."
+          },
+          "parameters": {
+            "token": {
+              "type": "oauthSetting",
+              "oAuthSettings": {
+                "identityProvider": "aadcertificate",
+                "clientId": "fb0b0d8e-05af-43a7-b23c-843ea5010245",
+                "clientAssertionType": "GlobalFederatedIdentityCredential",
+                "scopes": [],
+                "redirectMode": "GlobalPerConnector",
+                "redirectUrl": "https://global.consent.azure-apim.net/redirect/azureopenai",
+                "properties": {
+                  "IsFirstParty": "True",
+                  "AzureActiveDirectoryResourceId": "https://cognitiveservices.azure.com/",
+                  "IsOnbehalfofLoginSupported": true,
+                  "FederatedIdentityCredentials": {
+                    "Issuer": "https://login.microsoftonline.com/{tenantId}/v2.0",
+                    "Subject": "/eid1/c/pub/t/{tenantId}/a/k972yLpWjkypg7DpMYfrNA/fb0b0d8e-05af-43a7-b23c-843ea5010245",
+                    "Audience": "api://AzureADTokenExchange"
+                  }
+                },
+                "customParameters": {
+                  "ResourceUri": {
+                    "value": "https://cognitiveservices.azure.com/"
+                  },
+                  "loginUri": {
+                    "value": "https://login.windows.net"
+                  },
+                  "loginUriAAD": {
+                    "value": "https://login.windows.net"
+                  }
+                }
+              },
+              "uiDefinition": {
+                "displayName": "Sign in with your Microsoft Entra ID credentials",
+                "description": "Sign in with an account assigned the Cognitive Services OpenAI User role on the Azure OpenAI resource",
+                "tooltip": "Sign in with your Microsoft Entra ID credentials",
+                "constraints": {
+                  "required": "true"
+                }
+              }
+            },
+            "azureOpenAIResourceName": {
+              "type": "string",
+              "uiDefinition": {
+                "displayName": "Azure OpenAI resource name",
+                "description": "The name of the Azure OpenAI resource that hosts the AI model",
+                "tooltip": "Provide the Azure OpenAI resource name",
+                "constraints": {
+                  "clearText": true,
+                  "required": "true"
+                }
+              }
+            }
+          },
+          "metadata": {
+            "allowSharing": false
+          }
+        }
+      ]
+    },
+    "connectionParameters": {
+      "azureOpenAIResourceName": {
+        "type": "string",
+        "uiDefinition": {
+          "displayName": "Azure OpenAI resource name",
+          "description": "The name of the Azure OpenAI resource that hosts the AI model",
+          "tooltip": "Provide the Azure OpenAI resource name",
+          "constraints": {
+            "clearText": true,
+            "required": "true"
+          }
+        }
+      },
+      "azureOpenAIApiKey": {
+        "type": "securestring",
+        "uiDefinition": {
+          "displayName": "Azure OpenAI API key",
+          "description": "The API key to access the Azure OpenAI resource that hosts the AI model",
+          "tooltip": "Provide the Azure OpenAI API key",
+          "constraints": {
+            "clearText": false,
+            "required": "true"
+          }
+        }
+      },
+      "azureSearchEndpointUrl": {
+        "type": "string",
+        "uiDefinition": {
+          "displayName": "Azure Cognitive Search endpoint URL",
+          "description": "The URL of the Azure Cognitive Search endpoint indexing your data",
+          "tooltip": "Provide the Azure Cognitive Search endpoint URL",
+          "constraints": {
+            "clearText": true,
+            "required": "false"
+          }
+        }
+      },
+      "azureSearchApiKey": {
+        "type": "securestring",
+        "uiDefinition": {
+          "displayName": "Azure Cognitive Search API key",
+          "description": "The API key to access the Azure Cognitive Search endpoint indexing your data",
+          "tooltip": "Provide the Azure Cognitive Search API key",
+          "constraints": {
+            "clearText": false,
+            "required": "false"
+          }
+        }
+      }
+    },
+    "swagger": {
+      "swagger": "2.0",
+      "info": {
+        "title": "Azure OpenAI",
+        "description": "Easily integrate Azure OpenAI's cutting-edge artificial intelligence capabilities into your workflows",
+        "version": "1.0",
+        "contact": {
+          "name": "Microsoft",
+          "url": "https://support.microsoft.com"
+        },
+        "x-ms-api-annotation": {
+          "status": "Production"
+        }
+      },
+      "host": "0b768ed1f103e3748a5806c623794b.19.environment.api.powerplatform.com",
+      "basePath": "/connectors/runtime/invoke/scalegroups/firstrelease/scaleunits/firstrelease-001/apis/azureopenai/connections/",
+      "schemes": [
+        "https"
+      ],
+      "consumes": [
+        "application/json"
+      ],
+      "produces": [
+        "application/json"
+      ],
+      "paths": {
+        "/{connectionId}/2024-02-15-preview/deployments/{deployment-id}/chat/completions": {
+          "post": {
+            "description": "Creates a completion for the chat message",
+            "summary": "Creates a completion for the chat message",
+            "operationId": "ChatCompletions_Create_2024Feb15Preview",
+            "x-ms-visibility": "advanced",
+            "parameters": [
+              {
+                "name": "connectionId",
+                "in": "path",
+                "required": true,
+                "x-ms-visibility": "internal",
+                "type": "string"
+              },
+              {
+                "$ref": "#/parameters/DeploymentId"
+              },
+              {
+                "$ref": "#/parameters/ApiVersion"
+              },
+              {
+                "in": "body",
+                "name": "requestBody",
+                "required": true,
+                "schema": {
+                  "$ref": "#/definitions/createChatCompletionRequest_2024Feb15Preview"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "schema": {
+                  "$ref": "#/definitions/createChatCompletionResponse_2024Feb15Preview"
+                },
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              },
+              "default": {
+                "description": "Service unavailable",
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "externalDocs": {
+              "url": "https://docs.microsoft.com/connectors/azureopenai/#creates-a-completion-for-the-chat-message"
+            }
+          }
+        },
+        "/{connectionId}/deployments/{deployment-id}/extensions/chat/completions": {
+          "post": {
+            "operationId": "ExtensionsChatCompletions_Create",
+            "summary": "Using extensions to create a completion for chat messages",
+            "description": "Using extensions to create a completion for chat messages",
+            "x-ms-visibility": "advanced",
+            "parameters": [
+              {
+                "name": "connectionId",
+                "in": "path",
+                "required": true,
+                "x-ms-visibility": "internal",
+                "type": "string"
+              },
+              {
+                "$ref": "#/parameters/DeploymentId"
+              },
+              {
+                "$ref": "#/parameters/DeploymentIdQueryParam"
+              },
+              {
+                "$ref": "#/parameters/ApiVersion"
+              },
+              {
+                "in": "body",
+                "name": "requestBody",
+                "required": true,
+                "schema": {
+                  "$ref": "#/definitions/ExtensionsChatCompletionsRequest"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "schema": {
+                  "$ref": "#/definitions/ExtensionsChatCompletionsResponse"
+                },
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              },
+              "default": {
+                "description": "Service unavailable",
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "externalDocs": {
+              "url": "https://docs.microsoft.com/connectors/azureopenai/#using-extensions-to-create-a-completion-for-chat-messages"
+            }
+          }
+        },
+        "/{connectionId}/deployments/{deployment-id}/embeddings": {
+          "post": {
+            "description": "Get a vector representation of a given input that can be easily consumed by machine learning models and algorithms",
+            "summary": "Get an embedding",
+            "operationId": "SingleEmbeddings_Create_2024Feb15Preview",
+            "parameters": [
+              {
+                "name": "connectionId",
+                "in": "path",
+                "required": true,
+                "x-ms-visibility": "internal",
+                "type": "string"
+              },
+              {
+                "$ref": "#/parameters/DeploymentId"
+              },
+              {
+                "$ref": "#/parameters/ApiVersion"
+              },
+              {
+                "in": "body",
+                "name": "requestBody",
+                "required": true,
+                "schema": {
+                  "$ref": "#/definitions/getSingleEmbeddingsRequest_2024Feb15Preview"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "schema": {
+                  "$ref": "#/definitions/getSingleEmbeddingsResponse_2024Feb15Preview"
+                },
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              },
+              "default": {
+                "description": "Service unavailable",
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "externalDocs": {
+              "url": "https://docs.microsoft.com/connectors/azureopenai/#get-an-embedding"
+            }
+          }
+        },
+        "/{connectionId}/deployments/{deployment-id}/multipleEmbeddings": {
+          "post": {
+            "description": "Get vector representations of a given array of inputs that can be easily consumed by machine learning models and algorithms",
+            "summary": "Get multiple embeddings",
+            "operationId": "MultipleEmbeddings_Create_2024Feb15Preview",
+            "parameters": [
+              {
+                "name": "connectionId",
+                "in": "path",
+                "required": true,
+                "x-ms-visibility": "internal",
+                "type": "string"
+              },
+              {
+                "$ref": "#/parameters/DeploymentId"
+              },
+              {
+                "$ref": "#/parameters/ApiVersion"
+              },
+              {
+                "in": "body",
+                "name": "requestBody",
+                "required": true,
+                "schema": {
+                  "$ref": "#/definitions/getMultipleEmbeddingsRequest_2024Feb15Preview"
+                }
+              }
+            ],
+            "responses": {
+              "200": {
+                "description": "OK",
+                "schema": {
+                  "$ref": "#/definitions/getMultipleEmbeddingsResponse_2024Feb15Preview"
+                },
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              },
+              "default": {
+                "description": "Service unavailable",
+                "headers": {
+                  "apim-request-id": {
+                    "description": "Request ID for troubleshooting purposes",
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "externalDocs": {
+              "url": "https://docs.microsoft.com/connectors/azureopenai/#get-multiple-embeddings"
+            }
+          }
+        }
+      },
+      "definitions": {
+        "ExtensionsChatCompletionsRequest": {
+          "type": "object",
+          "description": "Request for the chat completions using extensions",
+          "required": [
+            "messages"
+          ],
+          "properties": {
+            "messages": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Message"
+              }
+            },
+            "dataSources": {
+              "type": "array",
+              "description": "The data sources to be used for the Azure OpenAI on your data feature.",
+              "items": {
+                "$ref": "#/definitions/DataSource"
+              }
+            },
+            "temperature": {
+              "description": "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\nWe generally recommend altering this or `top_p` but not both.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 1,
+              "example": 1
+            },
+            "top_p": {
+              "description": "An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.\nWe generally recommend altering this or `temperature` but not both.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "stream": {
+              "description": "If set, partial message deltas will be sent, like in ChatGPT. Tokens will be sent as data-only server-sent events as they become available, with the stream terminated by a `data: [DONE]` message.",
+              "type": "boolean",
+              "default": false
+            },
+            "stop": {
+              "description": "Array minimum size of 1 and maximum of 4",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "maxItems": 4,
+              "default": null
+            },
+            "max_tokens": {
+              "description": "The maximum number of tokens allowed for the generated answer. By default, the number of tokens the model can return will be (4096 - prompt tokens).",
+              "type": "integer",
+              "default": 250
+            },
+            "presence_penalty": {
+              "description": "Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.",
+              "type": "number",
+              "default": 0,
+              "minimum": -2,
+              "maximum": 2
+            },
+            "frequency_penalty": {
+              "description": "Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.",
+              "type": "number",
+              "default": 0,
+              "minimum": -2,
+              "maximum": 2
+            },
+            "logit_bias": {
+              "description": "Modify the likelihood of specified tokens appearing in the completion. Accepts a json object that maps tokens (specified by their token ID in the tokenizer) to an associated bias value from -100 to 100. Mathematically, the bias is added to the logits generated by the model prior to sampling. The exact effect will vary per model, but values between -1 and 1 should decrease or increase likelihood of selection; values like -100 or 100 should result in a ban or exclusive selection of the relevant token.",
+              "type": "object"
+            },
+            "user": {
+              "description": "A unique identifier representing your end-user, which can help Azure OpenAI to monitor and detect abuse.",
+              "type": "string",
+              "example": "user-1234"
+            }
+          },
+          "example": {
+            "dataSources": [
+              {
+                "type": "AzureCognitiveSearch",
+                "parameters": {
+                  "endpoint": "https://mysearchexample.search.windows.net",
+                  "key": "***(admin key)",
+                  "indexName": "my-chunk-index",
+                  "fieldsMapping": {
+                    "titleField": "productName",
+                    "urlField": "productUrl",
+                    "filepathField": "productFilePath",
+                    "contentFields": [
+                      "productDescription"
+                    ],
+                    "contentFieldsSeparator": "\n"
+                  },
+                  "topNDocuments": 5,
+                  "queryType": "semantic",
+                  "semanticConfiguration": "defaultConfiguration",
+                  "inScope": true,
+                  "roleInformation": "roleInformation"
+                }
+              }
+            ],
+            "messages": [
+              {
+                "role": "user",
+                "content": "Where can I find a hiking place in Seattle?"
+              }
+            ],
+            "temperature": 0.9
+          }
+        },
+        "DataSource": {
+          "type": "object",
+          "description": "The data source to be used for the Azure OpenAI on your data feature.",
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "The data source type."
+            },
+            "parameters": {
+              "type": "object",
+              "description": "The parameters to be used for the data source in runtime.",
+              "additionalProperties": true
+            }
+          },
+          "required": [
+            "type"
+          ]
+        },
+        "Message": {
+          "type": "object",
+          "description": "A chat message.",
+          "properties": {
+            "index": {
+              "type": "integer",
+              "description": "The index of the message in the conversation."
+            },
+            "role": {
+              "type": "string",
+              "enum": [
+                "system",
+                "user",
+                "assistant",
+                "tool"
+              ],
+              "description": "The role of the author of this message."
+            },
+            "recipient": {
+              "type": "string",
+              "example": "Contoso.productsUsingGET",
+              "description": "The recipient of the message in the format of <namespace>.<operation>. Present if and only if the recipient is tool."
+            },
+            "content": {
+              "type": "string",
+              "description": "The contents of the message"
+            },
+            "end_turn": {
+              "type": "boolean",
+              "description": "Whether the message ends the turn."
+            }
+          },
+          "required": [
+            "role",
+            "content"
+          ]
+        },
+        "ExtensionsChatCompletionsResponse": {
+          "type": "object",
+          "description": "The response of the extensions chat completions.",
+          "required": [
+            "id",
+            "object",
+            "created",
+            "model"
+          ],
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "object": {
+              "type": "string"
+            },
+            "created": {
+              "type": "integer"
+            },
+            "model": {
+              "type": "string"
+            },
+            "prompt_filter_results": {
+              "$ref": "#/definitions/promptFilterResults"
+            },
+            "usage": {
+              "type": "object",
+              "properties": {
+                "prompt_tokens": {
+                  "type": "integer"
+                },
+                "completion_tokens": {
+                  "type": "integer"
+                },
+                "total_tokens": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "prompt_tokens",
+                "completion_tokens",
+                "total_tokens"
+              ]
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ExtensionsChatCompletionChoice"
+              }
+            }
+          },
+          "example": {
+            "id": "1",
+            "object": "extensions.chat.completion",
+            "created": 1679201802,
+            "model": "gpt-3.5-turbo-0301",
+            "choices": [
+              {
+                "index": 0,
+                "finish_reason": "stop",
+                "messages": [
+                  {
+                    "index": 0,
+                    "role": "assistant",
+                    "recipient": "MySearch.Query",
+                    "content": "{\"query\":\"hiking places in Seattle\"}"
+                  },
+                  {
+                    "index": 1,
+                    "role": "tool",
+                    "content": "{\"citations\":[{\"id\":1,\"name\":\"ContosoTraveler.pdf\",\"link\":\"https://www.example.com/ContosoTraveler.pdf\",\"content\":\"This is the content of the citation 1\"},{\"id\":2,\"name\":\"WestCoastTraveler.html\",\"link\":\"https://www.example.com/WestCoastTraveler.html\",\"content\":\"This is the content of the citation 2\"},{\"id\":3,\"name\":\"Citation3\",\"link\":\"https://www.example.com/3\",\"content\":\"This is the content of the citation 3\"}],\"intent\":\"hiking place in seattle\"}"
+                  },
+                  {
+                    "index": 2,
+                    "role": "assistant",
+                    "content": "Seattle is a great place for hiking! Here are some of the best hiking places in Seattle according to Contoso Traveler [^1^] and West Coast Traveler, Snow Lake, Mount Si, and Mount Tenerife [^2^]. I hope this helps! Let me know if you need more information."
+                  }
+                ]
+              }
+            ]
+          }
+        },
+        "ExtensionsChatCompletionChoice": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer"
+            },
+            "finish_reason": {
+              "type": "string"
+            },
+            "content_filter_results": {
+              "$ref": "#/definitions/contentFilterResults"
+            },
+            "messages": {
+              "type": "array",
+              "description": "The list of messages returned by the service.",
+              "items": {
+                "$ref": "#/definitions/Message"
+              }
+            }
+          }
+        },
+        "contentFilterResult": {
+          "type": "object",
+          "properties": {
+            "severity": {
+              "type": "string",
+              "enum": [
+                "safe",
+                "low",
+                "medium",
+                "high"
+              ],
+              "x-ms-enum": {
+                "name": "ContentFilterSeverity",
+                "modelAsString": true
+              }
+            },
+            "filtered": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "severity",
+            "filtered"
+          ]
+        },
+        "contentFilterResults": {
+          "type": "object",
+          "description": "Information about the content filtering category (hate, sexual, violence, self_harm), if it has been detected, as well as the severity level (very_low, low, medium, high-scale that determines the intensity and risk level of harmful content) and if it has been filtered or not.",
+          "properties": {
+            "sexual": {
+              "$ref": "#/definitions/contentFilterResult"
+            },
+            "violence": {
+              "$ref": "#/definitions/contentFilterResult"
+            },
+            "hate": {
+              "$ref": "#/definitions/contentFilterResult"
+            },
+            "self_harm": {
+              "$ref": "#/definitions/contentFilterResult"
+            },
+            "error": {
+              "$ref": "#/definitions/errorBase"
+            }
+          }
+        },
+        "promptFilterResult": {
+          "type": "object",
+          "description": "Content filtering results for a single prompt in the request.",
+          "properties": {
+            "prompt_index": {
+              "type": "integer"
+            },
+            "content_filter_results": {
+              "$ref": "#/definitions/contentFilterResults"
+            }
+          }
+        },
+        "promptFilterResults": {
+          "type": "array",
+          "description": "Content filtering results for zero or more prompts in the request. In a streaming request, results for different prompts may arrive at different times or in different orders.",
+          "items": {
+            "$ref": "#/definitions/promptFilterResult"
+          }
+        },
+        "errorBase": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        },
+        "errorBase_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "message": {
+              "type": "string"
+            }
+          }
+        },
+        "contentFilterSeverityResult_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "filtered": {
+              "type": "boolean"
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "safe",
+                "low",
+                "medium",
+                "high"
+              ],
+              "x-ms-enum": {
+                "name": "ContentFilterSeverity",
+                "modelAsString": true
+              }
+            }
+          },
+          "required": [
+            "severity",
+            "filtered"
+          ]
+        },
+        "contentFilterDetectedResult_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "filtered": {
+              "type": "boolean"
+            },
+            "detected": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "detected",
+            "filtered"
+          ]
+        },
+        "contentFilterDetectedWithCitationResult_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "filtered": {
+              "type": "boolean"
+            },
+            "detected": {
+              "type": "boolean"
+            },
+            "citation": {
+              "type": "object",
+              "properties": {
+                "URL": {
+                  "type": "string"
+                },
+                "license": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": [
+            "detected",
+            "filtered"
+          ]
+        },
+        "contentFilterIdResult_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "filtered": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "id",
+            "filtered"
+          ]
+        },
+        "contentFilterResultsBase_2024Feb15Preview": {
+          "type": "object",
+          "description": "Information about the content filtering results.",
+          "properties": {
+            "sexual": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "violence": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "hate": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "self_harm": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "profanity": {
+              "$ref": "#/definitions/contentFilterDetectedResult_2024Feb15Preview"
+            },
+            "custom_blocklists": {
+              "items": {
+                "$ref": "#/definitions/contentFilterIdResult_2024Feb15Preview"
+              },
+              "type": "array"
+            },
+            "error": {
+              "$ref": "#/definitions/errorBase_2024Feb15Preview"
+            }
+          }
+        },
+        "contentFilterPromptResults_2024Feb15Preview": {
+          "type": "object",
+          "description": "Information about the content filtering category (hate, sexual, violence, self_harm), if it has been detected, as well as the severity level (very_low, low, medium, high-scale that determines the intensity and risk level of harmful content) and if it has been filtered or not. Information about jailbreak content and profanity, if it has been detected, and if it has been filtered or not. And information about customer block list, if it has been filtered and its id.",
+          "properties": {
+            "sexual": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "violence": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "hate": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "self_harm": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "profanity": {
+              "$ref": "#/definitions/contentFilterDetectedResult_2024Feb15Preview"
+            },
+            "custom_blocklists": {
+              "items": {
+                "$ref": "#/definitions/contentFilterIdResult_2024Feb15Preview"
+              },
+              "type": "array"
+            },
+            "error": {
+              "$ref": "#/definitions/errorBase_2024Feb15Preview"
+            },
+            "jailbreak": {
+              "$ref": "#/definitions/contentFilterDetectedResult_2024Feb15Preview"
+            }
+          }
+        },
+        "contentFilterChoiceResults_2024Feb15Preview": {
+          "type": "object",
+          "description": "Information about the content filtering category (hate, sexual, violence, self_harm), if it has been detected, as well as the severity level (very_low, low, medium, high-scale that determines the intensity and risk level of harmful content) and if it has been filtered or not. Information about third party text and profanity, if it has been detected, and if it has been filtered or not. And information about customer block list, if it has been filtered and its id.",
+          "properties": {
+            "sexual": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "violence": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "hate": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "self_harm": {
+              "$ref": "#/definitions/contentFilterSeverityResult_2024Feb15Preview"
+            },
+            "profanity": {
+              "$ref": "#/definitions/contentFilterDetectedResult_2024Feb15Preview"
+            },
+            "custom_blocklists": {
+              "items": {
+                "$ref": "#/definitions/contentFilterIdResult_2024Feb15Preview"
+              },
+              "type": "array"
+            },
+            "error": {
+              "$ref": "#/definitions/errorBase_2024Feb15Preview"
+            },
+            "protected_material_text": {
+              "$ref": "#/definitions/contentFilterDetectedResult_2024Feb15Preview"
+            },
+            "protected_material_code": {
+              "$ref": "#/definitions/contentFilterDetectedWithCitationResult_2024Feb15Preview"
+            }
+          }
+        },
+        "promptFilterResult_2024Feb15Preview": {
+          "type": "object",
+          "description": "Content filtering results for a single prompt in the request.",
+          "properties": {
+            "prompt_index": {
+              "type": "integer"
+            },
+            "content_filter_results": {
+              "$ref": "#/definitions/contentFilterPromptResults_2024Feb15Preview"
+            }
+          }
+        },
+        "promptFilterResults_2024Feb15Preview": {
+          "type": "array",
+          "description": "Content filtering results for zero or more prompts in the request. In a streaming request, results for different prompts may arrive at different times or in different orders.",
+          "items": {
+            "$ref": "#/definitions/promptFilterResult_2024Feb15Preview"
+          }
+        },
+        "createChatCompletionRequest_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "temperature": {
+              "description": "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.\nWe generally recommend altering this or `top_p` but not both.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 2,
+              "default": 1,
+              "example": 1
+            },
+            "top_p": {
+              "description": "An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.\nWe generally recommend altering this or `temperature` but not both.",
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1,
+              "default": 1,
+              "example": 1
+            },
+            "stream": {
+              "description": "If set, partial message deltas will be sent, like in ChatGPT. Tokens will be sent as data-only server-sent events as they become available, with the stream terminated by a `data: [DONE]` message.",
+              "type": "boolean",
+              "default": false
+            },
+            "stop": {
+              "description": "Up to 4 sequences where the API will stop generating further tokens. The returned text will not contain the stop sequence.",
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "default": "<|endoftext|>",
+                "example": "\n"
+              },
+              "default": null
+            },
+            "max_tokens": {
+              "description": "The maximum number of tokens allowed for the generated answer. By default, the number of tokens the model can return will be (4096 - prompt tokens).",
+              "type": "integer",
+              "default": 4096
+            },
+            "presence_penalty": {
+              "description": "Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics.",
+              "type": "number",
+              "default": 0,
+              "minimum": -2,
+              "maximum": 2
+            },
+            "frequency_penalty": {
+              "description": "Number between -2.0 and 2.0. Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim.",
+              "type": "number",
+              "default": 0,
+              "minimum": -2,
+              "maximum": 2
+            },
+            "logit_bias": {
+              "description": "Modify the likelihood of specified tokens appearing in the completion. Accepts a json object that maps tokens (specified by their token ID in the tokenizer) to an associated bias value from -100 to 100. Mathematically, the bias is added to the logits generated by the model prior to sampling. The exact effect will vary per model, but values between -1 and 1 should decrease or increase likelihood of selection; values like -100 or 100 should result in a ban or exclusive selection of the relevant token.",
+              "type": "object"
+            },
+            "user": {
+              "description": "A unique identifier representing your end-user, which can help Azure OpenAI to monitor and detect abuse.",
+              "type": "string",
+              "example": "user-1234"
+            },
+            "messages": {
+              "description": "A list of messages comprising the conversation so far. [Example Python code](https://github.com/openai/openai-cookbook/blob/main/examples/How_to_format_inputs_to_ChatGPT_models.ipynb).",
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "$ref": "#/definitions/chatCompletionRequestMessage_2024Feb15Preview"
+              }
+            },
+            "data_sources": {
+              "type": "array",
+              "description": "  The configuration entries for Azure OpenAI chat extensions that use them.\n  This additional specification is only compatible with Azure OpenAI.",
+              "items": {
+                "$ref": "#/definitions/azureSearchChatExtensionConfiguration_2024Feb15Preview"
+              }
+            },
+            "n": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 128,
+              "default": 1,
+              "example": 1,
+              "description": "How many chat completion choices to generate for each input message."
+            },
+            "seed": {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647,
+              "default": 0,
+              "example": 1,
+              "description": "If specified, our system will make a best effort to sample deterministically, such that repeated requests with the same `seed` and parameters should return the same result.Determinism is not guaranteed, and you should refer to the `system_fingerprint` response parameter to monitor changes in the backend."
+            },
+            "logprobs": {
+              "description": "Whether to return log probabilities of the output tokens or not. If true, returns the log probabilities of each output token returned in the `content` of `message`. This option is currently not available on the `gpt-4-vision-preview` model.",
+              "type": "boolean",
+              "default": false
+            },
+            "top_logprobs": {
+              "description": "An integer between 0 and 5 specifying the number of most likely tokens to return at each token position, each with an associated log probability. `logprobs` must be set to `true` if this parameter is used.",
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "response_format": {
+              "type": "object",
+              "description": "An object specifying the format that the model must output. Used to enable JSON mode.",
+              "properties": {
+                "type": {
+                  "$ref": "#/definitions/chatCompletionResponseFormat_2024Feb15Preview"
+                }
+              }
+            }
+          },
+          "required": [
+            "messages"
+          ]
+        },
+        "chatCompletionResponseFormat_2024Feb15Preview": {
+          "type": "string",
+          "enum": [
+            "text",
+            "json_object"
+          ],
+          "default": "text",
+          "example": "json_object",
+          "description": "Setting to `json_object` enables JSON mode. This guarantees that the message the model generates is valid JSON.",
+          "x-ms-enum": {
+            "name": "ChatCompletionResponseFormat",
+            "modelAsString": true
+          }
+        },
+        "chatCompletionFunctionParameters_2024Feb15Preview": {
+          "type": "object",
+          "description": "The parameters the functions accepts, described as a JSON Schema object. See the [guide](/docs/guides/gpt/function-calling) for examples, and the [JSON Schema reference](https://json-schema.org/understanding-json-schema/) for documentation about the format.",
+          "additionalProperties": true
+        },
+        "chatCompletionRequestMessage_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "role": {
+              "$ref": "#/definitions/chatCompletionRequestMessageRole_2024Feb15Preview"
+            },
+            "content": {
+              "type": "string",
+              "description": "An array of content parts with a defined type, each can be of type `text`."
+            }
+          },
+          "required": [
+            "role",
+            "content"
+          ]
+        },
+        "chatCompletionRequestMessageRole_2024Feb15Preview": {
+          "type": "string",
+          "enum": [
+            "system",
+            "user",
+            "assistant"
+          ],
+          "description": "The role of the messages author.",
+          "x-ms-enum": {
+            "name": "ChatCompletionRequestMessageRole",
+            "modelAsString": true
+          }
+        },
+        "azureChatExtensionType_2024Feb15Preview": {
+          "type": "string",
+          "description": "  A representation of configuration data for a single Azure OpenAI chat extension. This will be used by a chat\n  completions request that should use Azure OpenAI chat extensions to augment the response behavior.\n  The use of this configuration is compatible only with Azure OpenAI.",
+          "enum": [
+            "azure_search"
+          ],
+          "x-ms-enum": {
+            "name": "AzureChatExtensionType",
+            "modelAsString": true
+          }
+        },
+        "azureSearchChatExtensionConfiguration_2024Feb15Preview": {
+          "type": "object",
+          "required": [
+            "type",
+            "parameters"
+          ],
+          "description": "A specific representation of configurable options for Azure Search when using it as an Azure OpenAI chat\nextension.",
+          "properties": {
+            "type": {
+              "$ref": "#/definitions/azureChatExtensionType_2024Feb15Preview"
+            },
+            "parameters": {
+              "$ref": "#/definitions/azureSearchChatExtensionParameters_2024Feb15Preview"
+            }
+          }
+        },
+        "azureSearchChatExtensionParameters_2024Feb15Preview": {
+          "required": [
+            "index_name"
+          ],
+          "type": "object",
+          "properties": {
+            "top_n_documents": {
+              "type": "integer",
+              "description": "The configured top number of documents to feature for the configured query.",
+              "format": "int32"
+            },
+            "in_scope": {
+              "type": "boolean",
+              "description": "Whether queries should be restricted to use of indexed data."
+            },
+            "strictness": {
+              "maximum": 5,
+              "minimum": 1,
+              "type": "integer",
+              "description": "The configured strictness of the search relevance filtering. The higher of strictness, the higher of the precision but lower recall of the answer.",
+              "format": "int32"
+            },
+            "role_information": {
+              "type": "string",
+              "description": "Give the model instructions about how it should behave and any context it should reference when generating a response. You can describe the assistant's personality and tell it how to format responses. There's a 100 token limit for it, and it counts against the overall token limit."
+            },
+            "index_name": {
+              "type": "string",
+              "description": "The name of the index to use as available in the referenced Azure Search resource."
+            },
+            "fields_mapping": {
+              "$ref": "#/definitions/azureSearchIndexFieldMappingOptions_2024Feb15Preview"
+            },
+            "query_type": {
+              "$ref": "#/definitions/azureSearchQueryType_2024Feb15Preview"
+            },
+            "semantic_configuration": {
+              "type": "string",
+              "description": "The additional semantic configuration for the query."
+            },
+            "filter": {
+              "type": "string",
+              "description": "Search filter."
+            },
+            "embedding_dependency": {
+              "$ref": "#/definitions/onYourDataDeploymentNameVectorizationSource_2024Feb15Preview"
+            }
+          },
+          "description": "Parameters for Azure Search when used as an Azure OpenAI chat extension."
+        },
+        "azureSearchIndexFieldMappingOptions_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "title_field": {
+              "type": "string",
+              "description": "The name of the index field to use as a title."
+            },
+            "url_field": {
+              "type": "string",
+              "description": "The name of the index field to use as a URL."
+            },
+            "filepath_field": {
+              "type": "string",
+              "description": "The name of the index field to use as a filepath."
+            },
+            "content_fields": {
+              "type": "array",
+              "description": "The names of index fields that should be treated as content.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "content_fields_separator": {
+              "type": "string",
+              "description": "The separator pattern that content fields should use."
+            },
+            "vector_fields": {
+              "type": "array",
+              "description": "The names of fields that represent vector data.",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "description": "Optional settings to control how fields are processed when using a configured Azure Search resource."
+        },
+        "azureSearchQueryType_2024Feb15Preview": {
+          "type": "string",
+          "description": "The type of Azure Search retrieval query that should be executed when using it as an Azure OpenAI chat extension.",
+          "enum": [
+            "simple",
+            "semantic",
+            "vector",
+            "vector_simple_hybrid",
+            "vector_semantic_hybrid"
+          ],
+          "x-ms-enum": {
+            "name": "AzureSearchQueryType",
+            "modelAsString": true
+          }
+        },
+        "onYourDataVectorizationSource_2024Feb15Preview": {
+          "required": [
+            "type"
+          ],
+          "type": "object",
+          "properties": {
+            "type": {
+              "$ref": "#/definitions/onYourDataVectorizationSourceType_2024Feb15Preview"
+            }
+          },
+          "description": "An abstract representation of a vectorization source for Azure OpenAI On Your Data with vector search."
+        },
+        "onYourDataVectorizationSourceType_2024Feb15Preview": {
+          "type": "string",
+          "description": "Represents the available sources Azure OpenAI On Your Data can use to configure vectorization of data for use with\nvector search.",
+          "enum": [
+            "deployment_name"
+          ],
+          "x-ms-enum": {
+            "name": "OnYourDataVectorizationSourceType",
+            "modelAsString": true
+          }
+        },
+        "onYourDataDeploymentNameVectorizationSource_2024Feb15Preview": {
+          "type": "object",
+          "required": [
+            "deployment_name"
+          ],
+          "description": "The details of a a vectorization source, used by Azure OpenAI On Your Data when applying vector search, that is based\non an internal embeddings model deployment name in the same Azure OpenAI resource.",
+          "properties": {
+            "type": {
+              "$ref": "#/definitions/onYourDataVectorizationSourceType_2024Feb15Preview"
+            },
+            "deployment_name": {
+              "type": "string",
+              "description": "Specifies the name of the model deployment to use for vectorization. This model deployment must be in the same Azure OpenAI resource, but On Your Data will use this model deployment via an internal call rather than a public one, which enables vector search even in private networks."
+            }
+          }
+        },
+        "azureChatExtensionsMessageContext_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "citations": {
+              "type": "array",
+              "description": "The data source retrieval result, used to generate the assistant message in the response.",
+              "items": {
+                "$ref": "#/definitions/citation_2024Feb15Preview"
+              }
+            },
+            "intent": {
+              "type": "string",
+              "description": "The detected intent from the chat history, used to pass to the next turn to carry over the context."
+            }
+          },
+          "description": "  A representation of the additional context information available when Azure OpenAI chat extensions are involved\n  in the generation of a corresponding chat completions response. This context information is only populated when\n  using an Azure OpenAI request configured to use a matching extension."
+        },
+        "citation_2024Feb15Preview": {
+          "required": [
+            "content"
+          ],
+          "type": "object",
+          "properties": {
+            "content": {
+              "type": "string",
+              "description": "The content of the citation."
+            },
+            "title": {
+              "type": "string",
+              "description": "The title of the citation."
+            },
+            "url": {
+              "type": "string",
+              "description": "The URL of the citation."
+            },
+            "filepath": {
+              "type": "string",
+              "description": "The file path of the citation."
+            },
+            "chunk_id": {
+              "type": "string",
+              "description": "The chunk ID of the citation."
+            }
+          },
+          "description": "citation information for a chat completions response message."
+        },
+        "createChatCompletionResponse_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A unique identifier for the chat completion."
+            },
+            "object": {
+              "$ref": "#/definitions/chatCompletionResponseObject_2024Feb15Preview"
+            },
+            "created": {
+              "type": "integer",
+              "description": "The Unix timestamp (in seconds) of when the chat completion was created."
+            },
+            "model": {
+              "type": "string",
+              "description": "The model used for the chat completion."
+            },
+            "usage": {
+              "$ref": "#/definitions/completionUsage_2024Feb15Preview"
+            },
+            "system_fingerprint": {
+              "type": "string",
+              "description": "Can be used in conjunction with the `seed` request parameter to understand when backend changes have been made that might impact determinism."
+            },
+            "prompt_filter_results": {
+              "$ref": "#/definitions/promptFilterResults_2024Feb15Preview"
+            },
+            "choices": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "index": {
+                    "type": "integer"
+                  },
+                  "finish_reason": {
+                    "type": "string"
+                  },
+                  "message": {
+                    "$ref": "#/definitions/chatCompletionResponseMessage_2024Feb15Preview"
+                  },
+                  "content_filter_results": {
+                    "$ref": "#/definitions/contentFilterChoiceResults_2024Feb15Preview"
+                  },
+                  "logprobs": {
+                    "$ref": "#/definitions/chatCompletionChoiceLogProbs_2024Feb15Preview"
+                  }
+                }
+              }
+            }
+          },
+          "required": [
+            "id",
+            "object",
+            "created",
+            "model",
+            "choices"
+          ]
+        },
+        "chatCompletionChoiceLogProbs_2024Feb15Preview": {
+          "description": "Log probability information for the choice.",
+          "type": "object",
+          "properties": {
+            "content": {
+              "description": "A list of message content tokens with log probability information.",
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/chatCompletionTokenLogprob_2024Feb15Preview"
+              }
+            }
+          },
+          "required": [
+            "content"
+          ]
+        },
+        "chatCompletionTokenLogprob_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "token": {
+              "description": "The token.",
+              "type": "string"
+            },
+            "logprob": {
+              "description": "The log probability of this token.",
+              "type": "number"
+            },
+            "bytes": {
+              "description": "A list of integers representing the UTF-8 bytes representation of the token. Useful in instances where characters are represented by multiple tokens and their byte representations must be combined to generate the correct text representation. Can be `null` if there is no bytes representation for the token.",
+              "type": "array",
+              "items": {
+                "type": "integer"
+              }
+            },
+            "top_logprobs": {
+              "description": "List of the most likely tokens and their log probability, at this token position. In rare cases, there may be fewer than the number of requested `top_logprobs` returned.",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "description": "The token.",
+                    "type": "string"
+                  },
+                  "logprob": {
+                    "description": "The log probability of this token.",
+                    "type": "number"
+                  },
+                  "bytes": {
+                    "description": "A list of integers representing the UTF-8 bytes representation of the token. Useful in instances where characters are represented by multiple tokens and their byte representations must be combined to generate the correct text representation. Can be `null` if there is no bytes representation for the token.",
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                },
+                "required": [
+                  "token",
+                  "logprob",
+                  "bytes"
+                ]
+              }
+            }
+          },
+          "required": [
+            "token",
+            "logprob",
+            "bytes",
+            "top_logprobs"
+          ]
+        },
+        "chatCompletionResponseMessage_2024Feb15Preview": {
+          "type": "object",
+          "description": "A chat completion message generated by the model.",
+          "properties": {
+            "role": {
+              "$ref": "#/definitions/chatCompletionResponseMessageRole_2024Feb15Preview"
+            },
+            "content": {
+              "type": "string",
+              "description": "The contents of the message."
+            },
+            "context": {
+              "$ref": "#/definitions/azureChatExtensionsMessageContext_2024Feb15Preview"
+            }
+          }
+        },
+        "chatCompletionResponseMessageRole_2024Feb15Preview": {
+          "type": "string",
+          "enum": [
+            "assistant"
+          ],
+          "description": "The role of the author of the response message."
+        },
+        "chatCompletionsResponseCommon_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "A unique identifier for the chat completion."
+            },
+            "object": {
+              "$ref": "#/definitions/chatCompletionResponseObject_2024Feb15Preview"
+            },
+            "created": {
+              "type": "integer",
+              "description": "The Unix timestamp (in seconds) of when the chat completion was created."
+            },
+            "model": {
+              "type": "string",
+              "description": "The model used for the chat completion."
+            },
+            "usage": {
+              "$ref": "#/definitions/completionUsage_2024Feb15Preview"
+            },
+            "system_fingerprint": {
+              "type": "string",
+              "description": "Can be used in conjunction with the `seed` request parameter to understand when backend changes have been made that might impact determinism."
+            }
+          },
+          "required": [
+            "id",
+            "object",
+            "created",
+            "model"
+          ]
+        },
+        "chatCompletionResponseObject_2024Feb15Preview": {
+          "type": "string",
+          "description": "The object type.",
+          "enum": [
+            "chat.completion"
+          ],
+          "x-ms-enum": {
+            "name": "ChatCompletionResponseObject",
+            "modelAsString": true
+          }
+        },
+        "completionUsage_2024Feb15Preview": {
+          "type": "object",
+          "description": "Usage statistics for the completion request.",
+          "properties": {
+            "prompt_tokens": {
+              "type": "integer",
+              "description": "Number of tokens in the prompt."
+            },
+            "completion_tokens": {
+              "type": "integer",
+              "description": "Number of tokens in the generated completion."
+            },
+            "total_tokens": {
+              "type": "integer",
+              "description": "Total number of tokens used in the request (prompt + completion)."
+            }
+          },
+          "required": [
+            "prompt_tokens",
+            "completion_tokens",
+            "total_tokens"
+          ]
+        },
+        "chatCompletionChoiceCommon_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "index": {
+              "type": "integer"
+            },
+            "finish_reason": {
+              "type": "string"
+            }
+          }
+        },
+        "getSingleEmbeddingsRequest_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "description": "Input text to get embeddings for, encoded as a string. Input string must not exceed 2048 tokens in length",
+              "type": "string",
+              "default": "",
+              "example": "This is a test input string for single embeddings create operation"
+            },
+            "user": {
+              "description": "A unique identifier representing your end-user, which can help Azure OpenAI to monitor and detect abuse.",
+              "type": "string",
+              "example": "user-1234"
+            },
+            "input_type": {
+              "description": "The input type of embedding search to use.",
+              "type": "string",
+              "example": "query"
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "input"
+          ]
+        },
+        "getMultipleEmbeddingsRequest_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "input": {
+              "description": "Array of Input texts to get embeddings for, encoded as a string. Each Input string must not exceed 2048 tokens in length",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "example": "This is a test."
+              },
+              "default": [],
+              "minItems": 1,
+              "maxItems": 2048
+            },
+            "user": {
+              "description": "A unique identifier representing your end-user, which can help Azure OpenAI to monitor and detect abuse.",
+              "type": "string",
+              "example": "user-1234"
+            },
+            "input_type": {
+              "description": "The input type of embedding search to use.",
+              "type": "string",
+              "example": "query"
+            }
+          },
+          "additionalProperties": true,
+          "required": [
+            "input"
+          ]
+        },
+        "getSingleEmbeddingsResponse_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "object": {
+              "type": "string",
+              "description": "Details of the response object type"
+            },
+            "model": {
+              "type": "string",
+              "description": "The model name"
+            },
+            "embedding": {
+              "type": "array",
+              "description": "An array of floats that represent the computed embeddings for the given inputs",
+              "items": {
+                "type": "number"
+              }
+            },
+            "usage": {
+              "type": "object",
+              "description": "Object that represents token usage",
+              "properties": {
+                "prompt_tokens": {
+                  "type": "integer",
+                  "description": "The number of tokens used in the input"
+                },
+                "total_tokens": {
+                  "type": "integer",
+                  "description": "The total tokens used"
+                }
+              },
+              "required": [
+                "prompt_tokens",
+                "total_tokens"
+              ]
+            }
+          },
+          "required": [
+            "object",
+            "model",
+            "embedding",
+            "usage"
+          ]
+        },
+        "getMultipleEmbeddingsResponse_2024Feb15Preview": {
+          "type": "object",
+          "properties": {
+            "object": {
+              "type": "string",
+              "description": "Details of the response object type"
+            },
+            "model": {
+              "type": "string",
+              "description": "The model name"
+            },
+            "embeddings": {
+              "type": "array",
+              "description": "An array with arrays of floats representing the input string collection's computed embeddings",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "usage": {
+              "type": "object",
+              "description": "Object that represents token usage",
+              "properties": {
+                "prompt_tokens": {
+                  "type": "integer",
+                  "description": "The number of tokens used in the input"
+                },
+                "total_tokens": {
+                  "type": "integer",
+                  "description": "The total tokens used"
+                }
+              },
+              "required": [
+                "prompt_tokens",
+                "total_tokens"
+              ]
+            }
+          },
+          "required": [
+            "object",
+            "model",
+            "embeddings",
+            "usage"
+          ]
+        }
+      },
+      "parameters": {
+        "DeploymentId": {
+          "in": "path",
+          "name": "deployment-id",
+          "required": true,
+          "type": "string",
+          "description": "Deployment ID of the deployed model",
+          "x-ms-summary": "Deployment ID of the deployed model",
+          "x-ms-url-encoding": "single"
+        },
+        "DeploymentIdQueryParam": {
+          "in": "query",
+          "name": "deploymentId",
+          "required": true,
+          "type": "string",
+          "description": "Confirm Deployment ID of the deployed model",
+          "x-ms-summary": "Confirm Deployment ID of the deployed model"
+        },
+        "ApiVersion": {
+          "in": "query",
+          "name": "api-version",
+          "required": true,
+          "type": "string",
+          "description": "API version",
+          "x-ms-summary": "API version"
+        }
+      },
+      "responses": {},
+      "securityDefinitions": {
+        "custom": {
+          "type": "basic"
+        }
+      },
+      "security": [],
+      "tags": [],
+      "x-ms-connector-metadata": [
+        {
+          "propertyName": "Website",
+          "propertyValue": "https://azure.microsoft.com/en-us/products/cognitive-services/openai-service"
+        },
+        {
+          "propertyName": "Privacy policy",
+          "propertyValue": "https://learn.microsoft.com/en-us/legal/cognitive-services/openai/data-privacy"
+        },
+        {
+          "propertyName": "Categories",
+          "propertyValue": "AI;Business Intelligence"
+        }
+      ],
+      "externalDocs": {
+        "url": "https://docs.microsoft.com/connectors/azureopenai"
+      }
+    },
+    "runtimeUrls": [
+      "https://0b768ed1f103e3748a5806c623794b.19.environment.api.powerplatform.com/connectors/runtime/invoke/scalegroups/firstrelease/scaleunits/firstrelease-001/apis/azureopenai/connections/"
+    ],
+    "primaryRuntimeUrl": "https://0b768ed1f103e3748a5806c623794b.19.environment.api.powerplatform.com/connectors/runtime/invoke/scalegroups/firstrelease/scaleunits/firstrelease-001/apis/azureopenai/connections/",
+    "doNotUseApiHubNetRuntimeUrl": "https://0b768ed1-f103-e374-8a58-06c623794b19.firstrelease-001.firstrelease.azure-apihub.net/apim/azureopenai",
+    "metadata": {
+      "source": "marketplace",
+      "brandColor": "#000000",
+      "useNewApimVersion": "true",
+      "version": {
+        "previous": "releases/v1.0.1820\\1.0.1820.4809",
+        "current": "releases/v1.0.1829\\1.0.1829.5054"
+      }
+    },
+    "capabilities": [
+      "actions"
+    ],
+    "interfaces": {},
+    "description": "Easily integrate Azure OpenAI's cutting-edge artificial intelligence capabilities into your workflows",
+    "createdTime": "2023-05-24T17:39:29.2404088Z",
+    "changedTime": "2026-09-16T02:46:25.5152883Z",
+    "releaseTag": "Production",
+    "tier": "Premium",
+    "publisher": "Microsoft",
+    "rateLimit": 0,
+    "apiVersion": "None"
+  }
+}

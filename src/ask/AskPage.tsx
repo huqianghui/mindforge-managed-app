@@ -16,13 +16,18 @@ import { docHash, useContentIndex } from '../docs/content';
 import { useUser } from '../platform/user';
 import { askCopilot } from '../platform/copilot';
 import { askAgent } from '../platform/agent';
+import { AOAI_DEPLOYMENT, askAzureOpenAI } from '../platform/aoai';
 import { retrieve } from './retrieve';
 import type { Source } from './retrieve';
 import { buildPrompt, parseAnswer } from './prompt';
 import type { Turn } from './prompt';
 
-type Backend = 'workiq' | 'agent';
-const BACKENDS: Record<Backend, string> = { workiq: 'Work IQ（M365 Copilot）', agent: 'Copilot Studio agent' };
+type Backend = 'workiq' | 'agent' | 'aoai';
+const BACKENDS: Record<Backend, string> = {
+  workiq: 'Work IQ（M365 Copilot）',
+  agent: 'Copilot Studio agent',
+  aoai: `Azure OpenAI（${AOAI_DEPLOYMENT}）`,
+};
 
 interface Message {
   backend: Backend;
@@ -32,6 +37,8 @@ interface Message {
   related?: number[];
   error?: string;
   ms?: number;
+  /** Azure OpenAI 返回的模型与 token 用量 */
+  usage?: string;
 }
 
 const SLOW_MS = 10_000;
@@ -79,9 +86,17 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
       // 宿主外 SDK 调用不会返回，只演示检索
       if (user === null) throw new Error('offhost');
       const prompt = buildPrompt(q, sources, history, backend === 'agent');
-      const raw = backend === 'agent' ? await askAgent(prompt) : await askCopilot(prompt);
+      let raw: string;
+      let usage: string | undefined;
+      if (backend === 'aoai') {
+        const r = await askAzureOpenAI(prompt);
+        raw = r.text;
+        usage = `${r.model ?? AOAI_DEPLOYMENT} · 输入 ${r.promptTokens ?? '?'} / 输出 ${r.completionTokens ?? '?'} token`;
+      } else {
+        raw = backend === 'agent' ? await askAgent(prompt) : await askCopilot(prompt);
+      }
       const { text, related } = parseAnswer(raw, sources.length);
-      update({ answer: text, related, ms: performance.now() - started });
+      update({ answer: text, related, ms: performance.now() - started, usage });
     } catch (e) {
       update({ error: e instanceof Error ? e.message : String(e) });
     } finally {
@@ -98,10 +113,12 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
       <Box sx={{ maxWidth: 880, mx: 'auto', px: { xs: 2, md: 4 }, py: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>问答</Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
-          先在本应用里检索最相关的文章段落，再经 Work IQ 以你的身份交给{' '}
-          {backend === 'agent'
-            ? 'Copilot Studio agent「Mindforge Ask」（Standard harness，可选模型；资料里没有时会查公开网络并标明）'
-            : 'Microsoft 365 Copilot，只根据这些段落作答'}
+          先在本应用里检索最相关的文章段落，再
+          {backend === 'aoai'
+            ? `经 Azure OpenAI connector 直接调用部署 ${AOAI_DEPLOYMENT}（API Key 连接），只根据这些段落作答`
+            : backend === 'agent'
+              ? '经 Work IQ 以你的身份交给 Copilot Studio agent「Mindforge Ask」（Standard harness，可选模型；资料里没有时会查公开网络并标明）'
+              : '经 Work IQ 以你的身份交给 Microsoft 365 Copilot，只根据这些段落作答'}
           ；[n] 与下方引用都能直接打开原文。
         </Typography>
         <ToggleButtonGroup size="small" exclusive value={backend} onChange={(_, v: Backend | null) => v && setBackend(v)} sx={{ mb: 2 }}>
@@ -136,8 +153,8 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
                   <Box sx={{ py: 1 }}>
                     <LinearProgress sx={{ mb: 1 }} />
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                      {m.sources.length ? `已检索到 ${m.sources.length} 篇资料，等待 Copilot 回答…` : '检索中…'}
-                      {slow && i === messages.length - 1 && ' 仍在处理，Copilot 通常需要 10–30 秒。'}
+                      {m.sources.length ? `已检索到 ${m.sources.length} 篇资料，等待 ${BACKENDS[m.backend]} 回答…` : '检索中…'}
+                      {slow && i === messages.length - 1 && ' 仍在处理，经 Work IQ 的回答通常需要 15–35 秒。'}
                     </Typography>
                   </Box>
                 )}
@@ -151,6 +168,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       {m.answer !== undefined && m.related?.length ? '引用' : '检索到的资料'}
                       {m.ms !== undefined && ` · ${(m.ms / 1000).toFixed(1)} 秒`} · {BACKENDS[m.backend]}
+                      {m.usage && ` · ${m.usage}`}
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
                       {m.sources.map((s) => {

@@ -4,7 +4,9 @@
  */
 
 // Models
+export * as AzureOpenAIModel from './models/AzureOpenAIModel';
 export * as WorkIQCopilotMCPModel from './models/WorkIQCopilotMCPModel';
 
 // Services
+export * from './services/AzureOpenAIService';
 export * from './services/WorkIQCopilotMCPService';
