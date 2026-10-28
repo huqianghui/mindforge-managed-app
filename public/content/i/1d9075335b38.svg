@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 700" width="1400" height="700" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif">
+  <defs>
+    <style>
+      .bg { fill: #0b1220; }
+      .done { fill: #13213a; stroke: #2dd4bf; stroke-width: 1.6; }
+      .fail { fill: #2a1215; stroke: #f87171; stroke-width: 1.8; stroke-dasharray: 7 4; }
+      .win { fill: #0f2a2a; stroke: #5eead4; stroke-width: 2.4; animation: pulse 2.4s ease-in-out infinite; }
+      .plan { fill: #111827; stroke: #334155; stroke-width: 1.4; stroke-dasharray: 6 5; }
+      .h15 { fill: #e2e8f0; font-size: 15px; font-weight: 600; }
+      .hRed { fill: #fca5a5; font-size: 15px; font-weight: 600; }
+      .hTeal { fill: #99f6e4; font-size: 15px; font-weight: 600; }
+      .t { fill: #cbd5e1; font-size: 13.5px; }
+      .tGray { fill: #94a3b8; font-size: 13.5px; }
+      .tAmber { fill: #fcd34d; font-size: 13.5px; }
+      .tRed { fill: #fca5a5; font-size: 13.5px; }
+      .mono { fill: #e2e8f0; font-size: 13px; font-family: Menlo, Consolas, monospace; }
+      .monoRed { fill: #fca5a5; font-size: 13px; font-family: Menlo, Consolas, monospace; }
+      .monoTeal { fill: #5eead4; font-size: 13px; font-family: Menlo, Consolas, monospace; }
+      .title { fill: #f8fafc; font-size: 22px; font-weight: 700; }
+      .sub { fill: #94a3b8; font-size: 14px; }
+      .axisDone { stroke: #2dd4bf; stroke-width: 4; stroke-dasharray: 10 6; animation: dash 1.2s linear infinite; }
+      .axisFail { stroke: #f87171; stroke-width: 3; stroke-dasharray: 4 6; }
+      .nDone { fill: #0f766e; stroke: #5eead4; stroke-width: 2; }
+      .nFail { fill: #7f1d1d; stroke: #fca5a5; stroke-width: 2; }
+      .nWin { fill: #0f766e; stroke: #fde68a; stroke-width: 2.6; animation: pulse 1.6s ease-in-out infinite; }
+      .bn { fill: #f0fdfa; font-size: 14px; font-weight: 700; text-anchor: middle; }
+      .lg { font-size: 13.5px; fill: #cbd5e1; }
+      @keyframes dash { to { stroke-dashoffset: -32; } }
+      @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+    </style>
+  </defs>
+
+  <rect class="bg" width="1400" height="700" rx="16"/>
+  <text class="title" x="34" y="44">从新建到被应用调用：Standard agent 的七步（实测版）</text>
+  <text class="sub" x="34" y="72">截至 2026-10-28 全部走完；红色虚线是计划中的路径实测走不通，第 ⑦ 步改走 Work IQ，复测也走不通</text>
+
+  <line class="axisDone" x1="124" y1="140" x2="1004" y2="140"/>
+  <line class="axisFail" x1="1004" y1="140" x2="1084" y2="140"/>
+  <line class="axisDone" x1="1084" y1="140" x2="1276" y2="140"/>
+  <circle r="5" fill="#5eead4"><animateMotion dur="5s" repeatCount="indefinite" path="M124,140 L1276,140"/></circle>
+
+  <circle class="nDone" cx="124" cy="140" r="20"/><text class="bn" x="124" y="145">1</text>
+  <circle class="nDone" cx="316" cy="140" r="20"/><text class="bn" x="316" y="145">2</text>
+  <circle class="nDone" cx="508" cy="140" r="20"/><text class="bn" x="508" y="145">3</text>
+  <circle class="nDone" cx="700" cy="140" r="20"/><text class="bn" x="700" y="145">4</text>
+  <circle class="nDone" cx="892" cy="140" r="20"/><text class="bn" x="892" y="145">5</text>
+  <circle class="nFail" cx="1084" cy="140" r="20"/><text class="bn" x="1084" y="145">6</text>
+  <circle class="nFail" cx="1276" cy="140" r="20"/><text class="bn" x="1276" y="145">7</text>
+
+  <!-- 1 -->
+  <rect class="done" x="34" y="184" width="180" height="336" rx="10"/>
+  <text class="h15" x="48" y="210">选对 harness</text>
+  <text class="t" x="48" y="238">New agent 右侧</text>
+  <text class="t" x="48" y="260">下拉 → Other ways</text>
+  <text class="t" x="48" y="282">to build →</text>
+  <text class="t" x="48" y="304">Agent（Standard）</text>
+  <text class="tAmber" x="48" y="336">直接点按钮建出的</text>
+  <text class="tAmber" x="48" y="358">是 GitHub Copilot</text>
+  <text class="tAmber" x="48" y="380">harness</text>
+  <text class="tGray" x="48" y="412">创建后不能互转</text>
+
+  <!-- 2 -->
+  <rect class="done" x="226" y="184" width="180" height="336" rx="10"/>
+  <text class="h15" x="240" y="210">命名对话框</text>
+  <text class="t" x="240" y="238">展开 Agent settings</text>
+  <text class="t" x="240" y="270">Solution 选自建的</text>
+  <text class="t" x="240" y="292">（前缀随之变化）</text>
+  <text class="mono" x="240" y="324">mf_MindforgeAsk</text>
+  <text class="tAmber" x="240" y="356">schema name</text>
+  <text class="tAmber" x="240" y="378">一次定终身</text>
+  <text class="tGray" x="240" y="410">中文名会变随机串</text>
+
+  <!-- 3 -->
+  <rect class="done" x="418" y="184" width="180" height="336" rx="10"/>
+  <text class="h15" x="432" y="210">配置</text>
+  <text class="t" x="432" y="238">模型：GPT Chat</text>
+  <text class="t" x="432" y="260">Latest（可换）</text>
+  <text class="t" x="432" y="292">指令：先用 SOURCES</text>
+  <text class="t" x="432" y="314">答，没有才上网</text>
+  <text class="t" x="432" y="346">知识源：不挂，</text>
+  <text class="t" x="432" y="368">资料由应用写进消息</text>
+  <text class="tAmber" x="432" y="400">Web Search 改为开</text>
+  <text class="tAmber" x="432" y="422">（标明来源即可）</text>
+  <text class="tGray" x="432" y="454">程序改指令要直接</text>
+  <text class="tGray" x="432" y="476">改 gpt.default YAML</text>
+
+  <!-- 4 -->
+  <rect class="done" x="610" y="184" width="180" height="336" rx="10"/>
+  <text class="h15" x="624" y="210">测试面板</text>
+  <text class="t" x="624" y="238">先改写成短英文</text>
+  <text class="t" x="624" y="260">查询再检索</text>
+  <text class="t" x="624" y="282">（1–2 秒）</text>
+  <text class="t" x="624" y="314">回答附编号与 URL</text>
+  <text class="tAmber" x="624" y="346">指令里的输出格式</text>
+  <text class="tAmber" x="624" y="368">只部分生效</text>
+  <text class="tGray" x="624" y="400">经应用调用、消息</text>
+  <text class="tGray" x="624" y="422">自带规则时守约</text>
+
+  <!-- 5 -->
+  <rect class="done" x="802" y="184" width="180" height="336" rx="10"/>
+  <text class="h15" x="816" y="210">渠道与发布</text>
+  <text class="t" x="816" y="238">Publish 灰：至少</text>
+  <text class="t" x="816" y="260">要一个渠道</text>
+  <text class="t" x="816" y="292">Microsoft 认证下只</text>
+  <text class="t" x="816" y="314">剩 Teams / M365 /</text>
+  <text class="t" x="816" y="336">SharePoint</text>
+  <text class="tAmber" x="816" y="368">勾选 Make agent</text>
+  <text class="tAmber" x="816" y="390">available in M365</text>
+  <text class="tAmber" x="816" y="412">Copilot</text>
+  <text class="tGray" x="816" y="444">界面一直转，以</text>
+  <text class="mono" x="816" y="466">bots.publishedon</text>
+  <text class="tGray" x="816" y="488">为准</text>
+
+  <!-- 6 -->
+  <rect class="fail" x="994" y="184" width="180" height="336" rx="10"/>
+  <text class="hRed" x="1008" y="210">Connector ✗</text>
+  <text class="t" x="1008" y="238">add data-source</text>
+  <text class="t" x="1008" y="260">microsoftcopilot…</text>
+  <text class="tRed" x="1008" y="292">草稿：重定向到门户</text>
+  <text class="tRed" x="1008" y="314">→ CORS 拦截，SDK</text>
+  <text class="tRed" x="1008" y="336">却报 success</text>
+  <text class="tRed" x="1008" y="368">已发布：400</text>
+  <text class="monoRed" x="1008" y="390">notificationUrl</text>
+  <text class="tRed" x="1008" y="412">必填（回调式）</text>
+  <text class="tGray" x="1008" y="444">已移除该数据源，</text>
+  <text class="tGray" x="1008" y="466">少一个授权项</text>
+
+  <!-- 7 -->
+  <rect x="1186" y="184" width="180" height="336" rx="10" fill="#2a1215" stroke="#f87171" stroke-width="1.8"/>
+  <text class="hTeal" x="1200" y="210" fill="#fca5a5" style="fill:#fca5a5">Work IQ ✗</text>
+  <text class="mono" x="1200" y="238">copilot_chat</text>
+  <text class="t" x="1200" y="260">多传一个 agentId</text>
+  <text class="t" x="1200" y="292">agentId = 渠道面板</text>
+  <text class="t" x="1200" y="314">链接里的 titleId</text>
+  <text class="monoTeal" x="1200" y="336">T_xxxxxxxx-…</text>
+  <text class="tRed" x="1200" y="368">调用成功、回显</text>
+  <text class="tRed" x="1200" y="390">agentId，但被忽略</text>
+  <text class="tGray" x="1200" y="422">回答来自 M365</text>
+  <text class="tGray" x="1200" y="444">Copilot 本体；裸问</text>
+  <text class="tGray" x="1200" y="466">题对照才看出来</text>
+
+  <!-- legend -->
+  <rect class="plan" x="34" y="544" width="1332" height="134" rx="12"/>
+  <circle class="nDone" cx="60" cy="576" r="10"/>
+  <text class="lg" x="80" y="581">①② 不可逆，最先做、最该确认；③ 的 Web Search 从"关掉"改为"开着并标明来源"——应用要的是"知识库优先、网页兜底、两种引用分开"</text>
+  <circle class="nDone" cx="60" cy="608" r="10"/>
+  <text class="lg" x="80" y="613">④⑤ 都在 Copilot Studio 门户：测试面板的表现不等于经应用调用的表现；发布前必须先加渠道，渠道决定 agent 之后能从哪里被找到</text>
+  <circle class="nFail" cx="60" cy="640" r="10"/>
+  <text class="lg" x="80" y="645">⑥ 是原计划（Copilot Studio Connector）实测走不通的一步；⑦ 绕道 M365 Copilot 传 titleId 作 agentId，也被忽略——agent 只能由人直接用，或经 workflow 调</text>
+</svg>

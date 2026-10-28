@@ -38,6 +38,14 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ![洞察](docs/images/screenshots/insights.png)
 
+左栏还有 **Gap 主题**筛选：按差距报告的主题（如"全双工与端到端语音"）只看它关联的节点与 Claims，括号里是有关联 wiki 页的主题数。
+
+### 差距追踪 `#/gaps`
+
+把 12 期知识差距报告按主题归并（主题表在 mindforge 的 `wiki/knowledge-gap/topics.yml`，每期报告 frontmatter 的 `trends` 标出主题、优先级、动作、信号与关联节点）：主题标签云按加权热度排字号；主题 × 期数矩阵看一个主题热了几期、现在是持续 / 再现 / 沉寂；点一个主题，右侧列出关联 wiki 页和每一期的说法，可跳回原报告。地址带 `?topic=` 可直接分享。页面与 GitHub Pages 版同源（mindforge@040c9fa）。
+
+![差距追踪](docs/images/screenshots/gaps.png)
+
 ### 建议 `#/suggestions`
 
 用固定规则从图谱和提交历史里找出值得处理的地方，以数据自身的日期为准，同一份数据每次结果相同（阈值在 `src/suggestions/rules.ts`）。每张卡写明**依据**和**建议动作**，分行动 / 核查 / 提示三级，列出涉及的节点（点开即 wiki 页面），并可一键跳到洞察页的对应筛选。
@@ -90,7 +98,7 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 |---|---|---|
 | 访问 | 公开 | Entra 登录，按人/组分享 |
 | 内容 | 同一份内容，构建期从本仓库生成 | 同一份内容，从 mindforge 仓库同步 |
-| 页面 | 文章导航、知识图谱、洞察、建议、统计、演进（与本项目一致） | 同左，另有问答 |
+| 页面 | 文章导航、知识图谱、洞察、差距追踪、建议、统计、演进（与本项目一致） | 同左，另有问答 |
 | 阅读进度与收藏 | 只存在本机浏览器 | 按登录用户存在 App state，跨设备同步 |
 | 平台能力 | 无：不接 Connector、不识别用户，所以没有问答 | 可接 Connector（Work IQ、Azure OpenAI、SharePoint 等），可读取登录用户身份，按用户保存数据（App state） |
 | 定位 | 公开知识库 | 学习与实验 Copilot Studio / Managed Runtime 开发 |
@@ -99,19 +107,20 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ```text
 src/
-  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline、#/ask?q=&doc=）
+  App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/gaps?topic=、#/suggestions、#/stats、#/timeline、#/ask?q=&doc=）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写；收藏、继续阅读、我的收藏 / 最近阅读
   platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析）、aoai.ts（Azure OpenAI 可选部署列表与 api-version）
   ask/                 问答页：retrieve.ts（本地检索与段落摘录）、prompt.ts（提示词与 RELATED 解析）、AskPage.tsx
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
+  gaps/                差距追踪页：topics.ts 把 history.json 里每期报告的 trends 按主题归并（热度、连续期数、状态），GapsPage 画标签云、主题 × 期数矩阵与主题详情
   suggestions/         建议页：rules.ts 里的固定规则与阈值生成"依据 + 动作"卡片，分行动/核查/提示三级，可跳到洞察页对应筛选
   stats/               统计页：字数累计与分板块、最长文章、标签分布、系列完成度、链接健康度（读 stats.json）
   timeline/            演进页：知识之树（分形树随有内容的日子自动生长、台历翻页、鼠标移入看知识）、时间轴回放（泳道蜂群图）、累计增长、每周活动、Claims 健康度、分类成长、差距报告与建议（Recharts，按需加载）
 scripts/
   sync-content.py      从 mindforge 拉取内容到 public/content/
-  history.py           由 sync-content 调用：从 git 提交历史生成 history.json
+  history.py           由 sync-content 调用：从 git 提交历史生成 history.json（含每期差距报告的 trends 与主题表 gapTopics）
   stats.py             由 sync-content 调用：字数、标签、系列、链接健康度 → stats.json
   search.py            由 sync-content 调用：问答用的每篇摘要索引 → search.json（也可单独运行）
   release.sh           同步 → 本地构建 → 提交 → 推送 GitHub 与平台仓库 → deploy
@@ -161,7 +170,7 @@ ms auth login
 
 # ms.config.json 已在仓库里；换成自己的应用时用 ms app init 重新生成
 
-python3 scripts/sync-content.py   # 同步内容
+python3 scripts/sync-content.py   # 同步内容（history.py 解析差距报告的 frontmatter，需要 PyYAML：pip install pyyaml）
 npm run dev                       # 本地预览
 
 scripts/release.sh                # 同步并发布到 GitHub 与 Managed App

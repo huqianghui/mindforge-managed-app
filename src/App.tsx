@@ -15,6 +15,7 @@ import './docs/markdown.css';
 // 图表库只在洞察页和演进页用到，单独拆包
 const TimelinePage = lazy(() => import('./timeline/TimelinePage'));
 const InsightsPage = lazy(() => import('./insights/InsightsPage'));
+const GapsPage = lazy(() => import('./gaps/GapsPage'));
 const SuggestionsPage = lazy(() => import('./suggestions/SuggestionsPage'));
 const StatsPage = lazy(() => import('./stats/StatsPage'));
 const AskPage = lazy(() => import('./ask/AskPage'));
@@ -22,6 +23,7 @@ const AskPage = lazy(() => import('./ask/AskPage'));
 type Route =
   | { view: 'graph' }
   | { view: 'insights' }
+  | { view: 'gaps' }
   | { view: 'suggestions' }
   | { view: 'stats' }
   | { view: 'ask'; q?: string; doc?: string }
@@ -32,6 +34,7 @@ type Route =
 function parseHash(hash: string): Route {
   if (hash.startsWith('#/graph')) return { view: 'graph' };
   if (hash.startsWith('#/insights')) return { view: 'insights' };
+  if (hash.startsWith('#/gaps')) return { view: 'gaps' };
   if (hash.startsWith('#/suggestions')) return { view: 'suggestions' };
   if (hash.startsWith('#/stats')) return { view: 'stats' };
   if (hash.startsWith('#/ask')) {
@@ -64,6 +67,7 @@ export default function App() {
             <Tab value="doc" label="文章导航" component="a" href={`#/doc/${HOME_DOC}`} />
             <Tab value="graph" label="知识图谱" component="a" href="#/graph" />
             <Tab value="insights" label="洞察" component="a" href="#/insights" />
+            <Tab value="gaps" label="差距追踪" component="a" href="#/gaps" />
             <Tab value="suggestions" label="建议" component="a" href="#/suggestions" />
             <Tab value="stats" label="统计" component="a" href="#/stats" />
             <Tab value="timeline" label="演进" component="a" href="#/timeline" />
@@ -77,6 +81,11 @@ export default function App() {
         {route.view === 'insights' && (
           <Suspense fallback={null}>
             <InsightsPage />
+          </Suspense>
+        )}
+        {route.view === 'gaps' && (
+          <Suspense fallback={null}>
+            <GapsPage />
           </Suspense>
         )}
         {route.view === 'ask' && (
