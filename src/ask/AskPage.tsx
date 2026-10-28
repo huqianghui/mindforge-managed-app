@@ -52,7 +52,9 @@ interface Message {
   answer?: string;
   related?: number[];
   error?: string;
-  ms?: number;
+  /** 本地检索耗时，与后端（connector + 模型）耗时分开计 */
+  retrievalMs?: number;
+  modelMs?: number;
   /** Azure OpenAI 返回的模型与 token 用量 */
   usage?: string;
 }
@@ -107,7 +109,8 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
     setMessages((ms) => [...ms, { backend, deployment: backend === 'aoai' ? deployment : undefined, question: q, sources }]);
     try {
       sources = await retrieve(q, content, pinned);
-      update({ sources });
+      const retrieved = performance.now();
+      update({ sources, retrievalMs: retrieved - started });
       // 宿主外 SDK 调用不会返回，只演示检索
       if (user === null) throw new Error('offhost');
       const prompt = buildPrompt(q, sources, history, backend === 'agent');
@@ -121,7 +124,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
         raw = backend === 'agent' ? await askAgent(prompt) : await askCopilot(prompt);
       }
       const { text, related } = parseAnswer(raw, sources.length);
-      update({ answer: text, related, ms: performance.now() - started, usage });
+      update({ answer: text, related, modelMs: performance.now() - retrieved, usage });
     } catch (e) {
       update({ error: e instanceof Error ? e.message : String(e) });
     } finally {
@@ -204,7 +207,8 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
                   <Box sx={{ mt: 1.5, pt: 1, borderTop: 1, borderColor: 'divider' }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       {m.answer !== undefined && m.related?.length ? '引用' : '检索到的资料'}
-                      {m.ms !== undefined && ` · ${(m.ms / 1000).toFixed(1)} 秒`} · {BACKENDS[m.backend]}{m.deployment && `（${m.deployment}）`}
+                      {m.retrievalMs !== undefined && ` · 检索 ${(m.retrievalMs / 1000).toFixed(2)} 秒`}
+                      {m.modelMs !== undefined && ` · 回答 ${(m.modelMs / 1000).toFixed(1)} 秒`} · {BACKENDS[m.backend]}{m.deployment && `（${m.deployment}）`}
                       {m.usage && ` · ${m.usage}`}
                     </Typography>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 0.5 }}>
