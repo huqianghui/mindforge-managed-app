@@ -21,7 +21,7 @@ Agents 页 **New agent** 右侧的下拉菜单（截图 2026-10-27，环境 Qian
 | 菜单项（标签） | 对应 harness | 造出来的 agent 叫什么 | 计费（菜单上的硬币图标 / 列表 Credit usage 列） | 能否从 managed app 调（2026-10-28 实测） |
 |---|---|---|---|---|
 | **Agent**（GitHub Copilot）——"Optimize your business processes"下唯一一项，也是 New agent 按钮的默认动作 | GitHub Copilot harness | Agent | 有硬币图标：Copilot Credits，构建、测试、运行都算 | ❌ |
-| **Customer Assist Agent**（Customer conversation） | **Customer Conversation harness**（预览） | Customer Assist Agent | 有硬币图标：Copilot Credits | 文档未提，〔待实测〕；它面向网站聊天和电话号码渠道 |
+| **Customer Assist Agent**（Customer conversation） | **Customer Conversation harness**（预览） | Customer Assist Agent | 有硬币图标：Copilot Credits | ❌（推断，未实测）：它面向网站聊天和电话号码渠道，网站聊天要 iframe 或 Direct Line，都被应用的 CSP 挡住 |
 | **Microsoft Copilot agent**（Copilot chat），点击后在新标签页打开 | Copilot Chat harness | 运行在 Microsoft 365 Copilot Chat 里的 agent | 包含在 M365 Copilot 许可内 | ❌（只在 Copilot Chat 里用；经 Work IQ `agentId` 也实测无效） |
 | **Agent**（Standard）——"Other ways to build"下最后一项 | Standard harness | 经典 agent | 列表里写着 "Included with your Microsoft 365 Copilot license at no additional credit cost"，Credit usage 显示 N/A | 经 Copilot Studio Connector ❌（`ExecuteCopilotAsyncV2` 是回调式）；发布到 M365 Copilot 后经 Work IQ `copilot_chat` + `agentId` ❌（agentId 被忽略，回答来自 M365 Copilot 本体；2026-10-28 复测更正） |
 
@@ -119,7 +119,7 @@ Agents 页 **New agent** 右侧的下拉菜单（截图 2026-10-27，环境 Qian
 结论：
 
 - **managed app 里做 Ask Copilot，如果走 Copilot Studio agent，就必须建 Standard harness 的 agent。** 而新建默认是 GitHub Copilot harness，一不留神就会建错，调用时只拿到空的或占位的回复。
-- **而且即使是 Standard，也不能经 Copilot Studio Connector 调**（回调式，见上表）。曾以为可以发布到 Microsoft 365 Copilot 后经 Work IQ `copilot_chat` 传 `agentId`，复测证明 agentId 被忽略。目前浏览器里的 managed app 没有同步调用 Copilot Studio agent 的路。
+- **而且即使是 Standard，也不能经 Copilot Studio Connector 调**（回调式，见上表）。曾以为可以发布到 Microsoft 365 Copilot 后经 Work IQ `copilot_chat` 传 `agentId`，复测证明 agentId 被忽略。目前浏览器里的 managed app 没有同步调用 Copilot Studio agent 的路（四种 harness 汇总与异步做法见 [11 · 一](11-方案讨论.md#一问答的后端)）；问答页的 agent 切换项已于 2026-10-28 移除。
 - 已经写好的 [03 Copilot Studio 集成指南](03-Copilot-Studio集成指南.md) 已按这一点修正。
 
 ## 四、对本项目的意义

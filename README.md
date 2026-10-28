@@ -78,11 +78,9 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ![问答](docs/images/screenshots/ask.png)
 
-页面顶部还有一个 **Copilot Studio agent** 切换项：同样的检索结果，提示词允许资料外查公开网络并标明，再经 Work IQ 传 Copilot Studio Standard agent「Mindforge Ask」的 `agentId`。**2026-10-28 复测更正**：Work IQ 忽略 `agentId`，只把它原样回显，回答其实来自 M365 Copilot 本体，agent 的指令、模型都没有用上；Copilot Chat（声明式）agent 也一样。Copilot Studio Connector 又要求回调地址，浏览器里收不到。所以目前从 managed app 调不到 Copilot Studio agent。对照实验见 [03 · 实测 §5](docs/03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)。
+曾经还有一个 **Copilot Studio agent** 切换项：经 Work IQ 传 Copilot Studio agent「Mindforge Ask」的 `agentId`。复测发现 Work IQ 忽略 `agentId`，回答其实来自 M365 Copilot 本体，2026-10-28 已移除。四种 harness 的 agent 目前都没法从 managed app 同步调用，原因与可能的异步做法（经 workflow 中转）见 [11 方案讨论](docs/11-方案讨论.md#一问答的后端)，对照实验见 [03 · 实测 §5](docs/03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)。
 
-![问答：Copilot Studio agent 切换项（回答实际来自 M365 Copilot）](docs/images/screenshots/ask-agent.png)
-
-第三个后端 **Azure OpenAI**：经 Azure OpenAI connector 直接调用模型部署，旁边的下拉框可在 8 个对话部署（gpt-6.1 / gpt-6 / gpt-5.6 的 sol、terra、luna、astra）之间切换，选择记在本机。同一个问题约 4–8 秒（经 Work IQ 的两个后端要 15–35 秒），并显示模型版本和输入 / 输出 token。连接用 API Key（Entra 认证在本环境创建不了），部署名是每次调用的参数，不在连接里。对比与踩坑见 [04 · 阶段 6](docs/04-新功能开发指南.md#阶段-6azure-openai-connector直接调模型)。
+第二个后端 **Azure OpenAI**：经 Azure OpenAI connector 直接调用模型部署，旁边的下拉框可在 8 个对话部署（gpt-6.1 / gpt-6 / gpt-5.6 的 sol、terra、luna、astra）之间切换，选择记在本机。同一个问题约 4–8 秒（经 Work IQ 要 15–26 秒），并显示模型版本和输入 / 输出 token。连接用 API Key（Entra 认证在本环境创建不了），部署名是每次调用的参数，不在连接里。对比与踩坑见 [04 · 阶段 6](docs/04-新功能开发指南.md#阶段-6azure-openai-connector直接调模型)。
 
 ![问答：Azure OpenAI 后端](docs/images/screenshots/ask-aoai.png)
 
@@ -94,7 +92,7 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 | 内容 | 同一份内容，构建期从本仓库生成 | 同一份内容，从 mindforge 仓库同步 |
 | 页面 | 文章导航、知识图谱、洞察、建议、统计、演进（与本项目一致） | 同左，另有问答 |
 | 阅读进度与收藏 | 只存在本机浏览器 | 按登录用户存在 App state，跨设备同步 |
-| 平台能力 | 无：不接 Connector、不识别用户，所以没有问答 | 可接 Connector（Work IQ、Copilot Studio agent、Azure OpenAI、SharePoint 等），可读取登录用户身份，按用户保存数据（App state） |
+| 平台能力 | 无：不接 Connector、不识别用户，所以没有问答 | 可接 Connector（Work IQ、Azure OpenAI、SharePoint 等），可读取登录用户身份，按用户保存数据（App state） |
 | 定位 | 公开知识库 | 学习与实验 Copilot Studio / Managed Runtime 开发 |
 
 ## 结构
@@ -104,7 +102,7 @@ src/
   App.tsx              顶部导航 + hash 路由（#/doc/<path>、#/graph、#/insights、#/suggestions、#/stats、#/timeline、#/ask?q=&doc=）
   GraphPage.tsx        知识图谱（react-force-graph）
   docs/                README 导航与文章阅读：manifest 加载、Markdown 渲染、链接改写；收藏、继续阅读、我的收藏 / 最近阅读
-  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析，可带 agentId，实测被忽略）、agent.ts（Copilot Studio agent 的 agentId）、aoai.ts（Azure OpenAI 可选部署列表与 api-version）
+  platform/            SDK 调用集中在这里：user.ts（getUser，宿主外超时视为匿名）、readingState.ts（App state 读写 + 本机兜底）、copilot.ts（Work IQ 的 JSON-RPC 调用与返回解析）、aoai.ts（Azure OpenAI 可选部署列表与 api-version）
   ask/                 问答页：retrieve.ts（本地检索与段落摘录）、prompt.ts（提示词与 RELATED 解析）、AskPage.tsx
   components/          图谱的筛选栏、节点面板、图例
   insights/            洞察页：Claim 级多维筛选（写进 hash）、分类×状态/置信度/按月/关系类型图表联动、节点 → Claim → 原文钻取
@@ -187,5 +185,5 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 | 3 | 文档统计：文章与节点的提交时间线、Claims 健康度趋势、分类成长、差距报告与建议（演进页 `#/timeline`）；字数、标签分布、系列完成度、链接健康度（统计页 `#/stats`） | 构建期预计算 vs 运行期计算 | ✅ |
 | 4 | 个性化：读取登录用户，记录阅读进度与收藏，左栏我的收藏 / 最近阅读 | SDK `getUser()`；App state（按用户隔离）；Dataverse 表作对比，写入被租户 DLP 屏蔽 | ✅ |
 | 5a | Ask Copilot（Work IQ）：本地检索 + Work IQ Copilot MCP 回答，`[n]` 与 RELATED 引用跳回原文；文章页"就这篇提问"（`#/ask`） | `ms app add data-source`；MCP JSON-RPC；提示词约定输出协议；连接与首次授权 | ✅ |
-| 5b | Ask Copilot（Copilot Studio agent）：建 Standard agent「Mindforge Ask」，想作为第二种后端 | 建 Standard agent、解决方案与 schema name、发布需渠道；Copilot Studio Connector 是回调式不可用；Work IQ `copilot_chat` 的 `agentId` 复测被忽略（2026-10-28 更正），怎样判断“确实是 agent 在答” | ⚠️ 未打通 |
-| 6 | 对比：同样的问答改用 Azure OpenAI Connector（gpt-6.1-terra，API Key 连接），问答页第三个后端，显示 token 用量 | 连接认证方式（Entra 在本环境报 AADSTS50011）、部署是调用参数、三种后端的延迟与取舍 | ✅ |
+| 5b | Ask Copilot（Copilot Studio agent）：建 Standard agent「Mindforge Ask」，想作为第二种后端 | 建 Standard agent、解决方案与 schema name、发布需渠道；Copilot Studio Connector 是回调式不可用；Work IQ `copilot_chat` 的 `agentId` 被忽略；怎样判断“确实是 agent 在答”。四种 harness 都调不到，切换项已移除 | ❌ 未打通 |
+| 6 | 对比：同样的问答改用 Azure OpenAI Connector（gpt-6.1-terra，API Key 连接），问答页的另一个后端，显示 token 用量 | 连接认证方式（Entra 在本环境报 AADSTS50011）、部署是调用参数、与 Work IQ 的延迟与取舍 | ✅ |

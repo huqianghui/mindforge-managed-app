@@ -38,14 +38,15 @@ function answerOf(text: string, prompt: string): string {
   return body;
 }
 
-/** agentId：copilot_chat 的可选参数，文档说是交给指定 agent；实测被忽略，传不传都由 M365 Copilot 本体回答 */
-export async function askCopilot(message: string, agentId?: string): Promise<string> {
+// copilot_chat 还有可选参数 agentId（文档说是交给指定 agent）。实测被忽略、只原样回显，
+// 回答始终来自 M365 Copilot 本体，所以不再传（docs/03 实测 §5）。
+export async function askCopilot(message: string): Promise<string> {
   const id = crypto.randomUUID();
   const res = await WorkIQ.mcp_m365copilot(undefined, {
     jsonrpc: '2.0',
     id,
     method: 'tools/call',
-    params: { name: 'copilot_chat', arguments: agentId ? { message, agentId } : { message } },
+    params: { name: 'copilot_chat', arguments: { message } },
   });
   // SDK 不抛异常，失败体现在 success 上
   if (!res.success) throw res.error ?? new Error('Work IQ Copilot 调用失败');

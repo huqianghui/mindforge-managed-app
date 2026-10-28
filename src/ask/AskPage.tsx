@@ -17,7 +17,6 @@ import Select from '@mui/material/Select';
 import { docHash, useContentIndex } from '../docs/content';
 import { useUser } from '../platform/user';
 import { askCopilot } from '../platform/copilot';
-import { askAgent } from '../platform/agent';
 import { AOAI_DEFAULT, AOAI_DEPLOYMENTS, askAzureOpenAI } from '../platform/aoai';
 import type { AoaiDeployment } from '../platform/aoai';
 import { retrieve } from './retrieve';
@@ -25,10 +24,9 @@ import type { Source } from './retrieve';
 import { buildPrompt, parseAnswer } from './prompt';
 import type { Turn } from './prompt';
 
-type Backend = 'workiq' | 'agent' | 'aoai';
+type Backend = 'workiq' | 'aoai';
 const BACKENDS: Record<Backend, string> = {
   workiq: 'Work IQ（M365 Copilot）',
-  agent: 'Copilot Studio agent',
   aoai: 'Azure OpenAI',
 };
 
@@ -113,7 +111,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
       update({ sources, retrievalMs: retrieved - started });
       // 宿主外 SDK 调用不会返回，只演示检索
       if (user === null) throw new Error('offhost');
-      const prompt = buildPrompt(q, sources, history, backend === 'agent');
+      const prompt = buildPrompt(q, sources, history);
       let raw: string;
       let usage: string | undefined;
       if (backend === 'aoai') {
@@ -121,7 +119,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
         raw = r.text;
         usage = `${r.model ?? deployment} · 输入 ${r.promptTokens ?? '?'} / 输出 ${r.completionTokens ?? '?'} token`;
       } else {
-        raw = backend === 'agent' ? await askAgent(prompt) : await askCopilot(prompt);
+        raw = await askCopilot(prompt);
       }
       const { text, related } = parseAnswer(raw, sources.length);
       update({ answer: text, related, modelMs: performance.now() - retrieved, usage });
@@ -144,9 +142,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
           先在本应用里检索最相关的文章段落，再
           {backend === 'aoai'
             ? `经 Azure OpenAI connector 直接调用部署 ${deployment}（API Key 连接），只根据这些段落作答`
-            : backend === 'agent'
-              ? '经 Work IQ 发给 Microsoft 365 Copilot，并带上 Copilot Studio agent「Mindforge Ask」的 agentId；实测 agentId 被忽略，回答仍来自 M365 Copilot 本体，只是提示词允许资料外查公开网络并标明'
-              : '经 Work IQ 以你的身份交给 Microsoft 365 Copilot，只根据这些段落作答'}
+            : '经 Work IQ 以你的身份交给 Microsoft 365 Copilot，只根据这些段落作答'}
           ；[n] 与下方引用都能直接打开原文。
         </Typography>
         <ToggleButtonGroup size="small" exclusive value={backend} onChange={(_, v: Backend | null) => v && setBackend(v)} sx={{ mb: 2 }}>
@@ -194,7 +190,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
                     <LinearProgress sx={{ mb: 1 }} />
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       {m.sources.length ? `已检索到 ${m.sources.length} 篇资料，等待 ${BACKENDS[m.backend]}${m.deployment ? `（${m.deployment}）` : ''} 回答…` : '检索中…'}
-                      {slow && i === messages.length - 1 && ' 仍在处理，经 Work IQ 的回答通常需要 15–35 秒。'}
+                      {slow && i === messages.length - 1 && ' 仍在处理，经 Work IQ 的回答通常需要 15–26 秒。'}
                     </Typography>
                   </Box>
                 )}
