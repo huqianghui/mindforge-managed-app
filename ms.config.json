@@ -29,7 +29,10 @@
       ],
       "authenticationType": "keyBasedAuth",
       "sharedConnectionId": "/providers/Microsoft.PowerApps/apis/shared_azureopenai/connections/6bd1d8ab73354a8e893212c11354c2b7",
-      "dataSets": {}
+      "dataSets": {},
+      "allowedActions": [
+        "ChatCompletions_Create_2024Feb15Preview"
+      ]
     }
   },
   "appSettings": {
