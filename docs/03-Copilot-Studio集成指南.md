@@ -253,6 +253,45 @@ Publish 按钮是灰的，悬停提示 "You need to configure at least one chann
 
 ### 5. 调用：Work IQ `copilot_chat` + `agentId` 可行
 
+完整链路：
+
+```text
+问答页（选 Copilot Studio agent）
+  │ ① 应用内检索 search.json → 取 5 篇文章的相关段落，拼成提示词（带 SOURCES 和规则）
+  ▼
+Work IQ Copilot MCP connector（shared_a365copilotchatmcp，以当前用户身份）
+  │ ② JSON-RPC tools/call: copilot_chat
+  │    arguments: { message: 提示词, agentId: "T_c7f66753-…" }
+  ▼
+Graph Copilot Chat API → Microsoft 365 Copilot
+  │ ③ 看到 agentId，把这一轮交给 M365 Copilot 里的 agent「Mindforge Ask」
+  ▼
+Mindforge Ask（Copilot Studio Standard harness，模型 GPT Chat Latest）
+  │ ④ 按它的指令：先用 SOURCES 回答；没有答案才用 Web Search（Bing）上网，并标明来源
+  ▼
+返回：外层 JSON（回显 agentId）→ rawResponse 里最后一条消息就是回答
+  │ ⑤ 应用解析 [n] / RELATED，渲染成原文链接；网页引用显示为外链
+```
+
+**Work IQ 和 Web IQ 别混淆**：两者名字相近，在 5b 里分工不同。
+
+| | 在 5b 里做什么 | 谁调用 |
+|---|---|---|
+| **Work IQ**（Copilot MCP connector 的 `copilot_chat`） | 把问题**送进** Microsoft 365 Copilot，`agentId` 决定交给哪个 agent | 应用 |
+| **Web IQ / Bing**（agent 的 Web Search 开关，Grounding with Bing Search） | agent **内部**在资料里没有答案时查公开网络 | agent 自己，应用不直接调用 |
+
+**5a 与 5b 是同一个 connector、同一个工具**，代码上的唯一区别是多传一个 `agentId`（`src/platform/agent.ts`）：
+
+| | 5a：不传 agentId | 5b：传 agentId |
+|---|---|---|
+| 谁回答 | Microsoft 365 Copilot 本体 | Copilot Studio 里配置的「Mindforge Ask」 |
+| 模型 | M365 Copilot 自动路由，不可选 | 在 agent 里选 |
+| 上网 | 不（返回 `webSearchEnabled: false`） | agent 开着 Web Search |
+
+前提：发布 agent 时勾选 **"Make agent available in Microsoft 365 Copilot"**，它才会成为 M365 Copilot 里的 agent，才有 `T_…` titleId（渠道面板 "See agent in Teams" 打开的 `teams.microsoft.com/l/app/?titleId=…` 链接里取）。之所以绕道 M365 Copilot，是因为 Copilot Studio 自己的 `ExecuteCopilotAsyncV2` 是回调式的，浏览器里的 managed app 收不到回调（见上一小节）。
+
+具体做法：
+
 发布时勾选了 "Make agent available in Microsoft 365 Copilot"，agent 就成了 M365 Copilot 里的一个 agent。渠道面板 "See agent in Teams" 打开的链接是 `https://teams.microsoft.com/l/app/?titleId=T_c7f66753-0f26-f573-96fc-f7e374b762a3`，把这个 `T_…` titleId 当 `agentId` 传给 `copilot_chat`：
 
 ```ts
