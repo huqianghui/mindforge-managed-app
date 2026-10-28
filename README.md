@@ -72,7 +72,7 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 
 ### 问答 `#/ask`
 
-先在应用内检索：同步时生成的 `search.json`（每篇的标题、描述、标签、各级标题、开头一段）按"英文词 + 中文二元组"打分，取前 5 篇，再拉正文挑出最相关的段落并编号。然后经 **Work IQ Copilot MCP** connector，以当前用户的身份交给 Microsoft 365 Copilot，要求只根据这些段落作答，用 `[n]` 标注出处，最后一行写 `RELATED: 1, 3`。应用把 `[n]` 和引用标签都渲染成应用内原文链接；用到的来源是实心标签，检索到但没用上的是空心标签。文章页的"就这篇提问"会把当前文章固定为第一条资料。
+先在应用内检索：同步时生成的 `search.json`（每篇的标题、描述、标签、各级标题、开头一段）按"英文词 + 中文二元组"打分，取前 5 篇，再拉正文挑出最相关的段落并编号。然后经 **Work IQ Copilot MCP** connector，以当前用户的身份交给 Microsoft 365 Copilot，要求只根据这些段落作答，用 `[n]` 标注出处，最后一行写 `RELATED: 1, 3`。应用把 `[n]` 和引用标签都渲染成应用内原文链接；用到的来源是实心标签，检索到但没用上的是空心标签。文章页的"就这篇提问"会把当前文章固定为第一条资料。洞察页的每条 Claim、建议页的每张卡片也有"问 Copilot →"，跳过来时问题已预填好（Claim 还会固定它的来源文章），可以先选后端再发送。回答下方分开显示检索耗时和回答耗时。
 
 不需要建 Copilot Studio agent，引用也是结构化的（来源由应用检索决定），一次回答通常 15–20 秒。实现与返回格式的细节见 [04 · 阶段 5](docs/04-新功能开发指南.md#阶段-5ask-copilotwork-iq--本地检索)。
 
@@ -173,7 +173,7 @@ scripts/release.sh                # 同步并发布到 GitHub 与 Managed App
 
 找不到 Copilot Studio、连接、自定义 Connector、环境等页面时，看 [入口速查](docs/00-入口速查.md)。
 
-基于本项目开发新功能前，先读 [docs/](docs/README.md)：项目现状剖析、Managed Runtime 与 SDK 参考、Copilot Studio 集成指南、新功能开发指南。
+基于本项目开发新功能前，先读 [docs/](docs/README.md)：项目现状剖析、Managed Runtime 与 SDK 参考、Copilot Studio 集成指南、新功能开发指南。几种做法之间怎么选（问答三个后端、App state 与 Dataverse、Connector 检查清单），见 [11 方案讨论](docs/11-方案讨论.md)。
 
 ## 学习路线
 
