@@ -87,8 +87,10 @@ wiki 的 147 个概念 / 方法 / 决策节点与 516 条关系，可按节点�
 | | GitHub Pages（mindforge 仓库） | 本项目（Managed Runtime） |
 |---|---|---|
 | 访问 | 公开 | Entra 登录，按人/组分享 |
-| 内容 | README 导航 + 文章 + 知识图谱 | 同一份内容，从 mindforge 仓库同步 |
-| 能力 | 静态页面 | 可接 Connector（Copilot Studio agent、Azure OpenAI、SharePoint 等），可读取登录用户身份，按用户保存数据（App state） |
+| 内容 | 同一份内容，构建期从本仓库生成 | 同一份内容，从 mindforge 仓库同步 |
+| 页面 | 文章导航、知识图谱、洞察、建议、统计、演进（与本项目一致） | 同左，另有问答 |
+| 阅读进度与收藏 | 只存在本机浏览器 | 按登录用户存在 App state，跨设备同步 |
+| 平台能力 | 无：不接 Connector、不识别用户，所以没有问答 | 可接 Connector（Work IQ、Copilot Studio agent、Azure OpenAI、SharePoint 等），可读取登录用户身份，按用户保存数据（App state） |
 | 定位 | 公开知识库 | 学习与实验 Copilot Studio / Managed Runtime 开发 |
 
 ## 结构
