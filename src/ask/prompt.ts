@@ -11,6 +11,13 @@ export interface Turn {
 const HISTORY_TURNS = 2;
 const HISTORY_CHARS = 400;
 
+// 摘录里的网址去掉，只留链接文字：Work IQ 的 copilot_chat 会把提示词里的网址取出来当 grounding 文件
+// （autoExtractedFileUris），连中文括号都会被吞进网址；资料正文已经在 SOURCES 里，不需要它再去抓。
+// 实测见 docs/04 阶段 5。
+function stripUrls(text: string): string {
+  return text.replace(/\[([^\]]*)\]\(https?:\/\/[^)\s]+\)/g, '$1').replace(/<?https?:\/\/[^\s)>\]]+>?/g, '');
+}
+
 /** allowWeb：Copilot Studio agent 开着 Web Search，资料里没有时可以查公开网络；Work IQ 没有这个开关 */
 export function buildPrompt(question: string, sources: Source[], history: Turn[], allowWeb = false): string {
   const parts = [
@@ -29,7 +36,7 @@ export function buildPrompt(question: string, sources: Source[], history: Turn[]
     'End with one last line exactly like: RELATED: 1, 3   (the numbers of the sources you used; RELATED: none if you used none).',
     '',
     'SOURCES',
-    ...sources.map((s) => `[${s.n}] ${s.title} (${s.path})\n${s.excerpt}\n`),
+    ...sources.map((s) => `[${s.n}] ${s.title} (${s.path})\n${stripUrls(s.excerpt)}\n`),
   ];
   const recent = history.slice(-HISTORY_TURNS);
   if (recent.length) {
