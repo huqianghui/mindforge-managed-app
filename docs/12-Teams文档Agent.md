@@ -45,7 +45,7 @@ python3 scripts/export-for-agent.py    # 生成 agent-knowledge/（已 gitignore
 
 1. Agents → **New agent** 右侧下拉 → **Agent（Standard）**。新建默认是 GitHub Copilot harness，一问一答的知识库用它会"想太多"，更慢也更费 Credits（[05](05-Copilot-Studio-Harness对比.md)）。
 2. 名称 `Mindforge Docs`；Agent settings 里解决方案选 **Mindforge**，schema name 因此是 `mf_MindforgeDocs`。
-3. **Instructions**：粘贴 [`agent/mindforge-docs-instructions.md`](../agent/mindforge-docs-instructions.md) 的全文。
+3. **Instructions** 和设置：不在门户里粘贴，运行 `python3 scripts/apply-agent.py`（先加 `--dry-run` 看会改什么）。它把 [`agent/mindforge-docs-instructions.md`](../agent/mindforge-docs-instructions.md) 写进 `<schema>.gpt.default`（同时 `webBrowsing: false`），把 `agent/topics/*.yaml` 覆盖到同名 topic，并把 `useModelKnowledge` 设为 `false`；已经一致的项会打印 `unchanged`。脚本里写死了 US 环境的 org 地址和 bot id。改完要 Publish 才到 Teams。
 4. **Knowledge** → Add knowledge → **Upload files**，选 `agent-knowledge/` 里的 `.md`，不要选 `export.json`。**每次不超过约 45 个**，见下文"上传踩坑"。
 5. Settings → Knowledge：**Allow ungrounded responses** 改成 Off（存储里是 `aISettings.useModelKnowledge: false`），**Use information from the Web** 保持 Off（新建默认就是 Off）。否则资料外的问题会用模型自身知识或网页回答，就分不清回答是否来自 mindforge（阶段 5 Work IQ 误判的教训，[03 · 实测 §5](03-Copilot-Studio集成指南.md#实测从-managed-app-调用-standard-agent2026-10-28)）。
 6. 上传后等文件状态从 In progress 变成 Ready 再测试。
@@ -68,7 +68,7 @@ agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，sche
 - 改完之后新传一个小文件 `zz-index-probe.md`（里面一个暗号），40 分钟后状态仍是 In progress（门户新版界面里显示 Unknown），问暗号同样检索不到。所以光开 Dataverse search 不够，至少不能马上见效。
 - 这个环境是 Developer 类型，区域是 **Preview (United States)**，门户走 `copilotstudio.preview.microsoft.com`。文件索引卡住可能和预览区域有关，〔待实测：同样的文件在正式区域的环境里多久变成 Ready〕。
 
-结论：原因是区域。应用环境 `0b768ed1-…` 的区域实际是 `unitedstatesfirstrelease`（抢先体验，新功能先在这里上线）。2026-10-29 新建了一个正式区域 `unitedstates` 的 Developer 环境（BAP API `POST /providers/Microsoft.BusinessAppPlatform/environments`，20 秒建好），只传一篇 Prompt Cache 系列 01，约 5 分钟就能检索到并带引用回答。同一个文件在旧环境里放了一整晚都检索不到。之后在新环境建了正式的 agent，旧环境里的 agent 只留作记录，确认新的能用后删掉。
+结论：原因是区域。应用环境 `0b768ed1-…` 的区域实际是 `unitedstatesfirstrelease`（抢先体验，新功能先在这里上线）。2026-10-29 新建了一个正式区域 `unitedstates` 的 Developer 环境（BAP API `POST /providers/Microsoft.BusinessAppPlatform/environments`，20 秒建好），只传一篇 Prompt Cache 系列 01，约 5 分钟就能检索到并带引用回答。同一个文件在旧环境里放了一整晚都检索不到。之后在新环境建了正式的 agent。旧 agent `25132acf-…` 已于 2026-10-29 在门户里删除；为排查打开的旧环境 Dataverse search 也改回了 `false`（原值），因为它不是原因。
 
 **新环境的做法**（2026-10-29）：
 
@@ -98,8 +98,15 @@ agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，sche
 | App state 和 Dataverse 怎么选？ | ✅ 引用系列 08、12，`来源` 段落带 GitHub 链接 |
 | Prompt Cache 两代框架有什么区别？ | ✅ 引用系列 01 |
 | Azure 下有哪些文章？ | ⚠️ 按 `00-目录.md` 列出 48 篇，但输出里混着 `citeturn102search0` 这类残留标记，列表很长、输出要几分钟 |
-| 埃菲尔铁塔有多高？ | ✅ 没有编造；回的是系统的 "No information was found that could help answer this."，不是指令里的"知识库里没有相关内容。"（看起来检索为空时直接走了系统兜底话术，没有进入按指令生成这一步；未验证） |
+| 埃菲尔铁塔有多高？ | ✅ 没有编造。但用户看到的是 Fallback topic 的 "I'm sorry, I'm not sure how to help with that…"，不是指令里的"知识库里没有相关内容。"：检索为空时不走生成，直接进 Fallback（"No information was found…" 那条只有制作者能看到） |
 | What is Voice Live? | ✅ 英文回答，引用 Voice Live 系列 01，段落标题是 Sources |
+
+修正（2026-10-29，`apply-agent.py` 后重新 Publish，`publishedon = 01:07:21Z`）：
+
+- 拒答：[`agent/topics/Fallback.yaml`](../agent/topics/Fallback.yaml) 改成固定回"知识库里没有相关内容。/ Not in the Mindforge knowledge base."，并去掉原来连续 3 次后转"人工"的分支（这个 agent 没有人工）。复测埃菲尔铁塔，回的就是这句。
+- 残留标记：指令里加了"引用只写 [n]，不要输出 cite / turn…search… 这类内部标记"。复测"Voice Live 系列有哪些文章？"，没有再出现。
+- 仍然存在：同一次复测里，中文问题用英文回答；Voice Live 系列共 18 篇只列出 6 篇，也没有按 `00-目录.md` 回答。目录类问题检索到的是零散片段，整份目录（几百行）进不了上下文。下一步可以让导出脚本按分类再出小目录文件（如 `00-目录-Azure-VoiceLive.md`）。
+- 门户的 "1 Warning" 是 "No evaluation has been run on this agent"，不影响使用。
 
 ## 第四步：发布到 Teams
 
@@ -130,6 +137,6 @@ python3 scripts/sync-content.py && python3 scripts/export-for-agent.py
 
 - 上传文件数上限：`.md` 可以上传，405 个全部接受；500 个的上限没有验证。
 - 正式区域里单个文件约 5 分钟可检索；405 个全部传完 10 分钟后抽测的 5 题都能检索到，但没有逐个确认每个文件。
-- `00-目录.md` 类长列表回答里的 `cite…turn…search…` 残留标记能否通过指令去掉。
+- 目录类问题：按分类拆小目录文件后，能否完整列出某个系列，以及中文问题是否仍会用英文回答。
 - 引用卡片里显示的是文件名还是文章标题；如果是文件名，`__` 分隔的路径是否好认。
 - 同名文章更新后，覆盖上传与"先删后传"是否有区别。
