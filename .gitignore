@@ -29,5 +29,3 @@ dist-ssr
 # Python bytecode from scripts/
 __pycache__/
 
-# Knowledge files exported for the Copilot Studio agent (scripts/export-for-agent.py)
-agent-knowledge/

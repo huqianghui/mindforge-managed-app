@@ -1,8 +1,0 @@
-kind: AdaptiveDialog
-beginDialog:
-  kind: OnUnknownIntent
-  id: main
-  actions:
-    - kind: SendActivity
-      id: sendMessage_notInKb
-      activity: 知识库里没有相关内容。/ Not in the Mindforge knowledge base.
