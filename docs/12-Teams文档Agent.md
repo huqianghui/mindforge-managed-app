@@ -3,6 +3,8 @@
 > 把应用的"文章导航"能力做成一个 Copilot Studio agent「Mindforge Docs」，发布到 Teams 和 Microsoft 365 Copilot。知识源先用上传文件。基线 2026-10-28。
 > 标 **〔待实测〕** 的地方要在租户里跑一次才能确认。
 
+**当前在用的 agent（2026-10-29 起）**：环境「Mindforge Docs (US)」`cd3bb1b6-62a1-ee92-9805-3e71e1b41a08`，区域 `unitedstates`（westus），Dataverse `https://mindforgedocsus.crm.dynamics.com/`；bot id `4f87fa86-24d3-f111-a059-70a8a5af933e`，405 个知识文件，已发布到 Teams 和 M365 Copilot。它**不在**应用所在的环境里：应用环境在抢先体验区域，上传文件的索引在那里一直不完成（见下文"实际创建记录"）。Teams 用户直接和 agent 对话，不经过应用，所以分开放没有影响。
+
 ## 为什么这条路走得通
 
 阶段 5 没走通的是 **app → agent**：从浏览器里的 managed app 同步调用 agent（[11 · 一](11-方案讨论.md#一问答的后端)）。这里是反方向：**Teams 里的用户 → agent → mindforge 文章**，是 Copilot Studio 的常规用法，不经过 managed app，也就不受它的 Connector 和 CSP 限制。
@@ -66,7 +68,14 @@ agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，sche
 - 改完之后新传一个小文件 `zz-index-probe.md`（里面一个暗号），40 分钟后状态仍是 In progress（门户新版界面里显示 Unknown），问暗号同样检索不到。所以光开 Dataverse search 不够，至少不能马上见效。
 - 这个环境是 Developer 类型，区域是 **Preview (United States)**，门户走 `copilotstudio.preview.microsoft.com`。文件索引卡住可能和预览区域有关，〔待实测：同样的文件在正式区域的环境里多久变成 Ready〕。
 
-结论：在这个环境里，上传文件这条路暂时不可用。后备方案见"更新内容"一节末尾的 SharePoint 文档库。
+结论：原因是区域。应用环境 `0b768ed1-…` 的区域实际是 `unitedstatesfirstrelease`（抢先体验，新功能先在这里上线）。2026-10-29 新建了一个正式区域 `unitedstates` 的 Developer 环境（BAP API `POST /providers/Microsoft.BusinessAppPlatform/environments`，20 秒建好），只传一篇 Prompt Cache 系列 01，约 5 分钟就能检索到并带引用回答。同一个文件在旧环境里放了一整晚都检索不到。之后在新环境建了正式的 agent，旧环境里的 agent 只留作记录，确认新的能用后删掉。
+
+**新环境的做法**（2026-10-29）：
+
+- 先建成「Mindforge Docs Test」，确认能检索后改名为「Mindforge Docs」继续用，schema 因此是 `new_MindforgeDocsTest`。新环境里没有 Mindforge 解决方案，agent 放在默认解决方案里。
+- 指令和设置不经过门户编辑器，直接用 Web API 写：PATCH `new_MindforgeDocsTest.gpt.default` 的 `data`，内容是旧 agent 的整份 YAML（含 `webBrowsing: false`）；PATCH `bots.configuration`，把 `aISettings.useModelKnowledge` 设为 `false`。新建的 agent 默认这两项是**开**的，`webBrowsing: true`、`useModelKnowledge: true`。
+- 文件仍按每批 45 个上传，9 批共 404 个，每批 35～45 秒，没有出错。
+- 新版门户的状态栏显示 Unknown，但实际能检索到，以测试面板的回答为准。
 
 ## 第三步：测试
 
@@ -77,10 +86,20 @@ agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，sche
 | Copilot Managed Runtime 里 App state 和 Dataverse 怎么选？ | 引用"系列 08"等文章，来源行带 GitHub 链接 |
 | Prompt Cache 两代框架有什么区别？ | 引用 Prompt Cache 系列 01 |
 | Azure 下有哪些文章？ | 按 `00-目录.md` 列出带链接的标题 |
-| 澳大利亚的首都是哪里？ | "知识库里没有相关内容。"，**不能**答出堪培拉 |
+| 埃菲尔铁塔有多高？ | 拒答，**不能**答出高度 |
 | What is Voice Live? | 英文回答，来源段落标题是 Sources |
 
-最后一类"裸问题"最关键：判断"是 agent 在按指令答"，要看只有这份指令才会产生的行为（拒答常识题、`来源` 段落），不能看回答是否通顺（[11 · 教训](11-方案讨论.md#一问答的后端)）。
+"裸问题"最关键：判断"是 agent 在按指令答"，要看只有这份指令才会产生的行为（拒答常识题、`来源` 段落），不能看回答是否通顺（[11 · 教训](11-方案讨论.md#一问答的后端)）。拒答题要先 `grep agent-knowledge/` 确认知识库里真的没有：原来用的"澳大利亚的首都是哪里？"出现在 Copilot Managed Runtime 系列 10 里（那篇正是拿它做实验），agent 引用系列 10 答出堪培拉，这是按知识库答，不算违规。
+
+实测（2026-10-29，新环境）：
+
+| 问题 | 结果 |
+|---|---|
+| App state 和 Dataverse 怎么选？ | ✅ 引用系列 08、12，`来源` 段落带 GitHub 链接 |
+| Prompt Cache 两代框架有什么区别？ | ✅ 引用系列 01 |
+| Azure 下有哪些文章？ | ⚠️ 按 `00-目录.md` 列出 48 篇，但输出里混着 `citeturn102search0` 这类残留标记，列表很长、输出要几分钟 |
+| 埃菲尔铁塔有多高？ | ✅ 没有编造；回的是系统的 "No information was found that could help answer this."，不是指令里的"知识库里没有相关内容。"（看起来检索为空时直接走了系统兜底话术，没有进入按指令生成这一步；未验证） |
+| What is Voice Live? | ✅ 英文回答，引用 Voice Live 系列 01，段落标题是 Sources |
 
 ## 第四步：发布到 Teams
 
@@ -92,6 +111,8 @@ agent「Mindforge Docs」，bot id `25132acf-bbd2-f111-84e8-7c1e520d5f0d`，sche
 4. 给别人用：**Share** 给指定用户或组，或提交管理员批准后上架到组织的应用目录 〔待实测：本租户的审批流程〕。
 
 实际记录（2026-10-28）：新版门户里 Channels 在顶部标签的 "+2" 菜单里，不在 `/channels` 路径（那个地址打开是空白页）。点 **Add channel** 后显示 "Turning on Teams ..."，不到一分钟就弹出 "Ready to publish?"，直接 Publish；`bots.publishedon = 2026-10-28T13:31:35Z`。知识索引没完成时也能发布，发布后 agent 在 Teams 里能对话，但检索不到内容。
+
+新环境（2026-10-29）同样操作：Add channel 后约 1 分钟弹出 "Ready to publish?"，Publish 后 40 秒 `bots.publishedon = 2026-10-29T00:01:31Z`。
 
 费用：用户没有 M365 Copilot 许可证时，生成式回答消耗 Copilot Credits 〔待实测：在 admin center 的 Cost management 里核对〕。
 
@@ -108,6 +129,7 @@ python3 scripts/sync-content.py && python3 scripts/export-for-agent.py
 ## 待实测
 
 - 上传文件数上限：`.md` 可以上传，405 个全部接受；500 个的上限没有验证。
-- 405 个文件全部索引完成要多久（见"实际创建记录"）。
+- 正式区域里单个文件约 5 分钟可检索；405 个全部传完 10 分钟后抽测的 5 题都能检索到，但没有逐个确认每个文件。
+- `00-目录.md` 类长列表回答里的 `cite…turn…search…` 残留标记能否通过指令去掉。
 - 引用卡片里显示的是文件名还是文章标题；如果是文件名，`__` 分隔的路径是否好认。
 - 同名文章更新后，覆盖上传与"先删后传"是否有区别。
