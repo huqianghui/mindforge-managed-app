@@ -72,20 +72,20 @@ def file_history(vault: Path) -> tuple[dict, dict, list, dict]:
 
 
 def topic_series(articles: list, first: dict, touched: dict) -> dict:
-    """Per directory, the days its direct articles were added or edited: [day, added, edited], oldest first.
+    """Per directory, the days its direct articles were added or edited, oldest first:
+    [day, [file names added], [file names edited]].
 
     A directory is a topic; only those active on at least two days form a line worth drawing.
     """
     per_dir = {}
     for p in articles:
-        days = per_dir.setdefault(p.rpartition("/")[0], {})
-        for d in touched.get(p, ()):
-            n = days.setdefault(d, [0, 0])
-            n[0 if d == first[p] else 1] += 1
+        folder, _, name = p.rpartition("/")
+        days = per_dir.setdefault(folder, {})
         # an article first committed in a bulk commit still counts as added that day
-        days.setdefault(first[p], [0, 0])[0] += first[p] not in touched.get(p, ())
+        for d in touched.get(p, set()) | {first[p]}:
+            days.setdefault(d, ([], []))[0 if d == first[p] else 1].append(name)
     return {
-        d: [[day, a, e] for day, (a, e) in sorted(days.items())]
+        d: [[day, sorted(a), sorted(e)] for day, (a, e) in sorted(days.items())]
         for d, days in sorted(per_dir.items())
         if len(days) >= 2
     }
@@ -256,7 +256,7 @@ def build(vault: Path, doc_paths: list, out: Path) -> None:
         "gapTopics": {"lines": registry.get("lines") or {}, "topics": registry.get("topics") or {}},
         # path -> [first commit date, number of commits touching it]
         "docs": {p: [first[p], edits[p]] for p in doc_paths if p in first},
-        # topic directory -> [[day, articles added, articles edited], ...]
+        # topic directory -> [[day, [file names added], [file names edited]], ...]
         "topics": topic_series(articles, first, touched),
     }
     out.write_text(json.dumps(history, ensure_ascii=False), encoding="utf-8")
