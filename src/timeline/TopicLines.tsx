@@ -17,21 +17,33 @@ import { PlaybackBar } from './Playback';
 import { usePlayback } from './usePlayback';
 import { buildEntries, dateOf, dayIndex, GROUP_BY_KEY } from './knowledge';
 
-// 主题脉络：一个目录就是一个主题。所有主题平等：同一条时间轴、同样的起止日期（第一次提交到最后一次提交），
-// 同一条稳定的正弦波，横轴铺满第一天到最后一天，周期按宽度取合适的整周数，不断开也不变形；
-// 区别只在哪些日子有文章，那些日子在波上高亮成圆点。播放时波浪匀速一天天往前长；
+// 主题脉络：一个目录就是一个主题。所有主题共用同一条时间轴（第一次提交到最后一次提交）。
+// 每个主题一条标准的正弦波：摆幅不变，整条只有一个周期，从第一天到最后一天正好是整数个周期；
+// 文章多的主题周期短一些、波密一些，文章少的周期长一些。有文章的日子是串在波上的圆点。
+// 播放的快慢跟着活跃度走：平静的日子走得快，快到有文章的日子慢下来。
+// 波永远先长到，圆点才亮。主题出场时先从第一天回顾到当天，再跟着播放一天天长；
 // 鼠标移到波浪上暂停，悬停、点选圆点看那天的文章，和知识之树一样
 const PAD_X = 40;
 const ROW_H = 220;
-// 周期取整周，让一个周期在屏幕上大约 PERIOD_PX 宽，波形接近课本上的正弦曲线
+// 基准周期在屏幕上大约 PERIOD_PX 宽，用来算播放的节拍
 const PERIOD_PX = 120;
 const AMP = 40;
+// 每个主题整条线上的周期数：按文章日子的多少，在 MIN 到 MAX 之间
+const MIN_CYCLES = 4;
+const MAX_CYCLES = 14;
+// 活跃度：每篇文章在前后约 SIGMA 天里有影响，新增算 1，修改算 0.5
+const SIGMA = 3;
 const ACTIVE_WINDOW = 7;
 const MAX_SHOWN = 2;
-// 1× 时每天生长的时间（毫秒）：匀速，有没有文章都一样
-const DAY_MS = 450;
-// 一个主题出场时，波浪从第一天长到当天用的时间
-const INTRO_MS = 1400;
+// 1× 时每天的生长时间：平静的日子 QUIET 毫秒，越靠近有文章的日子越慢，最多再加 BUSY 毫秒
+const PLAY_QUIET_MS = 160;
+const PLAY_BUSY_MS = 900;
+// 出场回顾：平静的一天 INTRO_UNIT_MS，有文章的日子最多再加 INTRO_BUSY 倍，一路扫过平静处、到文章处放慢；
+// 总长压在 INTRO_MIN_MS（至少一个基准周期的时间）到 INTRO_MAX_MS 之间
+const INTRO_UNIT_MS = 20;
+const INTRO_BUSY = 14;
+const INTRO_MIN_MS = 1800;
+const INTRO_MAX_MS = 8000;
 const GROUP_ORDER = ['Notes', 'Azure', 'paper', 'book', 'product'];
 
 interface Point {
@@ -73,19 +85,40 @@ function loadTopics(history: History): Topic[] {
     .sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group) || a.label.localeCompare(b.label));
 }
 
-/** 所有行共用的横轴和波形 */
+/** 所有行共用的横轴 */
 interface Axis {
   dayPx: number;
   periodDays: number;
   width: number;
   xOfDay: (day: number) => number;
-  yOfDay: (day: number) => number;
-  wave: string;
 }
 
 const CY = ROW_H * 0.47;
 
-function TopicRow({ topic, axis, cursor, reveal, step, totalDays, titleOf, selectedDate, onPick }: {
+/** 活跃度 0..1：附近有文章的日子高，平静的日子接近 0 */
+function activity(points: Point[]): (day: number) => number {
+  return (day) => {
+    let v = 0;
+    for (const p of points) {
+      const d = (day - p.day) / SIGMA;
+      if (d > -3 && d < 3) v += (p.added.length ? 1 : 0.5) * Math.exp(-d * d);
+    }
+    return Math.tanh(v);
+  };
+}
+
+/** 一个主题自己的波：标准正弦，摆幅固定，周期固定，第一天在波峰，整条线正好整数个周期 */
+function topicWave(points: Point[], axis: Axis, totalDays: number) {
+  const act = activity(points);
+  const cycles = Math.min(MAX_CYCLES, Math.max(MIN_CYCLES, Math.round(points.length * 0.6)));
+  const periodDays = (totalDays + 1) / cycles;
+  const yOfDay = (day: number) => CY - AMP * Math.cos((2 * Math.PI * day) / periodDays);
+  let wave = '';
+  for (let x = axis.xOfDay(0); x <= axis.xOfDay(totalDays + 1) + 0.5; x += 1) wave += `${wave ? 'L' : 'M'}${x.toFixed(1)},${yOfDay((x - PAD_X) / axis.dayPx).toFixed(1)}`;
+  return { act, yOfDay, wave };
+}
+
+function TopicRow({ topic, axis, cursor, reveal, step, speed, totalDays, titleOf, selectedDate, onPick, onIntro }: {
   topic: Topic;
   axis: Axis;
   cursor: number;
@@ -93,27 +126,58 @@ function TopicRow({ topic, axis, cursor, reveal, step, totalDays, titleOf, selec
   reveal: number;
   /** 播放中这一步的停留和生长时间；不播放时为 0 */
   step: Step;
+  speed: number;
   totalDays: number;
   titleOf: (dir: string, name: string) => string;
   selectedDate: string | null;
   /** 点圆点：选中那一天看详情 */
   onPick: (p: Point) => void;
+  /** 出场回顾中报告波浪长到了哪一天，回顾完报 null；回顾期间主播放停住等它，发展记录也只列到这一天 */
+  onIntro: (dir: string, day: number | null) => void;
 }) {
   const color = GROUP_BY_KEY[topic.group].color;
   const clipId = useId();
   const [hover, setHover] = useState<Point | null>(null);
-  // 出场：先从第一天长到当天，之后再跟着播放一天天长
-  const [intro, setIntro] = useState<'start' | 'grow' | 'done'>('start');
+  const { xOfDay, width } = axis;
+  const { act, yOfDay, wave } = useMemo(() => topicWave(topic.points, axis, totalDays), [topic.points, axis, totalDays]);
+  // 出场：先把这个主题从第一天到当天回顾一遍，平静处一扫而过，有文章处放慢，圆点等波浪长到才亮；
+  // 回顾完再跟着播放一天天长。introX 是回顾中波浪长到的横坐标，null 表示回顾完了
+  const [introX, setIntroX] = useState<number | null>(PAD_X);
+  const introRef = useRef({ cursor, speed, axis, act });
   useEffect(() => {
-    const raf = requestAnimationFrame(() => setIntro('grow'));
-    const t = window.setTimeout(() => setIntro('done'), INTRO_MS);
+    const { cursor: day, speed: sp, axis: ax, act: actOf } = introRef.current;
+    // 每一天用的时间按活跃度定，累加成时间表；总长不足一个基准周期的时间就整体放慢
+    const ends: number[] = [];
+    let total = 0;
+    for (let d = 0; d <= day; d++) ends.push((total += 1 + INTRO_BUSY * actOf(d + 0.5)));
+    const scale = Math.min(INTRO_MAX_MS, Math.max(INTRO_MIN_MS, total * INTRO_UNIT_MS)) / total / sp;
+    let raf = 0;
+    let t0 = 0;
+    let d = 0;
+    onIntro(topic.dir, -1);
+    const tick = (now: number) => {
+      t0 ||= now;
+      const t = (now - t0) / scale;
+      if (t < total) {
+        while (ends[d] <= t) d++;
+        const start = d ? ends[d - 1] : 0;
+        setIntroX(ax.xOfDay(d + (t - start) / (ends[d] - start)));
+        onIntro(topic.dir, d);
+        raf = requestAnimationFrame(tick);
+      } else {
+        setIntroX(null);
+        onIntro(topic.dir, null);
+      }
+    };
+    raf = requestAnimationFrame(tick);
     return () => {
       cancelAnimationFrame(raf);
-      window.clearTimeout(t);
+      onIntro(topic.dir, null);
     };
-  }, []);
-  const { xOfDay, yOfDay, width } = axis;
-  const seen = topic.points.filter((p) => p.day <= cursor);
+  }, [topic.dir, onIntro]);
+  // 永远先有波，再有点：只显示波浪已经长到的圆点，圆点都串在波上
+  const waveX = introX ?? reveal;
+  const seen = topic.points.filter((p) => p.day <= cursor && xOfDay(p.day) <= waveX + 0.5);
   const latest = seen.at(-1);
   // 日期标签分两行放，两行都挤不下的就不标（悬停圆点仍能看到日期）
   const labelRow = new Map<string, number>();
@@ -152,29 +216,36 @@ function TopicRow({ topic, axis, cursor, reveal, step, totalDays, titleOf, selec
               y={0}
               height={ROW_H}
               style={{
-                width: intro === 'start' ? 0 : Math.max(0, reveal),
-                transition: intro === 'grow' ? `width ${INTRO_MS}ms ease-in-out` : `width ${step.grow}ms linear ${step.delay}ms`,
+                width: introX ?? Math.max(0, reveal),
+                transition: introX === null ? `width ${step.grow}ms linear ${step.delay}ms` : undefined,
               }}
             />
           </clipPath>
-          <path d={axis.wave} clipPath={`url(#${clipId})`} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" />
+          <path d={wave} clipPath={`url(#${clipId})`} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" />
+          {/* 回顾中波浪的笔尖：眼睛跟着它走 */}
+          {introX !== null && (
+            <g>
+              <circle cx={introX} cy={yOfDay((introX - PAD_X) / axis.dayPx)} r={9} fill={color} opacity={0.18} />
+              <circle cx={introX} cy={yOfDay((introX - PAD_X) / axis.dayPx)} r={3.5} fill={color} />
+            </g>
+          )}
           {seen.map((p) => {
             const x = xOfDay(p.day);
             const y = yOfDay(p.day);
-            const fresh = cursor - p.day < 2 && cursor < totalDays;
+            const fresh = (introX !== null ? p === latest : cursor - p.day < 2) && cursor < totalDays;
             return (
               <g
                 key={p.date}
                 onMouseEnter={() => setHover(p)}
                 onMouseLeave={() => setHover(null)}
                 onClick={() => onPick(p)}
-                // 出场时圆点随着波浪长到它才亮起来
-                style={{ cursor: 'pointer', animation: intro !== 'done' ? `mfDotIn .3s ease-out ${((x - PAD_X) / Math.max(1, reveal - PAD_X)) * INTRO_MS}ms both` : undefined }}
+                // 回顾中圆点在波浪长到它时淡入
+                style={{ cursor: 'pointer', animation: introX !== null ? 'mfDotIn .3s ease-out both' : undefined }}
               >
                 {fresh && <circle cx={x} cy={y} r={8} fill="none" stroke={color} strokeWidth={2} style={{ animation: 'mfRing 1.1s ease-out' }} />}
                 <circle cx={x} cy={y} r={16} fill="transparent" />
                 {p.date === selectedDate && <circle cx={x} cy={y} r={13} fill="none" stroke="#263238" strokeWidth={2} />}
-                <circle cx={x} cy={y} r={p.added.length ? 8 : 6} fill={color} stroke="#fff" strokeWidth={2.5} />
+                <circle cx={x} cy={y} r={p.added.length ? 8 : 6} fill={color} stroke="#fff" strokeWidth={1.5} />
                 {labelRow.has(p.date) && (
                   <text x={x} y={CY + AMP + 24 + labelRow.get(p.date)! * 13} textAnchor="middle" fontSize={11} fontWeight={700} fill={color}>{p.date.slice(5)}</text>
                 )}
@@ -200,13 +271,11 @@ function TopicRow({ topic, axis, cursor, reveal, step, totalDays, titleOf, selec
   );
 }
 
-/** 横轴：每个周期的波峰标日期，所有行共用 */
-function WeekAxis({ axis, totalDays, firstCommit }: { axis: Axis; totalDays: number; firstCommit: string }) {
-  // 每个周期的波峰（周一）标一个日期
+/** 横轴：每月 1 日标一个日期，所有行共用 */
+function MonthAxis({ axis, totalDays, firstCommit }: { axis: Axis; totalDays: number; firstCommit: string }) {
   const ticks: number[] = [];
-  const weekday0 = (new Date(firstCommit).getUTCDay() + 6) % 7;
-  for (let day = 0; day <= totalDays; day++) if ((day + weekday0) % axis.periodDays === 0) ticks.push(day);
-  const step = axis.dayPx * axis.periodDays < 44 ? 2 : 1;
+  for (let day = 0; day <= totalDays; day++) if (dateOf(day, firstCommit).endsWith('-01')) ticks.push(day);
+  const step = axis.dayPx * 30 < 44 ? 2 : 1;
   return (
     <svg width={axis.width} height={22} style={{ display: 'block' }}>
       {ticks.map((day, i) => (
@@ -262,23 +331,50 @@ export default function TopicLines({ history, index, graph }: { history: History
     const dayPx = (viewW - PAD_X * 2) / (totalDays + 1);
     const periodDays = Math.max(7, Math.round(PERIOD_PX / dayPx / 7) * 7);
     const xOfDay = (day: number) => PAD_X + Math.min(Math.max(day, 0), totalDays + 1) * dayPx;
-    // 周一相位为 0，cos 在周一取波峰
-    const weekday0 = (new Date(history.firstCommit).getUTCDay() + 6) % 7;
-    const yOfDay = (day: number) => CY - AMP * Math.cos((2 * Math.PI * (day + weekday0)) / periodDays);
-    let wave = '';
-    for (let x = xOfDay(0); x <= xOfDay(totalDays + 1); x += 1) wave += `${wave ? 'L' : 'M'}${x.toFixed(1)},${yOfDay((x - PAD_X) / dayPx).toFixed(1)}`;
-    return { dayPx, periodDays, width: viewW, xOfDay, yOfDay, wave };
-  }, [viewW, totalDays, history.firstCommit]);
+    return { dayPx, periodDays, width: viewW, xOfDay };
+  }, [viewW, totalDays]);
 
-  const stepOf = useCallback((): Step => ({ delay: 0, grow: DAY_MS }), []);
-  const dwell = useCallback(() => DAY_MS, []);
+  // 「当下活跃」的舞台：从第一天一路排下来，已经在台上的主题只要还在更新就留着，
+  // 当天有更新的新主题只补空位，这样一个主题能把自己的故事讲完，不会一天一换
+  const stage = useMemo(() => {
+    const lastOn = (t: Topic, c: number) => t.points.filter((p) => p.day <= c).at(-1)?.day ?? -1;
+    const byDay: Topic[][] = [];
+    let on: Topic[] = [];
+    for (let c = 0; c <= totalDays; c++) {
+      on = on.filter((t) => c - lastOn(t, c) < ACTIVE_WINDOW);
+      for (const t of topics) if (on.length < MAX_SHOWN && !on.includes(t) && t.points.some((p) => p.day === c)) on = [...on, t];
+      byDay.push(on);
+    }
+    return byDay;
+  }, [topics, totalDays]);
+  // 播放节奏跟着屏幕上的内容走：平静的日子一晃而过，快到有文章的日子慢下来。
+  // 「选择主题」看这个主题的活跃度，「当下活跃」看那天台上主题的
+  const focusAct = useMemo(() => focus && activity(focus.points), [focus]);
+  const stageAct = useMemo(() => stage.map((on) => activity(on.flatMap((t) => t.points))), [stage]);
+  const dwell = useCallback((day: number) => {
+    const act = mode === 'pick' ? focusAct : stageAct[day];
+    return PLAY_QUIET_MS + PLAY_BUSY_MS * (act?.(day + 0.5) ?? 0);
+  }, [mode, focusAct, stageAct]);
+  const stepOf = useCallback((day: number): Step => ({ delay: 0, grow: dwell(day) }), [dwell]);
   // 和知识之树一样：鼠标在波浪上或选中了某一天就停住，移开、关掉详情后接着长
   const [hovering, setHovering] = useState(false);
   const [selected, setSelected] = useState<{ dir: string; point: Point } | null>(null);
-  const held = hovering || selected !== null;
+  // 有主题在出场回顾时，主播放停住等它回顾完
+  const [introDay, setIntroDay] = useState<Record<string, number>>({});
+  const onIntro = useCallback((dir: string, day: number | null) => {
+    setIntroDay((m) => {
+      if (m[dir] === (day ?? undefined)) return m;
+      const next = { ...m };
+      if (day === null) delete next[dir];
+      else next[dir] = day;
+      return next;
+    });
+  }, []);
+  const introducing = Object.keys(introDay);
+  const held = hovering || selected !== null || introducing.length > 0;
   const pb = usePlayback(range[1], dwell, 1, held);
   const { cursor, playing, setCursor, setPlaying, speed } = pb;
-  const cur = stepOf();
+  const cur = stepOf(cursor);
   const step = playing && !held && cursor < range[1] ? { delay: cur.delay / speed, grow: cur.grow / speed } : NO_STEP;
   // 整条波先画好，再用裁剪框露出来：播放时在这一步里先停 delay，再匀速扩到下一天
   const reveal = axis.xOfDay(step.grow > 0 ? cursor + 1 : cursor);
@@ -291,14 +387,7 @@ export default function TopicLines({ history, index, graph }: { history: History
     setCursor(totalDays);
   };
 
-  const shown = mode === 'pick'
-    ? (focus ? [focus] : [])
-    : topics
-      .map((t) => ({ t, last: t.points.filter((p) => p.day <= cursor).at(-1)?.day ?? -1 }))
-      .filter(({ last }) => last >= 0 && cursor - last < ACTIVE_WINDOW)
-      .sort((a, b) => b.last - a.last || a.t.dir.localeCompare(b.t.dir))
-      .slice(0, MAX_SHOWN)
-      .map(({ t }) => t);
+  const shown = mode === 'pick' ? (focus ? [focus] : []) : (stage[cursor] ?? []);
 
   const titleOf = useCallback((dir: string, name: string) => index.byPath.get(`${dir}/${name}`)?.title ?? name.replace(/\.md$/, ''), [index]);
 
@@ -358,16 +447,18 @@ export default function TopicLines({ history, index, graph }: { history: History
             cursor={cursor}
             reveal={reveal}
             step={step}
+            speed={speed}
             totalDays={totalDays}
             titleOf={titleOf}
             selectedDate={selected?.dir === t.dir ? selected.point.date : null}
             onPick={(p) => setSelected({ dir: t.dir, point: p })}
+            onIntro={onIntro}
           />
         ))}
-        {shown.length > 0 && <WeekAxis axis={axis} totalDays={totalDays} firstCommit={history.firstCommit} />}
+        {shown.length > 0 && <MonthAxis axis={axis} totalDays={totalDays} firstCommit={history.firstCommit} />}
       </Box>
       <Typography variant="caption" sx={{ display: 'block', px: `${PAD_X}px`, color: held ? '#1a237e' : 'text.secondary' }}>
-        {held ? '已暂停 · 悬停圆点看那天的文章，点击看详情' : playing ? '正在一天天往前长 · 鼠标移到波浪上暂停查看' : '点 ▶ 播放；鼠标移到波浪上查看，点圆点看详情'}
+        {introducing.length && !hovering && !selected ? '正在回顾这个主题从第一天到今天的发展，回顾完接着往前长' : held ? '已暂停 · 悬停圆点看那天的文章，点击看详情' : playing ? '正在一天天往前长 · 鼠标移到波浪上暂停查看' : '点 ▶ 播放；鼠标移到波浪上查看，点圆点看详情'}
       </Typography>
       {selected && (
         <Paper variant="outlined" sx={{ mx: `${PAD_X}px`, mt: 1, p: 1.5, position: 'relative', borderColor: GROUP_BY_KEY[selected.dir.split('/')[0]]?.color }}>
@@ -381,11 +472,14 @@ export default function TopicLines({ history, index, graph }: { history: History
           ))}
         </Paper>
       )}
-      {mode === 'pick' && focus && <DevLog topic={focus} cursor={cursor} titleOf={titleOf} selectedDate={selected?.dir === focus.dir ? selected.point.date : null} />}
+      {mode === 'pick' && focus && <DevLog topic={focus} cursor={introDay[focus.dir] ?? cursor} titleOf={titleOf} selectedDate={selected?.dir === focus.dir ? selected.point.date : null} />}
       <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1.5 }}>
-        一个目录就是一个主题，只算它直接下面的文章。所有主题共用同一条时间轴（第一天到最后一天）和同一条稳定的正弦波，周期按屏幕宽度取合适的整周数，
-        不断开也不变形；有文章的日子在波上高亮成圆点（大圆点有新文章，小圆点只修改）。播放时波浪匀速一天天往前长，
-        长到有文章的日子圆点亮起来，旁边显示那天的文章；鼠标移到波浪上暂停，悬停、点选圆点看详情。「当下活跃」只显示最近 {ACTIVE_WINDOW} 天里有更新的主题；「选择主题」单看一个主题，
+        一个目录就是一个主题，只算它直接下面的文章。所有主题共用同一条时间轴（第一天到最后一天），每个主题一条连续的正弦波，
+        都是标准的正弦波，摆幅和周期不变，从第一天到最后一天正好整数个周期；文章多的主题波密一些，文章少的疏一些。
+        有文章的日子是串在波上的圆点（大圆点有新文章，小圆点只修改）。
+        播放的快慢也跟着内容：平静的日子一晃而过，快到有文章的日子慢下来；波先长到，圆点才亮，旁边显示那天的文章。
+        主题出场时先从第一天回顾到当天，回顾完再接着往前播。鼠标移到波浪上暂停，悬停、点选圆点看详情。
+        「当下活跃」最多同时看 {MAX_SHOWN} 个主题，台上的主题沉寂 {ACTIVE_WINDOW} 天才退场；「选择主题」单看一个主题，
         下方是它的发展记录。全库改名、批量改链接这类一次动几十个文件的提交不算作修改。
       </Typography>
     </Box>
