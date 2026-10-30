@@ -9,11 +9,14 @@ import { PlaybackBar } from './Playback';
 import { usePlayback } from './usePlayback';
 import { buildEntries, dateOf, dayIndex, GROUP_BY_KEY } from './knowledge';
 
-// 主题脉络：一个目录就是一个主题，一行一条线，从它第一篇文章画到最近一次改动；
-// 实心点是那天新增了文章，空心点是只修改了已有文章，点越大当天动的文章越多
+// 主题脉络：一个目录就是一个主题，一行一条波浪线。线只在主题活跃的日子附近出现，
+// 当天动的文章越多波峰越高；相隔超过 BURST_GAP 天就断开，沉寂的日子不画线
 const LABEL_W = 180;
 const PAD_R = 24;
-const ROW_H = 18;
+const ROW_H = 24;
+const BURST_GAP = 10;
+const AMP_MAX = 10;
+const WAVE_PX = 12;
 const GROUP_GAP = 10;
 const AXIS_H = 40;
 const GROUP_ORDER = ['Notes', 'Azure', 'paper', 'book', 'product'];
@@ -30,6 +33,36 @@ interface Hover {
   topic: Topic;
   point?: Topic['points'][number];
   x: number;
+}
+
+type Point = Topic['points'][number];
+
+/** 相隔不超过 BURST_GAP 天的活跃日连成一段 */
+function bursts(points: Point[]): Point[][] {
+  const out: Point[][] = [];
+  for (const p of points) {
+    const last = out.at(-1);
+    if (last && p.day - last.at(-1)!.day <= BURST_GAP) last.push(p);
+    else out.push([p]);
+  }
+  return out;
+}
+
+/** 一段波浪：振幅是各活跃日的高斯脉冲叠加，新增文章比修改权重大 */
+function wavePath(burst: Point[], y: number, xOfDay: (d: number) => number, upTo: number): string {
+  const sigma = Math.max(5, xOfDay(2) - xOfDay(0));
+  const pulses = burst.map((p) => ({ x: xOfDay(p.day), a: Math.min(AMP_MAX, 2.5 + Math.sqrt(p.added * 2 + p.edited) * 2.6) }));
+  const x0 = Math.max(LABEL_W, pulses[0].x - sigma * 2.5);
+  const x1 = Math.min(pulses.at(-1)!.x + sigma * 2.5, upTo);
+  if (x1 <= x0) return '';
+  let d = '';
+  for (let x = x0; x <= x1; x += 1) {
+    let env = burst.length > 1 && x > pulses[0].x && x < pulses.at(-1)!.x ? 1 : 0;
+    for (const p of pulses) env += p.a * Math.exp(-((x - p.x) ** 2) / (2 * sigma * sigma));
+    const yy = y - Math.min(AMP_MAX, env) * Math.sin((2 * Math.PI * x) / WAVE_PX);
+    d += `${d ? 'L' : 'M'}${x.toFixed(1)},${yy.toFixed(1)}`;
+  }
+  return d;
 }
 
 function layoutTopics(history: History): { topics: Topic[]; height: number } {
@@ -100,6 +133,11 @@ export default function TopicLines({ history, index, graph }: { history: History
       <PlaybackBar pb={pb} history={history} entries={entries} totalDays={totalDays} onSelect={() => {}} />
       <Box ref={wrapRef} sx={{ position: 'relative' }}>
         <svg width={width} height={svgH} style={{ display: 'block', userSelect: 'none' }}>
+          <style>{`
+            .mf-flow { animation: mfFlow 2.4s linear infinite; }
+            @keyframes mfFlow { from { stroke-dashoffset: 48 } to { stroke-dashoffset: 0 } }
+            @keyframes mfRing { from { r: 3; opacity: .9 } to { r: 16; opacity: 0 } }
+          `}</style>
           {months.map((m) => (
             <g key={m.label}>
               <line x1={m.x} x2={m.x} y1={0} y2={height} stroke="#e0e0e0" strokeDasharray="2 4" />
@@ -109,14 +147,13 @@ export default function TopicLines({ history, index, graph }: { history: History
           <rect x={LABEL_W} y={0} width={Math.max(0, xOfDay(cursor) - LABEL_W)} height={height} fill="#1a237e" opacity={0.025} />
           {topics.map((t) => {
             const color = GROUP_BY_KEY[t.group].color;
-            const start = t.points[0].day;
-            const end = Math.min(t.points.at(-1)!.day, cursor);
             const active = hover?.topic.dir === t.dir;
             const dim = hover && !active;
+            const upTo = xOfDay(cursor);
             return (
               <g
                 key={t.dir}
-                opacity={dim ? 0.35 : 1}
+                opacity={dim ? 0.3 : 1}
                 onMouseEnter={() => setHover({ topic: t, x: xOfDay(t.points.at(-1)!.day) })}
                 onMouseLeave={() => setHover(null)}
               >
@@ -125,23 +162,32 @@ export default function TopicLines({ history, index, graph }: { history: History
                 <text x={LABEL_W - 14} y={t.y + 4} textAnchor="end" fontSize={11} fill="#455a64" fontWeight={active ? 700 : 500}>
                   {t.label.length > 24 ? `…${t.label.slice(-23)}` : t.label}
                 </text>
-                {start <= cursor && (
-                  <line x1={xOfDay(start)} x2={xOfDay(end)} y1={t.y} y2={t.y} stroke={color} strokeWidth={active ? 3 : 2} strokeOpacity={0.55} strokeLinecap="round" />
-                )}
-                {t.points.filter((p) => p.day <= cursor).map((p) => {
-                  const r = 2.5 + Math.sqrt(p.added + p.edited) * 1.1;
+                {bursts(t.points).map((b) => {
+                  const d = wavePath(b, t.y, xOfDay, upTo);
+                  if (!d) return null;
                   return (
-                    <circle
-                      key={p.date}
-                      cx={xOfDay(p.day)}
-                      cy={t.y}
-                      r={r}
-                      fill={p.added ? color : '#fff'}
-                      stroke={color}
-                      strokeWidth={1.5}
-                      style={{ cursor: 'pointer' }}
-                      onMouseEnter={() => setHover({ topic: t, point: p, x: xOfDay(p.day) })}
-                    />
+                    <g key={b[0].date}>
+                      <path d={d} fill="none" stroke={color} strokeWidth={active ? 1.8 : 1.3} strokeOpacity={0.75} strokeLinejoin="round" />
+                      {/* 沿着波浪往前流动的光点 */}
+                      <path className="mf-flow" d={d} fill="none" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" strokeDasharray="2 46" />
+                    </g>
+                  );
+                })}
+                {t.points.filter((p) => p.day <= cursor).map((p) => {
+                  const fresh = cursor - p.day < 4 && cursor < totalDays;
+                  return (
+                    <g key={p.date}>
+                      {fresh && <circle cx={xOfDay(p.day)} cy={t.y} r={3} fill="none" stroke={color} strokeWidth={1.5} style={{ animation: 'mfRing 1s ease-out' }} />}
+                      {p.added > 0 && <circle cx={xOfDay(p.day)} cy={t.y} r={1.8} fill={color} pointerEvents="none" />}
+                      <circle
+                        cx={xOfDay(p.day)}
+                        cy={t.y}
+                        r={8}
+                        fill="transparent"
+                        style={{ cursor: 'pointer' }}
+                        onMouseEnter={() => setHover({ topic: t, point: p, x: xOfDay(p.day) })}
+                      />
+                    </g>
                   );
                 })}
               </g>
@@ -177,8 +223,8 @@ export default function TopicLines({ history, index, graph }: { history: History
         )}
       </Box>
       <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1 }}>
-        每一行是一个目录（主题），只算它直接下面的文章；线从第一篇文章画到最近一次改动。实心点是当天新增了文章，空心点是只修改了已有文章，点越大当天动的文章越多。
-        全库改名、批量改链接这类一次动几十个文件的提交不算作修改。只列出在两天以上有改动的目录。
+        每一行是一个目录（主题），只算它直接下面的文章。波浪只在主题活跃的日子出现，当天新增、修改的文章越多波峰越高，新增比修改分量重；
+        相隔超过 {BURST_GAP} 天没有动静，线就断开。波浪中间的小点表示那天有新文章。全库改名、批量改链接这类一次动几十个文件的提交不算作修改。
       </Typography>
     </Box>
   );
