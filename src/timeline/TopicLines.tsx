@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
@@ -11,17 +11,16 @@ import type { WikiGraph } from '../types';
 import type { History } from './history';
 import { PlaybackBar } from './Playback';
 import { usePlayback } from './usePlayback';
-import { buildEntries, dateOf, dayIndex, GROUP_BY_KEY } from './knowledge';
+import { buildEntries, dayIndex, GROUP_BY_KEY } from './knowledge';
 
 // 主题脉络：一个目录就是一个主题。默认只显示光标前 ACTIVE_WINDOW 天里有动静的主题（通常一两个），
-// 沉寂下来就退场；也可以选定一个主题单独看。每个主题一条余弦波，从它第一篇文章那天起，
-// 把每个有文章出现、改动的日子串成一个个波峰，画到当天为止；每行有自己的横轴，铺满这个主题的跨度
+// 沉寂下来就退场；也可以选定一个主题单独看。每个主题一条标准余弦波，从它第一篇文章那天起，
+// 把每个有文章出现、改动的日子等距串成一个个波峰，画到当天为止
 const PAD_X = 28;
 const ROW_H = 190;
 const ACTIVE_WINDOW = 7;
 const MAX_SHOWN = 2;
-const AMP_MAX = 52;
-const MIN_SPAN = 14;
+const AMP = 34;
 const GROUP_ORDER = ['Notes', 'Azure', 'paper', 'book', 'product'];
 
 interface Point {
@@ -45,29 +44,28 @@ interface Hover {
   top: number;
 }
 
-/** 当天的波峰高度：新增文章比修改分量重 */
-const amp = (p: Point) => Math.min(AMP_MAX, 18 + Math.sqrt(p.added * 2 + p.edited) * 11);
-
 /**
- * 一条余弦波把几个日期串起来：每个日期是一个波峰，相邻两个日期之间是一个波谷，
- * 开头用半个余弦从基线升起。只画到 upTo（当天），播放时波浪一点点往前长
+ * 主题的日期等距排开，每个日期占一个完整周期、正好落在波峰上，所以整条线是标准余弦波。
+ * pos 是"第几个日期"，两个日期之间按天数线性插值：播放时波浪按时间匀速从一个波峰长到下一个
  */
-function wavePath(points: Point[], y: number, xOfDay: (d: number) => number, upTo: number): string {
-  const pts = points.map((p) => ({ x: xOfDay(p.day), a: amp(p) }));
-  const lead = Math.min(24, PAD_X - 4);
-  const x0 = pts[0].x - lead;
-  const last = pts.at(-1)!;
-  const x1 = Math.min(last.x, upTo);
-  const offset = (x: number): number => {
-    if (x <= pts[0].x) return (pts[0].a * (1 - Math.cos((Math.PI * (x - x0)) / lead))) / 2;
-    if (x >= last.x) return last.a;
-    const i = pts.findIndex((p) => p.x > x) - 1;
-    const t = (x - pts[i].x) / (pts[i + 1].x - pts[i].x);
-    const a = pts[i].a + (pts[i + 1].a - pts[i].a) * t;
-    return a * (0.2 + 0.8 * Math.cos(2 * Math.PI * t));
-  };
+function posOfDay(points: Point[], day: number): number {
+  if (day < points[0].day) return -0.5;
+  const i = points.findIndex((p) => p.day > day);
+  if (i < 0) return points.length - 1;
+  const a = points[i - 1];
+  return i - 1 + (day - a.day) / (points[i].day - a.day);
+}
+
+/** 从第一个波峰前半个周期（波谷）起，一直画到最后一个波峰 */
+function wavePath(n: number, y: number, xOfPos: (pos: number) => number): string {
+  const x0 = xOfPos(-0.5);
+  const x1 = xOfPos(n - 1);
+  const per = xOfPos(1) - xOfPos(0);
   let d = '';
-  for (let x = x0; x <= x1; x += 1) d += `${d ? 'L' : 'M'}${x.toFixed(1)},${(y - offset(x)).toFixed(1)}`;
+  for (let x = x0; x <= x1 + 0.01; x += 0.5) {
+    const pos = (x - xOfPos(0)) / per;
+    d += `${d ? 'L' : 'M'}${x.toFixed(1)},${(y - AMP * Math.cos(2 * Math.PI * pos)).toFixed(1)}`;
+  }
   return d;
 }
 
@@ -87,31 +85,33 @@ function loadTopics(history: History): Topic[] {
     .sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group) || a.label.localeCompare(b.label));
 }
 
-function TopicRow({ topic, cursor, totalDays, width, top, history, onHover }: {
+function TopicRow({ topic, cursor, stepMs, totalDays, width, top, onHover }: {
   topic: Topic;
   cursor: number;
+  /** 播放时在这一天停留多久：这段时间里波浪匀速长到下一天，到了下一天那天的圆点才出现；不播放时为 0 */
+  stepMs: number;
   totalDays: number;
   width: number;
   top: number;
-  history: History;
   onHover: (h: Hover | null) => void;
 }) {
   const color = GROUP_BY_KEY[topic.group].color;
   const seen = topic.points.filter((p) => p.day <= cursor);
   const start = topic.points[0];
   const latest = seen.at(-1);
-  // 这一行自己的横轴：从主题的第一天到当天；刚起步的主题往前补足 MIN_SPAN 天，右边始终是当天
-  const hi = cursor + 1;
-  const lo = Math.min(start.day - 1, hi - MIN_SPAN);
-  const inner = width - PAD_X * 2;
-  const xOfDay = (d: number) => PAD_X + ((d - lo) / (hi - lo)) * inner;
-  const cy = ROW_H * 0.56;
-  const axisY = ROW_H - 14;
-  const step = Math.max(1, Math.ceil((hi - lo) / Math.max(4, Math.floor(inner / 70))));
-  const ticks: { x: number; label: string }[] = [];
-  for (let d = Math.ceil(lo); d <= hi; d += step) ticks.push({ x: xOfDay(d), label: dateOf(d, history.firstCommit).slice(5) });
+  const clipId = useId();
+  const n = topic.points.length;
+  const per = (width - PAD_X * 2) / n;
+  const xOfPos = (pos: number) => PAD_X + (pos + 0.5) * per;
+  const xOfDay = (day: number) => xOfPos(posOfDay(topic.points, day));
+  const cy = ROW_H * 0.52;
+  const dateY = cy + AMP + 22;
+  // 日期挤不下时隔几个标一个，起点和最近一个总是标
+  const every = Math.ceil(46 / per);
   const upTo = xOfDay(cursor);
-  const d = seen.length ? wavePath(seen, cy, xOfDay, upTo) : '';
+  // 整条波浪先画好，再用裁剪框露到当天；播放时裁剪框在这一天的停留时间里匀速扩到下一天
+  const reveal = cursor < start.day - 1 ? 0 : xOfDay(stepMs > 0 ? cursor + 1 : cursor);
+  const d = wavePath(n, cy, xOfPos);
   return (
     <Box sx={{ position: 'absolute', left: 0, right: 0, top, height: ROW_H, transition: 'top .5s ease', animation: 'mfTopicIn .5s ease-out' }}>
       <Box sx={{ position: 'absolute', left: PAD_X, top: 4, display: 'flex', alignItems: 'baseline', gap: 1, zIndex: 1 }}>
@@ -125,20 +125,25 @@ function TopicRow({ topic, cursor, totalDays, width, top, history, onHover }: {
       </Box>
       <svg width={width} height={ROW_H} style={{ display: 'block', overflow: 'visible' }}>
         <style>{`@keyframes mfRing { from { r: 7; opacity: .9 } to { r: 28; opacity: 0 } }`}</style>
-        <line x1={PAD_X} x2={width - PAD_X} y1={axisY - 14} y2={axisY - 14} stroke="#eceff1" />
-        {ticks.map((t) => (
-          <text key={t.label} x={t.x} y={axisY} textAnchor="middle" fontSize={10} fill="#90a4ae">{t.label}</text>
-        ))}
-        <line x1={upTo} x2={upTo} y1={22} y2={axisY - 14} stroke="#1a237e" strokeOpacity={0.35} strokeWidth={1.5} />
-        {d && <path d={d} fill="none" stroke={color} strokeWidth={2.2} strokeOpacity={0.85} strokeLinejoin="round" />}
-        {seen.map((p) => {
-          const x = xOfDay(p.day);
-          const y = cy - amp(p);
+        <line x1={PAD_X} x2={width - PAD_X} y1={cy} y2={cy} stroke="#eceff1" />
+        {seen.length > 0 && <line x1={upTo} x2={upTo} y1={22} y2={dateY - 12} stroke="#1a237e" strokeOpacity={0.3} strokeWidth={1.5} />}
+        <clipPath id={clipId}>
+          <rect x={0} y={0} height={ROW_H} style={{ width: Math.max(0, reveal), transition: `width ${stepMs}ms linear` }} />
+        </clipPath>
+        <path d={d} clipPath={`url(#${clipId})`} fill="none" stroke={color} strokeWidth={2.2} strokeOpacity={0.85} strokeLinejoin="round" />
+        {seen.map((p, i) => {
+          const x = xOfPos(i);
+          const y = cy - AMP;
           const fresh = cursor - p.day < 4 && cursor < totalDays;
           return (
             <g key={p.date}>
               {fresh && <circle cx={x} cy={y} r={7} fill="none" stroke={color} strokeWidth={2} style={{ animation: 'mfRing 1.1s ease-out' }} />}
               <circle cx={x} cy={y} r={p.added ? 7 : 5} fill={color} stroke="#fff" strokeWidth={2} pointerEvents="none" />
+              {(i === 0 || i === seen.length - 1 || i % every === 0) && (
+                <text x={x} y={dateY} textAnchor="middle" fontSize={10.5} fontWeight={i === 0 || i === seen.length - 1 ? 700 : 500} fill={i === 0 || i === seen.length - 1 ? color : '#78909c'}>
+                  {i === 0 ? '起 ' : ''}{p.date.slice(5)}
+                </text>
+              )}
               <circle
                 cx={x}
                 cy={y}
@@ -151,17 +156,6 @@ function TopicRow({ topic, cursor, totalDays, width, top, history, onHover }: {
             </g>
           );
         })}
-        {/* 起点和最近一个日期 */}
-        {seen.length > 0 && (
-          <text x={xOfDay(start.day)} y={cy - amp(start) - 14} textAnchor="middle" fontSize={11} fontWeight={700} fill={color}>
-            起 {start.date.slice(5)}
-          </text>
-        )}
-        {latest && latest !== start && (
-          <text x={xOfDay(latest.day)} y={cy - amp(latest) - 14} textAnchor="middle" fontSize={11} fontWeight={700} fill={color}>
-            {latest.date.slice(5)}
-          </text>
-        )}
       </svg>
     </Box>
   );
@@ -180,14 +174,18 @@ export default function TopicLines({ history, index, graph }: { history: History
 
   const { entries, totalDays } = useMemo(() => buildEntries(history, index, graph), [history, index, graph]);
   const topics = useMemo(() => loadTopics(history), [history]);
-  const pb = usePlayback(totalDays);
-  const { cursor } = pb;
   const [hover, setHover] = useState<Hover | null>(null);
   // 两种看法：当下活跃（跟着播放自动出现、退场）和选择主题（单看一个主题的整条发展线）
   const [mode, setMode] = useState<'live' | 'pick'>('live');
   const [picked, setPicked] = useState<Topic | null>(null);
   const busiest = useMemo(() => topics.reduce((a, b) => (b.points.length > a.points.length ? b : a), topics[0]), [topics]);
   const focus = picked ?? busiest;
+  // 播放节奏跟着内容走：快到有更新的日子放慢，看清波浪长到那个日期；没动静的日子快速走过。
+  // 选择主题时只看这个主题自己的日期
+  const activeDays = useMemo(() => new Set((mode === 'pick' && focus ? [focus] : topics).flatMap((t) => t.points.map((p) => p.day))), [mode, focus, topics]);
+  const dwell = useCallback((day: number) => (activeDays.has(day + 1) ? 1400 : activeDays.has(day) ? 500 : 90), [activeDays]);
+  const pb = usePlayback(totalDays, dwell, 1);
+  const { cursor } = pb;
 
   const shown = mode === 'pick'
     ? (focus ? [focus] : [])
@@ -258,7 +256,7 @@ export default function TopicLines({ history, index, graph }: { history: History
           </Typography>
         )}
         {shown.map((t, i) => (
-          <TopicRow key={t.dir} topic={t} cursor={cursor} totalDays={totalDays} width={width} top={i * ROW_H} history={history} onHover={setHover} />
+          <TopicRow key={t.dir} topic={t} cursor={cursor} stepMs={pb.playing && cursor < totalDays ? dwell(cursor) / pb.speed : 0} totalDays={totalDays} width={width} top={i * ROW_H} onHover={setHover} />
         ))}
         {hover && (
           <Paper
@@ -279,7 +277,7 @@ export default function TopicLines({ history, index, graph }: { history: History
       </Box>
       <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mt: 1 }}>
         一个目录就是一个主题，只算它直接下面的文章。「当下活跃」只显示最近 {ACTIVE_WINDOW} 天里有更新的主题，沉寂下来就退场；「选择主题」单看一个主题的整条发展线。
-        每条线从主题的第一篇文章开始，把每个有文章出现或修改的日子串成波峰，画到当天为止：大圆点是那天有新文章，小圆点是只修改，动的文章越多波峰越高。
+        每条线是一条标准余弦波：主题的每个日期等距排开、各占一个波峰，下方标着日期；大圆点是那天有新文章，小圆点是只修改。播放时波浪按时间从一个波峰长到下一个，快到有更新的日子会放慢，没动静的日子快速走过。
         全库改名、批量改链接这类一次动几十个文件的提交不算作修改。
       </Typography>
     </Box>
