@@ -30,6 +30,8 @@ const ACTIVE_WINDOW = 7;
 const MAX_SHOWN = 2;
 // 1× 时每天生长的时间（毫秒）：匀速，有没有文章都一样
 const DAY_MS = 450;
+// 一个主题出场时，波浪从第一天长到当天用的时间
+const INTRO_MS = 1400;
 const GROUP_ORDER = ['Notes', 'Azure', 'paper', 'book', 'product'];
 
 interface Point {
@@ -100,6 +102,16 @@ function TopicRow({ topic, axis, cursor, reveal, step, totalDays, titleOf, selec
   const color = GROUP_BY_KEY[topic.group].color;
   const clipId = useId();
   const [hover, setHover] = useState<Point | null>(null);
+  // 出场：先从第一天长到当天，之后再跟着播放一天天长
+  const [intro, setIntro] = useState<'start' | 'grow' | 'done'>('start');
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => setIntro('grow'));
+    const t = window.setTimeout(() => setIntro('done'), INTRO_MS);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(t);
+    };
+  }, []);
   const { xOfDay, yOfDay, width } = axis;
   const seen = topic.points.filter((p) => p.day <= cursor);
   const latest = seen.at(-1);
@@ -135,7 +147,15 @@ function TopicRow({ topic, axis, cursor, reveal, step, totalDays, titleOf, selec
         <svg width={width} height={ROW_H} style={{ display: 'block' }}>
           <line x1={PAD_X} x2={width - PAD_X} y1={CY} y2={CY} stroke="#cfd8dc" />
           <clipPath id={clipId}>
-            <rect x={0} y={0} height={ROW_H} style={{ width: Math.max(0, reveal), transition: `width ${step.grow}ms linear ${step.delay}ms` }} />
+            <rect
+              x={0}
+              y={0}
+              height={ROW_H}
+              style={{
+                width: intro === 'start' ? 0 : Math.max(0, reveal),
+                transition: intro === 'grow' ? `width ${INTRO_MS}ms ease-in-out` : `width ${step.grow}ms linear ${step.delay}ms`,
+              }}
+            />
           </clipPath>
           <path d={axis.wave} clipPath={`url(#${clipId})`} fill="none" stroke={color} strokeWidth={2.5} strokeLinejoin="round" />
           {seen.map((p) => {
@@ -143,7 +163,14 @@ function TopicRow({ topic, axis, cursor, reveal, step, totalDays, titleOf, selec
             const y = yOfDay(p.day);
             const fresh = cursor - p.day < 2 && cursor < totalDays;
             return (
-              <g key={p.date} onMouseEnter={() => setHover(p)} onMouseLeave={() => setHover(null)} onClick={() => onPick(p)} style={{ cursor: 'pointer' }}>
+              <g
+                key={p.date}
+                onMouseEnter={() => setHover(p)}
+                onMouseLeave={() => setHover(null)}
+                onClick={() => onPick(p)}
+                // 出场时圆点随着波浪长到它才亮起来
+                style={{ cursor: 'pointer', animation: intro !== 'done' ? `mfDotIn .3s ease-out ${((x - PAD_X) / Math.max(1, reveal - PAD_X)) * INTRO_MS}ms both` : undefined }}
+              >
                 {fresh && <circle cx={x} cy={y} r={8} fill="none" stroke={color} strokeWidth={2} style={{ animation: 'mfRing 1.1s ease-out' }} />}
                 <circle cx={x} cy={y} r={16} fill="transparent" />
                 {p.date === selectedDate && <circle cx={x} cy={y} r={13} fill="none" stroke="#263238" strokeWidth={2} />}
@@ -322,7 +349,7 @@ export default function TopicLines({ history, index, graph }: { history: History
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
       >
-        <style>{`@keyframes mfRing { from { r: 8; opacity: .9 } to { r: 30; opacity: 0 } }`}</style>
+        <style>{`@keyframes mfRing { from { r: 8; opacity: .9 } to { r: 30; opacity: 0 } } @keyframes mfDotIn { from { opacity: 0 } to { opacity: 1 } }`}</style>
         {shown.map((t) => (
           <TopicRow
             key={t.dir}
