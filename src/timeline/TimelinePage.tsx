@@ -265,7 +265,7 @@ export default function TimelinePage() {
             ? '知识之树：从一株小苗开始，每翻过一个有内容的日子（台历），树就长高、分叉一点；知识越多长得越快。叶子是文章与 wiki 节点，花是知识差距报告。鼠标移到树上会暂停，叶子换成知识的颜色，可以悬停、点选查看。'
             : view === 'axis'
               ? '时间轴：横轴是 commit 日期，每条泳道一类知识。点 ▶ 播放，或拖动滑块到任意一天。'
-              : '主题脉络：每天通常只有一两个主题在更新。播放时只出现当下活跃的主题，每个主题一条大波浪，波峰是它的文章出现的日子；主题沉寂下来就退场。'}
+              : '主题脉络：一个主题一条波浪线，从它第一篇文章那天起，把每个有文章出现、修改的日子串成波峰。「当下活跃」跟着播放只出现正在更新的一两个主题；「选择主题」单看一个主题的整条发展线。'}
         >
           <ToggleButtonGroup size="small" exclusive value={view} onChange={(_, v) => v && setView(v)} sx={{ mb: 1.5 }}>
             <ToggleButton value="tree" sx={{ textTransform: 'none', px: 2 }}>知识之树</ToggleButton>
