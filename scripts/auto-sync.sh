@@ -35,6 +35,14 @@ case "${1:-}" in
       git -C "$REPO" remote rename origin github
       git -C "$REPO" remote add platform "$(git -C "$src" remote get-url platform)"
     fi
+    # The platform remote signs in through Git Credential Manager, configured
+    # per repository by `ms app init`; give the clone the same settings
+    git -C "$src" config --local --get-regexp '^credential\.' | while read -r k v; do
+      git -C "$REPO" config --local --unset-all "$k" 2>/dev/null || true
+    done
+    git -C "$src" config --local --get-regexp '^credential\.' | while read -r k v; do
+      git -C "$REPO" config --local --add "$k" "$v"
+    done
     cp "$0" "$INSTALLED"
     chmod +x "$INSTALLED"
     # 21:00 local time every day; launchd runs a missed job when the Mac wakes up
