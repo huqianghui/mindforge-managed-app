@@ -14,7 +14,9 @@ python3 scripts/sync-content.py
 npm run build >/dev/null
 echo "local build ok"
 
-git add -A
+# Stage only the sync output and tracked edits, never untracked scratch files.
+git add public/content public/wiki-graph.json
+git add -u
 if git diff --cached --quiet; then
   echo "no changes to commit"
 else

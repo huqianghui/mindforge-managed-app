@@ -29,3 +29,7 @@ dist-ssr
 # Python bytecode from scripts/
 __pycache__/
 
+
+# Local debugging scratch (Playwright MCP snapshots, ad-hoc state checks)
+.playwright-mcp/
+state/.*
