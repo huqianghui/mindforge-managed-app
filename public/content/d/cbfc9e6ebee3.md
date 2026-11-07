@@ -1,7 +1,7 @@
 ---
 title: "Agent Loop Architecture"
 created: "2026-04-13"
-updated: "2026-09-25"
+updated: "2026-11-07"
 tags:
   - wiki
   - concept
@@ -28,9 +28,11 @@ Agent Loop 是所有 AI Agent 的运行时核心——一个 while 循环执行 
 
 - **来源**：[[Claude-Code系列02：learn-claude-code|learn-claude-code]]
 - **首次出现**：2026-04-13
-- **最近更新**：2026-04-13
-- **置信度**：0.8
-- **状态**：stale
+- **最近更新**：2026-11-07
+- **置信度**：0.9
+- **状态**：active
+- **证据类型**：产品与服务
+- **复核**：2026-11-07 确认——依据：shareAI-lab/learn-claude-code 与 mini-claude-code README 仍以 while 循环（stop_reason!=tool_use 返回，否则执行工具并回灌）为核心：https://github.com/shareAI-lab/learn-claude-code
 
 > while 循环 + model 调用 + 工具执行 + 结果回灌，"One loop & Bash is all you need"。
 
@@ -38,9 +40,11 @@ Agent Loop 是所有 AI Agent 的运行时核心——一个 while 循环执行 
 
 - **来源**：[[Claude-Code系列02：learn-claude-code|learn-claude-code]]
 - **首次出现**：2026-04-13
-- **最近更新**：2026-04-13
-- **置信度**：0.7
-- **状态**：stale
+- **最近更新**：2026-11-07
+- **置信度**：0.8
+- **状态**：active
+- **证据类型**：产品与服务
+- **复核**：2026-11-07 确认——依据：mind1949 镜像 README 的 s02 motto 'Adding a tool means adding one handler'；官方仓库 s02_tool_use 仍是 stable tool dispatch layer：https://github.com/shareAI-lab/learn-claude-code
 
 > agent loop 本身一字不改，这是 Tool Dispatch 模式的核心优势。
 
@@ -48,29 +52,41 @@ Agent Loop 是所有 AI Agent 的运行时核心——一个 while 循环执行 
 
 - **来源**：[[Claude-Code系列02：learn-claude-code|learn-claude-code]]
 - **首次出现**：2026-04-13
-- **最近更新**：2026-04-13
+- **最近更新**：2026-11-07
 - **置信度**：0.7
-- **状态**：stale
+- **状态**：active
+- **证据类型**：产品与服务
+- **复核**：2026-11-07 修订——依据：官方仓库 s05_todo_write / 旧版 s03 TodoWrite 仍在（https://github.com/shareAI-lab/learn-claude-code）；但『连续 3 轮提醒』等细节本轮未在 README 层面核实
 
+> **现行结论（2026-11-07 修订）**：TodoWrite 仍是 planning 机制（现仓库章节为 s05_todo_write，旧 12-session 版为 s03），提醒阈值细节标注未复核
+>
+> 以下为原记录：
 > 引入任务追踪后，model 被强制同一时间只有一个 in_progress 任务；连续 3 轮不调用 todo 工具时系统自动注入提醒。
 
 ### Claim: learn-claude-code 的 12 session 分三梯队
 
 - **来源**：[[Claude-Code系列02：learn-claude-code|learn-claude-code]]
 - **首次出现**：2026-04-13
-- **最近更新**：2026-04-13
+- **最近更新**：2026-11-07
 - **置信度**：0.7
-- **状态**：stale
+- **状态**：active
+- **证据类型**：产品与服务
+- **复核**：2026-11-07 修订——依据：官方仓库现为 s01–s17（含 s15 integrated harness、s16 workflow runtime、s17 goal loop），旧 12 课保留在 agents/ 与 docs/ 过渡目录：https://github.com/shareAI-lab/learn-claude-code；另见 wytheglobal 备份 README（2026.04.14 版 s00–s19 分章）
 
+> **现行结论（2026-11-07 修订）**：旧 12 session 三梯队分法仍可作历史描述，但上游已重构为 s01–s17（含权限、hooks、MCP/plugin、workflow runtime、goal loop），需注明版本差异并重写梯队划分
+>
+> 以下为原记录：
 > 基础层（Agent 能做什么）、隔离层（怎么管理注意力）、协作层（多 Agent 怎么协同），对应 Claude Code 从 Agent Loop 到 Teams/Worktree 的完整机制。
 
 ### Claim: action loop 是 agent loop 在 GUI 操作域的实例化——观察对象换成屏幕状态、动作换成 UI 事件
 
 - **来源**：[[Computer-Use与Browser-Use系列三：自己实现]]
 - **首次出现**：2026-08-29
-- **最近更新**：2026-08-30
+- **最近更新**：2026-11-07
 - **置信度**：0.75
-- **状态**：stale
+- **状态**：active
+- **证据类型**：产品与服务
+- **复核**：2026-11-07 确认——依据：Browserless 文档（https://docs.browserless.io/ai-integrations/computer-use/openai-computer-use）描述同一循环：发任务→执行 actions→回传截图→循环至无 computer_call；Playwright 作 handler 背后的执行环境。第三方文档，OpenAI 官方页本轮未提取
 
 > Computer Use 的 action loop（截图 → 模型返回 action JSON → handler 执行 → 截取新状态回传）与 agent loop 的 while 循环同构：都是"模型判断 + 执行 + 结果回灌"。区别仅在实例化域——观察从工具返回值变成截图/DOM/Accessibility Tree，动作从 API 调用变成 click/type/scroll。关键分层认知：模型返回的 action 只是协议（不会自己执行），**action handler 是使用者要写的翻译层**，Playwright/xdotool 只是 handler 背后的执行环境。"One loop & Bash is all you need" 在 GUI 域的对应物是 "One loop & screenshot+click is all you need"——loop 骨架不变，工具面变了。
 
@@ -98,6 +114,7 @@ Agent Loop 是所有 AI Agent 的运行时核心——一个 while 循环执行 
 ## 冲突与演进
 
 - 2026-08-30：注入 action loop 实例化 Claim（Computer Use 系列三），4 月 stale 页注入 active 新证据——agent loop 范式获得 GUI 操作域的跨域验证。
+- 2026-11-07：/revalidate 全库复核（证据分类）——确认 3
 
 ## 关联概念
 

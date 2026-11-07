@@ -1,7 +1,7 @@
 ---
 title: "Contract Testing"
 created: "2026-04-23"
-updated: "2026-04-23"
+updated: "2026-11-07"
 tags:
   - wiki
   - concept
@@ -31,7 +31,9 @@ Contract Testing（契约测试）是验证微服务间 API 接口是否一致�
 - **首次出现**：2026-04-23
 - **最近更新**：2026-04-23
 - **置信度**：0.7
-- **状态**：stale
+- **状态**：active
+- **证据类型**：理论（长效）
+- **复核**：2026-11-07 长效——依据：库内无矛盾：grep 过 契约测试/Pact（Notes/Azure/paper/wiki），最新命中仅为 wiki 索引与学习路径页，无与之冲突的更新文章
 
 > 测试金字塔从下到上：Unit（pytest/JUnit）→ Contract（Pact）→ Integration（Testcontainers）→ E2E（Playwright）。契约测试在不启动真实依赖的情况下验证服务间 API 接口，速度快、隔离好。
 
@@ -39,15 +41,21 @@ Contract Testing（契约测试）是验证微服务间 API 接口是否一致�
 
 - **来源**：[[Vibe-Coding系列12：测试环境即代码]]
 - **首次出现**：2026-04-23
-- **最近更新**：2026-04-23
+- **最近更新**：2026-11-07
 - **置信度**：0.5
-- **状态**：stale
+- **状态**：active
+- **证据类型**：产品与服务
+- **复核**：2026-11-07 修订——依据：依据：PactFlow AI 官网 FAQ https://pactflow.io/ai ；PactFlow MCP Server 博客 https://pactflow.io/blog/pactflow-mcp-server ；Swagger Contract Testing 文档 https://support.smartbear.com/swagger/contract-testing/docs/en/user-guide/features/ai/using-ai.html
 
+> **现行结论（2026-11-07 修订）**：核心成立（可从 OpenAPI、HTTP 流量或源码生成 Pact 测试）。补充三点：产品已更名为 PactFlow AI（原 HaloAI），命令为 pactflow-ai generate，并提供 PactFlow MCP Server；当前仅支持消费者侧 HTTP 交互的契约测试，provider 验证和事件架构仍在规划中；生成结果仍需人工评审。
+>
+> 以下为原记录：
 > PactFlow AI（2025）支持 MCP Server 集成 VS Code/Cursor/Claude Code，从 OpenAPI spec 自动生成契约测试。这是 AI 辅助测试生成的前沿方向。
 
 ## 冲突与演进
 
 （暂无）
+- 2026-11-07：/revalidate 全库复核（证据分类）——长效 1
 
 ## 关联概念
 

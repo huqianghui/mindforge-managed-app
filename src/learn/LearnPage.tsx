@@ -24,6 +24,8 @@ import { totalMinutes, usePaths } from './data';
 import type { LearningPath, Question, Station } from './data';
 import { getReview, getStation, gradeQuestion, toggleMastery, useLearning } from './progress';
 import type { Grade } from './progress';
+import { useWeeks } from '../weekly/data';
+import Recommendations from '../weekly/Recommendations';
 
 // 学习页：路径 → 站点 → 「算会」勾选与自测。没有打卡、没有连续天数，进度只记给自己看。
 // 地址：#/learn?path=<路径 id>&s=<站号>
@@ -330,6 +332,7 @@ function ExportDialog({ open, onClose, text }: { open: boolean; onClose: () => v
 
 export default function LearnPage() {
   const paths = usePaths();
+  const weeks = useWeeks();
   const { values, backend } = useLearning();
   const route = readRoute();
   const [tab, setTab] = useState<'route' | 'quiz' | 'about'>('route');
@@ -349,6 +352,13 @@ export default function LearnPage() {
           <Typography variant="body2" sx={{ color: 'text.secondary', mt: 0.5, mb: 2.5 }}>
             把网状的知识图谱排成有先后的路线。挑一条感兴趣的，从哪一站读起都行；每站读完对照「学到什么程度算会」自查，有题库的可以顺手做两题。{saved}。
           </Typography>
+          {weeks?.[0]?.recommendations.length ? (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>本周推荐</Typography>
+              <Recommendations items={weeks[0].recommendations} week={weeks[0].week} />
+            </Box>
+          ) : null}
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 1 }}>我的学习路径</Typography>
           <PathCards paths={paths} values={values} />
           <Box sx={{ mt: 2 }}>
             <Button size="small" onClick={() => setExportOpen(true)}>导出学习记录</Button>

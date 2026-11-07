@@ -25,6 +25,7 @@ import history
 import paths
 import search
 import stats
+import weekly
 
 DOC_ROOTS = ("Notes/", "Azure/", "paper/", "book/", "product/", "wiki/")
 IMG_EXT = (".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp")
@@ -114,6 +115,7 @@ def main() -> None:
     stats.build(vault, docs, tracked_set, OUT / "stats.json")
     search.build(vault, docs, OUT / "search.json")
     paths.build(vault, docs, OUT / "paths.json")
+    weekly.build(vault, docs, OUT / "weekly.json")
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
     print(f"{len(doc_entries)} docs, {len(assets)} images, {size // 1024} KB from mindforge@{commit} -> {OUT}")
 
