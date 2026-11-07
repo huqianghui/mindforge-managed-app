@@ -23,5 +23,11 @@ else
   git commit -m "${1:-Sync content from mindforge@$(git -C .cache/mindforge rev-parse --short HEAD)}"
 fi
 git push github main
-git push platform +main:refs/heads/main
+# The platform token expires between releases. Git Credential Manager answers the
+# first request with the stale token, gets a 401 ("Authentication failed") and erases
+# it; the next request signs in again with the refresh token. So warm the credential
+# with a throwaway ls-remote first, and still retry the push once in case it expires
+# mid-run.
+git ls-remote -q platform >/dev/null 2>&1 || git ls-remote -q platform >/dev/null
+git push platform +main:refs/heads/main || git push platform +main:refs/heads/main
 ms app deploy --commit "$(git rev-parse HEAD)"

@@ -94,9 +94,7 @@ cd "$REPO"
 git fetch -q github main
 git reset -q --hard github/main
 npm ci --no-audit --no-fund >/dev/null
-# An expired platform token fails once with "Authentication failed" (Git
-# Credential Manager erases it on the 401); the retry signs in with the refresh token
-git ls-remote -q platform >/dev/null 2>&1 || git ls-remote -q platform >/dev/null
+# release.sh warms the platform credential itself (an expired token fails once)
 scripts/release.sh
 echo "$head" > "$STATE"
 echo "  released mindforge@${head:0:7}"
