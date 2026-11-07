@@ -19,6 +19,7 @@ const GapsPage = lazy(() => import('./gaps/GapsPage'));
 const SuggestionsPage = lazy(() => import('./suggestions/SuggestionsPage'));
 const StatsPage = lazy(() => import('./stats/StatsPage'));
 const AskPage = lazy(() => import('./ask/AskPage'));
+const LearnPage = lazy(() => import('./learn/LearnPage'));
 
 type Route =
   | { view: 'graph' }
@@ -28,6 +29,7 @@ type Route =
   | { view: 'stats' }
   | { view: 'ask'; q?: string; doc?: string }
   | { view: 'timeline' }
+  | { view: 'learn' }
   | { view: 'doc'; path: string; anchor?: string };
 
 // hash 路由：宿主以 iframe 加载应用，hash 不依赖服务端的路径回退规则
@@ -42,6 +44,7 @@ function parseHash(hash: string): Route {
     return { view: 'ask', q: qs.get('q') ?? undefined, doc: qs.get('doc') ?? undefined };
   }
   if (hash.startsWith('#/timeline')) return { view: 'timeline' };
+  if (hash.startsWith('#/learn')) return { view: 'learn' };
   const m = hash.match(/^#\/doc\/([^?]+)(?:\?a=(.*))?$/);
   if (m) return { view: 'doc', path: decodeURIComponent(m[1]), anchor: m[2] ? decodeURIComponent(m[2]) : undefined };
   return { view: 'doc', path: HOME_DOC };
@@ -65,6 +68,7 @@ export default function App() {
           <Typography sx={{ fontWeight: 700, mr: 3 }}>Mindforge</Typography>
           <Tabs value={route.view} sx={{ minHeight: 44, '& .MuiTab-root': { minHeight: 44 } }}>
             <Tab value="doc" label="文章导航" component="a" href={`#/doc/${HOME_DOC}`} />
+            <Tab value="learn" label="学习" component="a" href="#/learn" />
             <Tab value="graph" label="知识图谱" component="a" href="#/graph" />
             <Tab value="insights" label="洞察" component="a" href="#/insights" />
             <Tab value="gaps" label="差距追踪" component="a" href="#/gaps" />
@@ -106,6 +110,11 @@ export default function App() {
         {route.view === 'timeline' && (
           <Suspense fallback={null}>
             <TimelinePage />
+          </Suspense>
+        )}
+        {route.view === 'learn' && (
+          <Suspense fallback={null}>
+            <LearnPage key={window.location.hash} />
           </Suspense>
         )}
         {route.view === 'doc' && <DocsPage path={route.path} anchor={route.anchor} />}

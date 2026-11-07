@@ -5,7 +5,10 @@
 
 export * from './client';
 export * from './models/CommonModels';
+export * from './models/LearningStateModel';
 export * from './models/ReadingStateModel';
 export * from './query';
+export * from './services/LearningStateService';
 export * from './services/ReadingStateService';
+export * from './validators/LearningStateValidator';
 export * from './validators/ReadingStateValidator';

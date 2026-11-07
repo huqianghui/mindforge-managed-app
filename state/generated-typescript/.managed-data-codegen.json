@@ -6,9 +6,12 @@
     "client.ts",
     "index.ts",
     "models/CommonModels.ts",
+    "models/LearningStateModel.ts",
     "models/ReadingStateModel.ts",
     "query.ts",
+    "services/LearningStateService.ts",
     "services/ReadingStateService.ts",
+    "validators/LearningStateValidator.ts",
     "validators/ReadingStateValidator.ts",
     "validators/validationRuntime.ts"
   ]

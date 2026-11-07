@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import history
+import paths
 import search
 import stats
 
@@ -112,6 +113,7 @@ def main() -> None:
     history.build(vault, docs, OUT / "history.json")
     stats.build(vault, docs, tracked_set, OUT / "stats.json")
     search.build(vault, docs, OUT / "search.json")
+    paths.build(vault, docs, OUT / "paths.json")
     size = sum(f.stat().st_size for f in OUT.rglob("*") if f.is_file())
     print(f"{len(doc_entries)} docs, {len(assets)} images, {size // 1024} KB from mindforge@{commit} -> {OUT}")
 

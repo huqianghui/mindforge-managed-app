@@ -32,6 +32,31 @@
       "required": [
         "docPath"
       ]
+    },
+    "learningState": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "maxLength": 200,
+          "x-ms-index": {
+            "ignoreCase": false
+          }
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "x-ms-ownership": "perUser",
+      "description": "Mindforge learning progress and quiz review state, one item per user and key (station:<path>/<n> or quiz:<question id>)"
     }
   }
 }
