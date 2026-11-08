@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import Box from '@mui/material/Box';
@@ -57,6 +57,12 @@ interface Message {
   usage?: string;
 }
 
+// 方案模式只在切过去时才加载
+const PlanPage = lazy(() => import('./plan/PlanPage'));
+
+type Mode = 'qa' | 'plan';
+const readMode = (): Mode => (/[?&]mode=plan/.test(window.location.hash) ? 'plan' : 'qa');
+
 const SLOW_MS = 10_000;
 const EXAMPLES = ['A2A 和 MCP 分别解决什么问题？', 'Voice Live 在弱网下表现如何？', 'Prompt Cache 新旧两代有什么区别？'];
 
@@ -85,6 +91,7 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
     }
   };
   const [slow, setSlow] = useState(false);
+  const [mode, setMode] = useState<Mode>(readMode);
   const endRef = useRef<HTMLDivElement>(null);
   const pinnedTitle = pinned ? content?.byPath.get(pinned)?.title : undefined;
 
@@ -134,10 +141,31 @@ export default function AskPage({ initialQuestion, pinned }: { initialQuestion?:
 
   const offHost = user === null;
 
+  if (mode === 'plan') {
+    return (
+      <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.default' }}>
+        <Box sx={{ maxWidth: 1180, mx: 'auto', px: { xs: 2, md: 4 }, py: 3 }}>
+          <Typography variant="h5" sx={{ fontWeight: 700 }}>问答</Typography>
+        <ToggleButtonGroup size="small" exclusive value={mode} onChange={(_, v: Mode | null) => v && setMode(v)} sx={{ mb: 1.5 }}>
+          <ToggleButton value="qa">问答</ToggleButton>
+          <ToggleButton value="plan">方案</ToggleButton>
+        </ToggleButtonGroup>
+          <Suspense fallback={null}>
+            <PlanPage />
+          </Suspense>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ flex: 1, overflow: 'auto', bgcolor: 'background.default' }}>
       <Box sx={{ maxWidth: 880, mx: 'auto', px: { xs: 2, md: 4 }, py: 3 }}>
         <Typography variant="h5" sx={{ fontWeight: 700 }}>问答</Typography>
+        <ToggleButtonGroup size="small" exclusive value={mode} onChange={(_, v: Mode | null) => v && setMode(v)} sx={{ mb: 1.5 }}>
+          <ToggleButton value="qa">问答</ToggleButton>
+          <ToggleButton value="plan">方案</ToggleButton>
+        </ToggleButtonGroup>
         <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
           先在本应用里检索最相关的文章段落，再
           {backend === 'aoai'

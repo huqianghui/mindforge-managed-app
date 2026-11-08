@@ -8,11 +8,14 @@
     "models/CommonModels.ts",
     "models/LearningStateModel.ts",
     "models/ReadingStateModel.ts",
+    "models/SolutionStateModel.ts",
     "query.ts",
     "services/LearningStateService.ts",
     "services/ReadingStateService.ts",
+    "services/SolutionStateService.ts",
     "validators/LearningStateValidator.ts",
     "validators/ReadingStateValidator.ts",
+    "validators/SolutionStateValidator.ts",
     "validators/validationRuntime.ts"
   ]
 }

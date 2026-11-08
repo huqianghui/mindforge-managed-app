@@ -57,6 +57,31 @@
       ],
       "x-ms-ownership": "perUser",
       "description": "Mindforge learning progress and quiz review state, one item per user and key (station:<path>/<n> or quiz:<question id>)"
+    },
+    "solutionState": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "maxLength": 100,
+          "x-ms-index": {
+            "ignoreCase": false
+          }
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 30000
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "key"
+      ],
+      "x-ms-ownership": "perUser",
+      "description": "Mindforge 方案助手：每人保存的客户场景、推荐方案与事后回填的实际结果（含客户信息，按用户隔离，不进 git）"
     }
   }
 }
