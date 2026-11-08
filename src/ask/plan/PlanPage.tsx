@@ -44,7 +44,7 @@ function CiteChip({ cid, result }: { cid: string; result: PlanResult }) {
   const w = weak(c);
   return (
     <Tooltip title={<Box sx={{ fontSize: 12 }}><b>{c.title}</b><br />{c.statement}<br />置信度 {c.confidence} · {c.status}{c.evidenceType ? ` · ${c.evidenceType}` : ''}{c.review ? <><br />复核：{c.review.slice(0, 80)}</> : null}</Box>}>
-      <Chip size="small" component="a" clickable href={docHash(nodeDocPath(c.node, c.type))} label={`${c.title.slice(0, 18)}${c.title.length > 18 ? '…' : ''}`}
+      <Chip size="small" component="a" clickable href={docHash(nodeDocPath(c.node, c.type))} label={`${c.statement.slice(0, 22)}${c.statement.length > 22 ? '…' : ''}`}
         color={w ? 'warning' : 'default'} variant={w ? 'filled' : 'outlined'} sx={{ maxWidth: 260 }} />
     </Tooltip>
   );
@@ -175,7 +175,7 @@ export default function PlanPage() {
           <Paper key={s.id} variant="outlined" onClick={() => setCurrent(s.id)}
             sx={{ p: 1, mt: 0.75, cursor: 'pointer', bgcolor: s.id === current ? 'action.selected' : undefined, '&:hover': { bgcolor: 'action.hover' } }}>
             <Typography variant="body2" sx={{ fontWeight: 600, lineHeight: 1.4 }}>{s.title}</Typography>
-            <Typography variant="caption" sx={{ color: 'text.secondary' }}>{s.createdAt.slice(0, 10)} · {STATUS[s.outcome?.status ?? 'open']}</Typography>
+            <Typography variant="caption" sx={{ color: 'text.secondary' }}>{new Date(s.createdAt).toLocaleDateString('zh-CN')} · {STATUS[s.outcome?.status ?? 'open']}</Typography>
           </Paper>
         ))}
         {list.some((s) => s.outcome && s.outcome.status !== 'open') && (
@@ -186,7 +186,7 @@ export default function PlanPage() {
         {shown ? (
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             <Paper variant="outlined" sx={{ p: 1.5 }}>
-              <Typography variant="caption" sx={{ color: 'text.secondary' }}>客户场景 · {shown.createdAt.slice(0, 16).replace('T', ' ')}{shown.deployment ? ` · ${shown.deployment}` : ''}</Typography>
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>客户场景 · {new Date(shown.createdAt).toLocaleString('zh-CN', { hour12: false })}{shown.deployment ? ` · ${shown.deployment}` : ''}</Typography>
               <Typography variant="body2" sx={{ mt: 0.5, whiteSpace: 'pre-wrap' }}>{shown.scenario}</Typography>
             </Paper>
             <ResultView result={shown.result} />
