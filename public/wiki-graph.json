@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-11-21",
+  "generated_at": "2026-11-23",
   "stats": {
     "nodes": 173,
-    "links": 752,
+    "links": 756,
     "orphan_links_removed": 2,
-    "claims": 1024,
+    "claims": 1037,
     "categories": 13
   },
   "nodes": [
@@ -412,18 +412,18 @@
       "method_type": null,
       "decision_status": null,
       "claims_count": 5,
-      "avg_confidence": 0.74,
+      "avg_confidence": 0.76,
       "claims": [
         {
           "statement": "三大协议分工——MCP 向下连工具、A2A 横向连 Agent、AG-UI 向上连 UI",
           "source": "AG-UI协议解析",
           "first_seen": "2026-07-30",
-          "last_updated": "2026-08-04",
-          "confidence": 0.75,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.85,
+          "status": "active",
           "evidence": "官方定位图：User —AG-UI— Agent Runtime —MCP— Tools/Data，—A2A— Other Agents。AG-UI 不是 Agent Framework 也不是 UI 框架，与 MCP、A2A 一样是协议规范（Specification）。与传统 REST 的本质区别：整个交互是双向事件流（RunStarted → MessageDelta → ToolCallStarted → RenderApprovalCard → UserAction(Confirm) → ContinueRun → FinalMessage），而非一次 HTTP Response。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：查到的 AG-UI README 与 CopilotKit 文档未直接给出 MCP/A2A/AG-UI 三协议定位原文，不能下结论"
+          "review": "2026-11-22 确认——依据：[AG-UI Overview](https://docs.ag-ui.com/introduction)：官方三层表——Agent↔User 为 AG-UI、Agent↔Tools & Data 为 MCP、Agent↔Agent 为 A2A"
         },
         {
           "statement": "三层设计——协议 / 传输（有意不绑定）/ SDK；关心 Client 而非 View Library",
@@ -749,7 +749,7 @@
       "method_type": null,
       "decision_status": null,
       "claims_count": 11,
-      "avg_confidence": 0.74,
+      "avg_confidence": 0.75,
       "claims": [
         {
           "statement": "框架是一条 9 模块数据流脊柱 + 控制反转（0.3.1 源码；v1.0 简化为 Trainer / API Gateway / Rollout Controller）",
@@ -777,12 +777,12 @@
           "statement": "@rollout 包函数不包实例；prompt 必须抽成注入资源",
           "source": "Agent-Lightning系列02：框架全景",
           "first_seen": "2026-06-25",
-          "last_updated": "2026-06-29",
-          "confidence": 0.8,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.9,
+          "status": "active",
           "evidence": "`@rollout` 靠 `inspect.signature` 自动判型，硬性签名：第一参必须叫 `task`，必须带 `llm` 或 `prompt_template` 之一。框架不关心函数体用 LangChain/OpenAI/AutoGen，只认「签名 + 返回值」——所谓\"零代码改动\"实质是\"包一层符合签名的函数\"。但接入 APO 有唯一强制改造：agent 若把 prompt 写死，必须重构成 baseline `PromptTemplate` + 注入，否则 APO 没有可优化对象。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：依据：查到 v1.0 README 与 releases（https://github.com/microsoft/agent-lightning/releases）但未见 @rollout/prompt 资源注入的新版 API 说明，无法判断 0.3.1 写法是否仍适用"
+          "review": "2026-11-22 确认——依据：[Write Agents（latest）](https://microsoft.github.io/agent-lightning/latest/tutorials/write-agents) 与 [Agent 参考](https://microsoft.github.io/agent-lightning/stable/reference/agent)：@rollout 按签名判型并注入 `prompt_template` / `llm`，llm_rollout 与 prompt_rollout 签名均以 task 开头"
         },
         {
           "statement": "store 是训练的控制平面，不只是 trace 存储（0.2~0.3 的 LightningStore 设计）",
@@ -821,12 +821,12 @@
           "statement": "store 居中解耦——算法与执行靠 5 个 store 动作做生产者消费者",
           "source": "Agent-Lightning系列03：自定义算法与Trainer集成",
           "first_seen": "2026-06-26",
-          "last_updated": "2026-06-29",
-          "confidence": 0.8,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.9,
+          "status": "active",
           "evidence": "自定义算法不依赖内置 `APO`/`VERL` 类，自己写优化循环，核心接入契约就是一组 store 动作（`enqueue_rollout` 等 5 个）。algorithm 进程（消费者）与 runner 进程（生产者）通过 store 解耦，可分进程跑也可用 Trainer 自带内存 store 一键运行。这印证了 §2.4「store 是控制平面」——它不是被动存储，而是 runner↔algorithm 之间的协调中枢，是 method-agnostic 能成立的物理基础。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：依据：v1.0 README 不再描述 5 个 store 动作；未查到能确认或否定的官方文档"
+          "review": "2026-11-22 确认——依据：[Write the First Algorithm（latest）](https://microsoft.github.io/agent-lightning/latest/how-to/write-first-algorithm)：Algorithm 调 enqueue_rollout / update_resources 并查询 spans，Runner dequeue_rollout 回写，二者只经 Store 通信可跨进程跨机器"
         },
         {
           "statement": "算法本质 = LLM 调用 + sorted，\"多 agent 协作\"是虚拟角色",
@@ -837,7 +837,7 @@
           "status": "stale",
           "evidence": "逐行打开 `apo.py` 后戳破两个直觉误解：① APO 算法核心就是「LLM 调用 + `sorted`（按 reward 排序选优）」，没有神秘机制；② APO 内部的\"多 agent 协作\"（Judge/Critic/Editor/BeamSearch）是同一个 LLM 扮演的虚拟角色，不是多个独立 agent 进程。这与 [[rejection-sampling-finetuning]] 的「内核是 sorted」形成同构——APO 和 SFT 共享「采样 → 按 reward 排序 → 取优」的对称结构。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：依据：未能在 v1.0 官方文档中核对 APO 源码实现（0.3.1 源码结论），无法下结论"
+          "review": "2026-11-22 待定——依据：v1.0 主干的 apo.py 原路径已 404（目录重组），本轮未取到新版 APO 源码，无法判断 0.3.1 结论是否仍成立"
         },
         {
           "statement": "对 VERL 是架构锁定而非简单依赖——Agent RL 是系统问题",
@@ -865,12 +865,12 @@
           "statement": "dsh session log（单一事实源 + trajectory 视图）是真实工作负载轨迹采集的候选前端——APO→SFT→RL 阶梯最缺的一环",
           "source": "Agent-Harness五平台对比",
           "first_seen": "2026-08-31",
-          "last_updated": "2026-09-04",
+          "last_updated": "2026-11-22",
           "confidence": 0.5,
-          "status": "stale",
+          "status": "active",
           "evidence": "DeepSeek Harness 的 session log 是\"模型可见事实的唯一来源\"（single source of truth）且自带 trajectory 审计视图（类 Langfuse 的 tool call 记录），五平台横评将\"轨迹采集/可审计执行（喂 RL、合规审计）\"列为 dsh 首选场景。这正对上 agent-lightning 主线最缺的一环：APO→SFT→RL 阶梯需要真实工作负载轨迹，而日常 coding 工作的轨迹目前不沉淀。设想路径（日记 DSH 深挖场景 3）：dsh \"loop 也是 plugin\" → 在 agent loop 插 middleware，把 tool call / observation / reward 以标准格式导出——白天干活、轨迹自动沉淀为训练素材。待验证：Cordis 事件系统是否暴露 loop 内部事件（tool call 前后钩子）、导出格式与 agent-lightning span/trace schema 的转换成本。dsh preview 阶段有 breaking changes，此路线是实验方向而非生产方案。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：依据：DeepSeek Harness 为 preview 且未查到官方 changelog，Cordis 事件暴露情况无法核实"
+          "review": "2026-11-22 确认——依据：[deepseek-harness session-log 包](https://github.com/deepseek-ai/deepseek-harness/blob/master/packages/session/session-log-deepseek/README.md)：session log 是 Cordis 插件、Session.events 为持久事件流；前提成立，导出路线仍未实测，置信度不升"
         }
       ]
     },
@@ -1225,7 +1225,7 @@
           "last_updated": "2026-11-16",
           "confidence": 0.75,
           "status": "active",
-          "evidence": "统一 `Agent` CRD 加 `spec.type`，三类共用字段在外、各自配置在对应块里。纯结构规则（type 与配置块对应）写 CEL，提交即拒、集群里没有这个对象；需查外部系统的规则（批准的运行时类 / 模型 / 镜像仓库前缀、代码镜像必须写 digest、skills tag 能否解析）放 controller，结果写进 status——五种故意写错的 agent 分别被 CEL 与 controller 拦下，后四个 Ready=False、不生成 revision、注册端点返回 404。revision：新会话用最新的，在跑的会话保持原来的；参考实现文档一处说已有会话固定\"配置和权限\"、一处说权限实时算，系列 04 撤销 1 秒生效的实测支持后者。skills 包：1.6 MB 的 ConfigMap 被 API Server 拒（上限 1048576 字节，kagent 1.x 每 revision 配置与卡片合计 ≤ 256 KiB）；改用 oras 打 OCI artifact 推 ACR，controller 用 Workload Identity 换 ACR 令牌 HEAD manifest 解析 digest；沙箱放文件必须按 revision 里记的 digest 拉——按 tag 拉到的是新内容，同一 revision 的两个会话可能拿到不同 skills。tag 挪动的处理见 [[reconciliation-loop]]。实测。",
+          "evidence": "统一 `Agent` CRD 加 `spec.type`，三类共用字段在外、各自配置在对应块里。纯结构规则（type 与配置块对应）写 CEL，提交即拒、集群里没有这个对象；需查外部系统的规则（批准的运行时类 / 模型 / 镜像仓库前缀、代码镜像必须写 digest、skills tag 能否解析）放 controller，结果写进 status——五种故意写错的 agent 分别被 CEL 与 controller 拦下，后四个 Ready=False、不生成 revision、注册端点返回 404。revision：新会话用最新的，在跑的会话保持原来的；参考实现文档里，已有会话是否连权限一起固定，前后两处表述不一致（已裁决）：系列 04 撤销约 1 秒生效的实测表明权限是每次请求实时算的。skills 包：1.6 MB 的 ConfigMap 被 API Server 拒（上限 1048576 字节，kagent 1.x 每 revision 配置与卡片合计 ≤ 256 KiB）；改用 oras 打 OCI artifact 推 ACR，controller 用 Workload Identity 换 ACR 令牌 HEAD manifest 解析 digest；沙箱放文件必须按 revision 里记的 digest 拉——按 tag 拉到的是新内容，同一 revision 的两个会话可能拿到不同 skills。tag 挪动的处理见 [[reconciliation-loop]]。实测。",
           "evidence_type": "实测经验",
           "review": "2026-11-16 确认——依据：来源 [[AKS-Agent-Runtime系列07：Agent的类型、注册与发现]]（2026-11-15 修订），修订后原文仍含本条的数字与结论"
         },
@@ -1312,8 +1312,8 @@
       "category": "AI Agent 理论与架构",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 8,
-      "avg_confidence": 0.73,
+      "claims_count": 10,
+      "avg_confidence": 0.72,
       "claims": [
         {
           "statement": "Runtime 内部有四个子层——隔离原语、沙箱编排、持久执行、调度与生命周期，各自不互相替代",
@@ -1402,6 +1402,28 @@
           "evidence": "按系列 11 的清单逐项对照常驻实现：harness 白名单、skill 白名单与按 Team 发布、模型白名单、每个 Agent 的预算与限流、Kata 与 Sandbox 的资源边界，都由 CRD 声明、operator 执行，规则执行不了一律不放行（Policy 读不到或无效则挂起 Agent、吊销 key，拿到执行证据才标为已生效）。两边都缺的四块：① 出站只到 Cilium 的\"公网黑名单、内网白名单、按域名封禁\"，做不到\"某 agent 对某资源的某动作\"，也没有撤销后秒级生效；② push、建 PR、部署、调外部系统都在 agent 手里，没有人工审批点——对人下线后还在自主推进的常驻 agent 更要紧；③ 一个 Team 或一个人最多几个 Agent、共占多少 Kata 容量没有上限；④ 日志之间没有共同的会话或轮次 ID，Portal 自己不记操作审计。LiteLLM 已自带、operator 未接的 Guardrails、MCP 网关、Tool Policies、Agents 模块可以复用，但接法应与 key、team 一样从 CRD 单向投影。",
           "evidence_type": "实测经验",
           "review": ""
+        },
+        {
+          "statement": "自建 runtime 交给别人部署时，最先坏的是\"手工做过、仓库里没有\"的东西——值按三类放：平台约定留在代码、环境值进配置、集群事实部署时现查",
+          "source": "AKS-Agent-Runtime系列14：让PoC能交给别人部署",
+          "first_seen": "2026-11-21",
+          "last_updated": "2026-11-23",
+          "confidence": 0.7,
+          "status": "active",
+          "evidence": "常驻 runtime 开启沙箱执行后，operator 要从一份平台登记读运行时能力（Kata 支持的特性）和网络拓扑（CoreDNS 与 AI 网关地址、Pod/Service/节点网段、API Server 地址、入口网关身份、Cilium 版本）。上游默认不生成这份登记，要部署者按自己集群提供；手工建的那份几天后就过时了（AKS 自动升级后 Cilium 版本对不上），换一个集群部署到这一步就会失败。分类按两个问题：换订阅或集群会不会变、变了能不能从集群查到。不变的（命名空间、约定的密钥名、协议固定的 ID）留在代码里并写明\"不要改\"，做成配置项反而让人改出不一致；会变但查不到的（订阅、区域、资源名、机型、版本号、模型与单价、管理员名单、端口列表）进配置文件，且一个值只在一处定义；会变又查得到的（地址、网段、UID、组件版本）部署时现查。交接前三项检查：变量来源逐个对上配置模板或生成逻辑；把写死的值提成变量后重新生成配置，与线上那份逐字段对比；仓库公开前扫全部 git 历史而不只是当前文件。另一个常被混在一起的点：能登录（Entra 组）和能进管理员后台（门户管理员名单）是两层，名单按登录名 `@` 前一段匹配，来宾账号要查本租户里的 UPN 而不是邮箱。",
+          "evidence_type": "实测经验",
+          "review": ""
+        },
+        {
+          "statement": "operator 代管的 Helm 升级会被同一次部署里 operator 自己的滚动更新打断——release 锁在 pending-upgrade，回滚到最后一个 deployed 版本再重跑",
+          "source": "AKS-Agent-Runtime系列14：让PoC能交给别人部署",
+          "first_seen": "2026-11-21",
+          "last_updated": "2026-11-23",
+          "confidence": 0.7,
+          "status": "active",
+          "evidence": "Helm 升级先把 release 标成 pending-upgrade，做完才改成 deployed，中途被打断就留下锁，之后的部署都报 \"has an unfinished operation\"。实际遇到两种来路：一是自己把 `helm upgrade` 的输出接到 `| head`，head 读够几行退出、管道断开，helm 进程被中途终止，资源已应用但 release 永远停在 pending-upgrade；二是平台升级的最后一步要等内置管理员 agent 就绪，而这个 agent 的 Helm 升级由 operator 发起，同一次部署里 operator 自己也在滚动更新，旧 Pod 被替换时手上那次升级就断了，平台升级等到超时。解法一样：`helm history` 找最后一个 deployed 版本、`helm rollback` 释放锁、再重跑；第二次重跑时 operator 已是新版本，不会再自己打断自己。runtime 里凡是控制器替你调用 Helm 的地方，都要考虑控制器自身升级时的中断。",
+          "evidence_type": "实测经验",
+          "review": ""
         }
       ]
     },
@@ -1422,7 +1444,7 @@
       "category": "AI Agent 理论与架构",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 22,
+      "claims_count": 23,
       "avg_confidence": 0.77,
       "claims": [
         {
@@ -1665,6 +1687,17 @@
           "status": "active",
           "evidence": "agent-sandbox：operatingMode 改 Suspended 删 Pod 留 PVC（8 秒），改回 Running 重挂 Azure Disk（11 秒），PVC 文件在、/tmp 没了、新 VM、主机名不变、Pod IP 变。OpenSandbox：commit Job 把 rootfs 推镜像仓库（7~11 秒），恢复约 5 秒，/workspace 与 /tmp 都在。叠加模式下暂停变 Suspended，不再存 rootfs。第一次恢复 OpenSandbox 沙箱时 Pod 一直 Pending——暂停腾出的 CPU 被两边预热池补货占走，Kata 节点 CPU 请求到 96%，删掉别的池后才恢复。要跨暂停保留 harness 原生会话文件，用 agent-sandbox 就得放进 PVC。AKS 实测。",
           "evidence_type": "",
+          "review": ""
+        },
+        {
+          "statement": "入站方向也有三道处理加一层网络策略，403、refused to connect、connection timeout 各对应一处——看报错就能定位卡在哪一道",
+          "source": "AKS-Agent-Runtime系列14：让PoC能交给别人部署",
+          "first_seen": "2026-11-21",
+          "last_updated": "2026-11-23",
+          "confidence": 0.75,
+          "status": "active",
+          "evidence": "常驻 runtime 的入口网关用一段脚本对所有路径做三道处理再转给后端：① Entra 登录与允许组检查；② owner 检查，把路径第一段当 agent 名，门户和 AI 网关控制台这类非 agent 路径必须在这一步之前放行，否则 `/ai-gateway` 被当成一个叫 ai-gateway 的 agent，返回\"不是 owner\"的 403；③ 安全响应头，默认禁止嵌入，被 iframe 嵌入的路径要改成只允许同源，否则浏览器显示 refused to connect。请求进了 agent 命名空间还有第四道：operator 按平台登记生成的 CiliumNetworkPolicy，入口网关只能连登记过的端口，登记漏了桌面 6080 时，路由存在却报 upstream connect error（connection timeout）。排查口诀：403 查 owner 检查有没有放行这条路径，refused to connect 查响应头，路由存在却超时查网络策略放行了哪些端口。会话型 runtime 有同类情况：OpenSandbox dashboard 调 lifecycle API 被 operator 自带的网络策略挡住（Snapshots 为空、详情页 i/o timeout，而走 Kubernetes API 的 Pools 页正常）；NetworkPolicy 是叠加生效的，补一条放行即可，不必改 operator 自带的那条，补丁要进部署脚本。与出站方向\"卡住而不是泄露\"那条同理：策略漏配的表现是超时，不是权限错误。",
+          "evidence_type": "实测经验",
           "review": ""
         }
       ]
@@ -4003,8 +4036,8 @@
       "category": "AI Agent 理论与架构",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 7,
-      "avg_confidence": 0.76,
+      "claims_count": 9,
+      "avg_confidence": 0.73,
       "claims": [
         {
           "statement": "LLM 性能限制通常是上下文问题而非模型缺陷",
@@ -4081,6 +4114,28 @@
           "status": "active",
           "evidence": "五段：① 取料——文档、数据库、外部 API、用户历史等原始来源；② 加工——分块、生成向量、补元数据；③ 库存——向量库等知识存储，要像仓库一样管\"变质\"（更新、过期、版本）；④ 即时检索——查询到来时按相关性取最相关的块，是质量控制点；⑤ 装配——按提示模板把检索结果与系统指令、对话历史、工具定义拼进上下文窗口。用处在于定位问题：答错时先问是哪一段坏了，而不是一律改提示词。本库\"编译一次、持续维护\"的 wiki 相当于把③做重、④做轻（见 [[personal-knowledge-compiler]]）。文章为英文综述（2025-08），偏概念框架，未附实测。",
           "evidence_type": "理论（长效）",
+          "review": ""
+        },
+        {
+          "statement": "上下文压缩是否有损，取决于任务状态存在哪里——进度已经落在外部环境里的任务几乎无损，状态只在上下文里的任务越压越差，而且压缩不只会漏信息，还会改写信息",
+          "source": "",
+          "first_seen": "2026-11-23",
+          "last_updated": "2026-11-23",
+          "confidence": 0.65,
+          "status": "active",
+          "evidence": "CompAct-Bench 从 200 条压缩前三次都能做对的成功轨迹出发，在执行到 25%、50%、75% 处插入压缩边界，让 12 个前沿模型各自压缩前面的上下文，再由同一个执行器从对应的环境状态接着做。压缩后平均准确率掉到 56.7%，最好的 Claude Opus 5 也只有 68.5%。损失不均匀：搜索类（BrowseComp）随边界后移从 52.9% 降到 42.6%、34.6%，编码类（SWE-bench）反而从 64.0% 升到 72.7%、86.1%——编码的进度已经写进代码仓库，仓库充当了外部记忆，压缩丢的是历史而不是状态；搜索的证据只在上下文里。失败有两条路：信息被漏掉时 agent 重复做已做过的事直到预算耗尽；信息被改写（把待定的证据写成结论、把已有的进展弄丢）时 agent 提前结束。另一篇 You don't need long context 的结论是频繁压缩几乎不掉精度，甚至每做一个动作就压一次，Claude Opus 4.5 在 SWE-bench Verified 上持平、Terminal-Bench 上高 4.6 个百分点，GPT 5.6 Sol 分别低 2.0 和 3.3 个百分点；它测的正是状态落在环境里的软件工程类任务，所以和 CompAct-Bench 不矛盾。该文还给出压缩的动机：开源前沿模型上越靠后的 token 生成越贵，最多差 7 倍。两篇都是外部论文结论，没有在自己的 harness 上复测。",
+          "evidence_type": "理论",
+          "review": ""
+        },
+        {
+          "statement": "压缩照做、另存一份只追加的完整日志、需要细节时 grep 回来——比纯摘要和观察遮蔽准确得多，token 开销多数情况下接近",
+          "source": "",
+          "first_seen": "2026-11-23",
+          "last_updated": "2026-11-23",
+          "confidence": 0.6,
+          "status": "active",
+          "evidence": "GrepMem 把有损的上下文摘要和无损的轨迹日志配在一起：日志是 agent 全部历史的纯文本、只追加，agent 只多一个 `grep_history` 工具按正则取回细节，不需要 embedding、检索索引或额外模型。用强化学习在五种上下文管理策略下训练 Qwen3.5-9B 对比：ContextBench 上准确率 95%~97%，SUPO 式摘要和观察遮蔽最多 21%；BCP-Multi 上比 SUPO 高 8.8 个百分点、比 MemGPT 高 7.0。token 开销：比 SUPO 在 BCP-Multi 多 6%、ContextBench 多 19%，只有 MemGPT 的 29%；例外是 AMA-Bench stream，token 是 SUPO 的 2.3 倍、每条轨迹调 grep 约 19 次，准确率只略高。优势最大的场景是\"上下文窗口之外的精确细节后面还要用\"。证据是一篇论文、一个 9B 模型，置信度留在 0.6；它和上一条一起说明，压缩的问题可以用\"不删原件、只换工作集\"来缓解，这与 [[claude-code-memory-system]] 里\"压缩后哪些指令从磁盘重新注入\"是同一个思路。",
+          "evidence_type": "理论",
           "review": ""
         }
       ]
@@ -4795,8 +4850,8 @@
       "category": "AI Agent 理论与架构",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 6,
-      "avg_confidence": 0.77,
+      "claims_count": 7,
+      "avg_confidence": 0.75,
       "claims": [
         {
           "statement": "四个独立平台的同一做法——沙箱只有一个受控出口，凭据由出口处的可信中介注入；机制可以是 egress 代理，也可以是浏览器宿主中介",
@@ -4862,6 +4917,17 @@
           "status": "active",
           "evidence": "OpenSandbox 只有建沙箱时带了出站策略才加 egress 边车（按域名放行、NET_ADMIN 只给边车），不带就完全不受限，连节点元数据地址都可达；叠加到 agent-sandbox 时绕过了模板，模板生成的网络策略也一并没有。agent-sandbox 默认模板封了 169.254/16，但改成 Unmanaged 自写策略后要自己记得封。兜底：命名空间级 NetworkPolicy，或 AKS 的 IMDS restriction（预览，挡住所有非 hostNetwork Pod，开启后要重做节点镜像）；快照镜像不要和业务镜像放在节点身份能拉的同一个注册表。AKS 实测。",
           "evidence_type": "",
+          "review": ""
+        },
+        {
+          "statement": "沙箱里的 agent 默认连委托连接的存储都碰不到——broker 只在\"不在沙箱\"或\"开了沙箱委托连接集成\"时被授权，报错看起来像配置坏了",
+          "source": "AKS-Agent-Runtime系列14：让PoC能交给别人部署",
+          "first_seen": "2026-11-21",
+          "last_updated": "2026-11-23",
+          "confidence": 0.65,
+          "status": "active",
+          "evidence": "常驻 runtime 里，委托连接（agent 代表用户访问 Microsoft 服务）的凭据存在 agent 命名空间，由平台的 agent-broker 读写。operator 只在两种情况下给 broker 授权：agent 不在沙箱里跑，或者在沙箱里跑但开启了沙箱委托连接集成。内置管理员 agent 不在沙箱里所以正常；跑在 Kata 沙箱里的演示 agent 工作区 Identities 一栏显示 \"Binding storage is unavailable\"，因为那个集成默认关闭。这是\"凭据不进沙箱\"的默认落在产品上的样子：沙箱 agent 要用委托连接，必须显式打开一条额外集成（还需要额外的平台登记，委托连接本身还要租户管理员同意）。没打开时的报错看起来像存储坏了，所以要写进使用说明的已知限制并写明原因。",
+          "evidence_type": "实测经验",
           "review": ""
         }
       ]
@@ -6490,8 +6556,8 @@
       "category": "Azure 与云平台",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 5,
-      "avg_confidence": 0.72,
+      "claims_count": 6,
+      "avg_confidence": 0.68,
       "claims": [
         {
           "statement": "GSA 的 Internet Access 本质是以 TCP 为中心的 Web 网关——UDP 支持不完整，实时媒体按设计就不该经过 SSE 隧道",
@@ -6546,6 +6612,17 @@
           "status": "active",
           "evidence": "同一日本东部资源每种方式 10 次、每次新建连接：chat 总计中位数经 GSA 按域名 2950 ms、按 IP 2692 ms、直连 1623 ms；服务端耗时三者都在 1.0~1.1 秒，**模型没有变慢，差距全在网络**。TLS 从约 110 ms 涨到 860~1020 ms，TCP 只多约 40 ms（TCP 握手在近端边缘完成，TLS 与数据沿边缘→connector→Azure 区域长路径走完，折算经通道一个完整往返约 400 ms vs 直连约 44 ms，绕路为推断）；按域名进入时 DNS 有约 1.3 秒的固定抖动（10 次中 3 次，疑似超时重试，推断）。客户端日志显示发往公网 IP 的连接同样进 Private 通道，跳过 DNS 只绕开 DNS 这一层，真正直连基线只能在通道正常时 Disable 再测。SDK 复用连接时建连开销只付一次，但每请求仍多约 300~400 ms 往返，对看首字节的流式输出与实时语音影响明显。样本少，适合判断量级。",
           "evidence_type": "",
+          "review": ""
+        },
+        {
+          "statement": "开着 GSA 时 SSH 到 Azure VM 连上即被 reset；给云上构建机下发命令改走管理面的 run-command，构建机不开任何入站端口",
+          "source": "AKS-Agent-Runtime系列14：让PoC能交给别人部署",
+          "first_seen": "2026-11-21",
+          "last_updated": "2026-11-23",
+          "confidence": 0.5,
+          "status": "active",
+          "evidence": "本机开着 GSA 时 SSH 一连上就被 reset；关掉 GSA 后公司网络出口又拦了 22 端口，把 sshd 改到 443 也连不上。所以这一次观察里 GSA 与公司出口策略两个因素叠在一起，没有单独验证是 GSA 的哪一个 profile 或哪条规则造成的 reset，置信度只给 0.5。绕开的办法不依赖本机网络路径：命令全部用 `az vm run-command` 下发，走 Azure 管理面 API、用本机 `az login` 的 Entra 身份认证，构建机 NSG 不开任何入站规则；源码包用 `az acr build` 封进 ACR 里只含这个文件的镜像，构建机 `docker pull` 后取出。run-command 单次调用有超时，长构建要放后台跑、结束时写退出码文件，本机轮询。外部来源：[Run scripts in an Azure Linux VM by using action Run Commands](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/run-command)。",
+          "evidence_type": "实测经验",
           "review": ""
         }
       ]
@@ -6784,7 +6861,7 @@
       "method_type": null,
       "decision_status": null,
       "claims_count": 18,
-      "avg_confidence": 0.8,
+      "avg_confidence": 0.81,
       "claims": [
         {
           "statement": "Harness Engineering 是 Prompt Engineering 和 Context Engineering 的超集",
@@ -6834,12 +6911,12 @@
           "statement": "OpenAI 的 Harness Engineering 五大支柱",
           "source": "Vibe-Coding系列02：架构师视角的Harness实践|Vibe Coding系列02",
           "first_seen": "2026-04-13",
-          "last_updated": "2026-04-13",
-          "confidence": 0.7,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.8,
+          "status": "active",
           "evidence": "仓库即系统记录、分层领域架构、Agent 可读性、黄金准则、垃圾回收。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：OpenAI 五支柱为对某篇外部文章的转述，本轮未取到官方原文"
+          "review": "2026-11-22 确认——依据：[Harness engineering: leveraging Codex in an agent-first world](https://openai.com/index/harness-engineering)：原文章节含 repository knowledge as system of record、layered domain architecture、agent legibility、golden principles、entropy and garbage collection"
         },
         {
           "statement": "Agent 的智能来自 model，可靠性来自 harness",
@@ -6977,12 +7054,12 @@
           "statement": "外层 Harness 框架 Skill 化收敛——复杂度没有消失，而是沉到宿主与模型两端",
           "source": "Vibe-Coding系列14：Harness框架的Skill化收敛",
           "first_seen": "2026-08-20",
-          "last_updated": "2026-08-30",
-          "confidence": 0.8,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.9,
+          "status": "active",
           "evidence": "Superpowers 三版本目录实证（5.0.2 有 agents/commands/hooks 全家桶 → 6.3.0 只剩 14 个 skill + 1 个极简 SessionStart bootstrap hook），GSD/gstack 同步瘦身。四个收敛原因：① 宿主把基础设施内置了（subagent 体系/plan mode/任务列表/原生 hooks/session 持久化），插件再自带就是在 50 万行内层 Harness 上重复建设；② 模型变强后流程挟持的成本收益倒挂；③ skill 是唯一跨 harness 可移植载体（归口 [[harness-portability-spectrum]]）；④ 纯文本维护成本低一个量级。收敛后三层分工：方法论层（插件=纯 skill）/ 基础设施层（宿主 harness）/ 能力层（模型）。**\"变简单\"是表象，实质是职责归位**——框架竞争维度从\"机制精巧\"变成\"方法论文本质量\"（Superpowers 用 eval campaign 微测试每段文字存废）。选型视角随之更新：过去看机制是否完备，现在看 skill 文本质量与实证方法。用户侧值得亲手维护的只剩三类：领域角色 agent（独有领域知识）、安全 hook（独有安全边界）、方法论 skill（工作流偏好）；深嵌套刻意受限（两层半），角色扮演式流水线（BMAD）按机制需求译成扁平星型而非照搬组织树。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：Superpowers 5.0.2→6.3.0 目录对比本轮仅核到 release notes，未核各版本目录"
+          "review": "2026-11-22 确认——依据：[obra/superpowers](https://github.com/obra/superpowers) 当前 v7.0.2（2026-11-03）：顶层无 agents/、commands/，skills/ 15 个，hooks/ 只剩 session-start 与 hooks 配置——收敛趋势延续"
         }
       ]
     },
@@ -7924,7 +8001,7 @@
       "method_type": null,
       "decision_status": null,
       "claims_count": 8,
-      "avg_confidence": 0.74,
+      "avg_confidence": 0.76,
       "claims": [
         {
           "statement": "MCP 曾有严重的 context 膨胀问题，tool search 延迟加载已大幅缓解",
@@ -7941,12 +8018,12 @@
           "statement": "CLI 方式 token 效率极高",
           "source": "MCP-vs-CLI：重新审视MCP",
           "first_seen": "2026-04-13",
-          "last_updated": "2026-04-13",
+          "last_updated": "2026-11-22",
           "confidence": 0.7,
-          "status": "stale",
+          "status": "active",
           "evidence": "只需单个 Bash tool 定义，model 利用预训练知识理解命令行工具。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：同上 tool search 文档；CLI 省 token 的相对优势仍在，但差距因 tool search 缩小"
+          "review": "2026-11-22 确认——依据：[Connect Claude Code to tools via MCP](https://docs.anthropic.com/en/docs/claude-code/mcp)：tool search 默认延迟加载 MCP 工具定义，CLI 单 Bash 工具的省 token 优势仍在但差距缩小"
         },
         {
           "statement": "社区出现\"回归 CLI\"趋势",
@@ -7974,23 +8051,23 @@
           "statement": "Azure Skills 是 MCP/CLI 共存互补的最佳实战案例",
           "source": "Azure-Copilot生态：Skills、MCP与Agents的协作",
           "first_seen": "2026-05-14",
-          "last_updated": "2026-05-24",
-          "confidence": 0.8,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.9,
+          "status": "active",
           "evidence": "Azure Skills 在剧本中预编排了 MCP/CLI 分工：关键专有 API（AppLens 诊断、Resource Health）走 MCP，常见成熟命令（azd up、terraform apply、kubectl）走 CLI。选择标准：模型是否熟悉 + CLI 有无等价命令 + 操作复杂度 + 安全敏感度。MCP 用上下文空间换取调用精确度；CLI 用模型内置知识换取上下文节省。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：本轮未查 Azure Skills 官方资料（Tavily 限流）"
+          "review": "2026-11-22 确认——依据：[microsoft/azure-skills](https://github.com/microsoft/azure-skills)：官方插件把 skills（何时用哪条 Azure 工作流）与 Azure MCP（操作在线资源）打包，部署依赖 az / azd CLI"
         },
         {
           "statement": "WebMCP 把工具集成的选型从 MCP/CLI 二元扩展为三层——自家页面场景的最优解",
           "source": "Computer-Use与Browser-Use系列四：产品化",
           "first_seen": "2026-08-29",
-          "last_updated": "2026-08-30",
+          "last_updated": "2026-11-22",
           "confidence": 0.7,
-          "status": "stale",
+          "status": "active",
           "evidence": "浏览器操作产品化引入第三层：**WebMCP site tools**——页面顶层 JS 里 `document.modelContext.registerTool()` 把页面能力直接声明为 agent 工具（带 readOnlyHint/untrustedContentHint 注解），agent 不再猜 DOM、不点坐标，直接调业务语义工具。三层分工：Extension 解决\"进入用户正在看的页面\"（登录态）、Plugin+MCP 解决\"安全稳定做业务\"（页面没开也能跑）、WebMCP 解决\"当前页面告诉 agent 自己能做什么\"（工具随页面关闭失效）。选型判据从\"MCP 上下文换精度 vs CLI 内置知识换节省\"扩展为按运行位置分层：操作自家页面 → WebMCP 优先；后台任务 → MCP+API；第三方站点 → Extension/浏览器控制兜底。OpenAI 开发者文档站已实测暴露 search/lookup/navigate site tools——生产级 WebMCP 已存在。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：WebMCP 规范与 OpenAI 开发者文档本轮未核实"
+          "review": "2026-11-22 确认——依据：[WebMCP 规范草案](https://webmachinelearning.github.io/webmcp) 与 [Chrome Imperative API](https://developer.chrome.com/docs/ai/webmcp/imperative-api)：`document.modelContext.registerTool` 注册页面工具；Chrome 侧仍标实验特性，置信度不升"
         },
         {
           "statement": "MCP 的非典型用法——同一产品内部 CLI↔native helper 的解耦协议",
@@ -8166,14 +8243,14 @@
         },
         {
           "statement": "「让算法替换成为配置问题」是同一原则在 infra 层的表达",
-          "source": "Agent Lightning系列03：推理与训练的分野——VERL架构拆解",
+          "source": "Agent-Lightning系列07：强化学习与VERL入门",
           "first_seen": "",
-          "last_updated": "2026-07-02",
+          "last_updated": "2026-11-23",
           "confidence": 0.8,
           "status": "active",
           "evidence": "VERL 的算法与执行引擎解耦——PPO/GRPO/RLHF/RLVR 皆为可插拔配置项，\"让算法替换成为一个配置问题\"，与 agent-lightning 上层的 method-agnostic 一脉相承。区别是层次：agent-lightning 在 RL infra 之上做\"换优化方法\"，VERL 在 RL 引擎内部做\"换 RL 算法\"。同一个\"解耦+插槽\"形状在不同抽象层各出现一次。",
           "evidence_type": "理论（长效）",
-          "review": "2026-11-07 长效——依据：库内无矛盾（grep/qmd 查 Notes/Azure/paper/wiki 同主题文章；来源文章 2026-06 之后仅有 2026-10-03 去行号的格式改动，无内容修订）；关键词：算法替换 配置 verl 架构拆解"
+          "review": "2026-11-23 修订（来源更正）——依据：[[Agent-Lightning系列07：强化学习与VERL入门]] §2.1「VERL 的三个核心特征」原文\"VERL 把算法与执行引擎解耦——PPO、GRPO、RLHF、RLVR 都是可插拔的配置项，其设计哲学是'让算法替换成为一个配置问题'。这与 agent-lightning 在更上层追求的 method-agnostic 一脉相承\"，与本 Claim 逐句对得上；原来源标题在 git 历史中从未存在"
         },
         {
           "statement": "environment-agnostic 是 method-agnostic 的环境侧孪生",
@@ -8203,8 +8280,8 @@
       "category": "Context 与工具集成",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 3,
-      "avg_confidence": 0.75,
+      "claims_count": 4,
+      "avg_confidence": 0.72,
       "claims": [
         {
           "statement": "MCP 定义三种原语、分属三个控制者——tools 由模型决定调用、resources 由应用或用户附加、prompts 由用户主动触发；三种都由 server 暴露，Host 负责把它们接进会话并管安全",
@@ -8238,6 +8315,17 @@
           "evidence": "一、协议选择：沙箱里的 Claude Code、Codex 都是 MCP 客户端、不说 A2A，所以参考实现把\"建会话、投递、读更新、读条目、中止\"包成一个 MCP server 给 agent 调 agent 用，跨框架的 agent 才用 A2A（[[agent-session-control-plane]]）。二、网关聚合：agentgateway 把两个 stdio server 合成 22 个带前缀的工具，按工具授权后 tools/list 只露出允许的，但一个 server 依赖装不上时客户端 initialize 直接 500，另一个正常的也用不了——不相关的 server 要拆到不同路由（[[ai-gateway]]）。三、暂停：MCP 是有状态长连接，Agent Substrate 文档写明挂起不保留打开的连接，rootfs 快照与 PVC 方式同样不跨暂停保留连接，恢复后要重连（[[agent-runtime]]）。治理一侧的判断——MCP 把接入成本变成治理成本——见 [[model-harness-codesign]]。",
           "evidence_type": "实测经验",
           "review": ""
+        },
+        {
+          "statement": "工具描述本身就是注入入口——恶意 MCP server 可以让 agent 照常做完任务、再顺手把查询和别的 server 的响应交出去；内容过滤防不住，次级工具调用要由宿主授权",
+          "source": "",
+          "first_seen": "2026-11-23",
+          "last_updated": "2026-11-23",
+          "confidence": 0.65,
+          "status": "active",
+          "evidence": "攻击方式：恶意 server 在工具描述里写指令，诱导 agent 完成用户的正常任务之后，再调用它提供的\"保存日志\"类工具，把用户查询、其他 server 返回的内容一并传出去。在 18 组有效的模型 × server 组合上，攻击成功率 62.64%~100%，被调用时字段记录准确率 76.55%~95.64%；其中 16 组的正常任务完成率变化不超过 6.63 个百分点——任务照样做完，用户从结果上看不出异常。三种防御（提示夹心、LLM 元数据检查、IPIGuard）在 GitHub MCP + GPT-4o 上残余成功率仍在 55% 以上，而且都让任务完成率下降 2~6 个点；一个指令检测器能认出 91% 的恶意描述，却把 85.53% 的正常描述也判成可疑。作者的结论是靠内容层面的过滤做不到\"低泄露且不伤任务\"，次级工具调用要由宿主控制授权。对应到 wiki：这是\"Host 负责把原语接进会话并管安全\"那一条的具体攻击面，也说明按工具授权（[[ai-gateway]] 上的 MCP 聚合）比读描述判断意图更可靠。",
+          "evidence_type": "理论",
+          "review": ""
         }
       ]
     },
@@ -8257,8 +8345,8 @@
       "category": "AI Agent 理论与架构",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 12,
-      "avg_confidence": 0.81,
+      "claims_count": 13,
+      "avg_confidence": 0.8,
       "claims": [
         {
           "statement": "Agent = Model + Harness——模型是引擎，harness 是整辆车",
@@ -8391,6 +8479,17 @@
           "evidence": "Codex `tool_mode` 三值按模型代际分布：老模型（mini）`direct`——每个工具独立 function call；最强模型（gpt-6-astra）`code_mode_only`——工具**只能**通过写 JavaScript 在 node_repl（App bundle 内置的真 Node.js 24 运行时）里 `await` 调用，连 shell 也是被编排者（`await functions.exec(...)`，node_repl 是编排者、exec 是被编排的工具）。设计动机是 CodeAct 论点：JSON function call 只能表达扁平调用串、表达不了控制流，代码一次完成\"调 A→过滤→喂 B\"省 round-trip 与 token（中间结果留在 JS 变量不进上下文）、`Promise.allSettled` 即原生并行；把 shell 也包进 JS 是为了**单一治理入口**——所有危险操作统一表现为\"一段代码\"，审批模型只需盯一个咽喉（`node_repl_auto_review_required` 的设计动机）。Claude Code 站在 Direct 端：几十个专用离散工具点名直调、per-tool 权限天然清晰，代价是复杂编排费 round-trip。两端不是对错而是取舍：**Claude Code 把能力做成「更多的工具」，Codex 给最新模型把能力做成「一种语言」**——工具调用形态本身也是 per-model co-design 的对象，模型越强越往 CodeModeOnly 端。",
           "evidence_type": "产品与服务",
           "review": "2026-11-07 待定——依据：Codex tool_mode 三值与 gpt-6-astra 本轮检索被限流(429)，未取得来源"
+        },
+        {
+          "statement": "评测开始把 harness 当受控变量——同一个模型换通用 harness，成功率差十个点、成本差几倍；连评测适配层本身都能把成绩拉低一大截",
+          "source": "",
+          "first_seen": "2026-11-23",
+          "last_updated": "2026-11-23",
+          "confidence": 0.7,
+          "status": "active",
+          "evidence": "Claw-SWE-Bench 用 350 个真实 issue（8 种语言、43 个仓库）和一套统一的适配协议，把通用 harness 放在同样的提示、运行预算、工作区约定和补丁提取方式下比较；v2 是 7 个 harness × 3 个模型、每个配置跑三遍取平均（v1 只有 5 个 harness × 2 个模型、单次运行，引用时注意版本）。以 GLM 5.1 为例，Pass@1 从 GenericAgent 的 62.9% 到 Hermes Agent 的 73.1%，总成本从 86 美元到 525 美元；DeepSeek-V4.1-Flash 下 Hermes Agent 以 36 美元做到 81.7%。适配层的影响更大：同一个 GLM 5.1，裸适配器 Pass@1 只有 19.3%（69.1% 的补丁打不上），完整适配器是 71.2%。HF 上同期出现反方向的证据：针对 pi harness 用强化学习训的 LoRA，关掉思考时 Terminal-Bench 2.1 从 39.5% 到 55.8%、SWE-bench Pro 难题集从 39.2% 到 64.7%，但模型卡的数字全部在 pi harness 下测得，换 harness 是否保留收益没有给。两边合起来：模型和 harness 的成绩是成对的，单报一个模型的分数不说 harness，信息是残缺的。与 [[meta-harness]] 里\"同一模型换一层 harness 排名可跳 28 位\"一致。",
+          "evidence_type": "理论",
+          "review": ""
         }
       ]
     },
@@ -9598,12 +9697,12 @@
           "statement": "WebSocket 是控制总线，WebRTC 是实时传输通道",
           "source": "WebSocket与WebRTC深度对比",
           "first_seen": "2026-05-22",
-          "last_updated": "2026-05-24",
+          "last_updated": "2026-11-22",
           "confidence": 0.9,
-          "status": "stale",
+          "status": "active",
           "evidence": "WebSocket：TCP 传输层、双向消息通道、可靠但可能 delay、载荷为 JSON 事件和控制指令。WebRTC：UDP（SRTP/SCTP）、超低延迟容忍丢包、载荷为音频帧/视频帧、原生集成浏览器音频处理链（AEC/AGC/NS）。在 Voice Live 中 WebSocket 负责信令 + 会话控制，WebRTC 负责音频/视频媒体流。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：依据：Azure/VoiceLive/Voice-Live系列17：Global-Secure-Access下数字人的网络问题解析.md 表格：麦克风上行、转写、VAD、文字、信令走 WebSocket，WebRTC 只承载数字人下行；Azure/VoiceLive/Voice-Live系列16：传输层概念对齐.md 第 46 行SDP经同一条 WS"
+          "review": "2026-11-22 确认——依据：[Voice Live API with WebRTC](https://learn.microsoft.com/en-us/azure/ai-services/speech-service/voice-live-webrtc)：SDP 经 WebSocket 控制通道交换后音频走 WebRTC RTP 媒体轨，非音频事件另走控制通道（另有 HTTP 信令模式，不保留 WS）"
         },
         {
           "statement": "SDP 是\"协商格式\"而非通信协议，WebSocket 是其传输渠道",
@@ -9744,7 +9843,7 @@
       "category": "AI Agent 理论与架构",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 5,
+      "claims_count": 7,
       "avg_confidence": 0.74,
       "claims": [
         {
@@ -9801,6 +9900,28 @@
           "evidence": "往同一个 `reviewer:v1` 推新内容后 28 秒内两个 agent 都有反应：Pinned 的 revision 仍指向原 digest，status 多一条 `bundleTagMoved` 写明钉住哪个、tag 现在指向哪个；Track 自动生成新 revision 指向新 digest，旧 revision 保留、在用的会话不受影响。期望状态（spec + 策略）与真实状态（registry 里 tag 当前指向）的比对是同一结构；区别在于修偏差的动作由策略决定是\"告警交给人\"还是\"自动跟随\"——与标签守护\"只自动修能安全修的\"同一判断。",
           "evidence_type": "实测经验",
           "review": "2026-11-16 确认——依据：来源 [[AKS-Agent-Runtime系列07：Agent的类型、注册与发现]]（2026-11-15 修订），修订后原文仍含本条的数字与结论"
+        },
+        {
+          "statement": "完整部署是一次调和——期望状态是 chart 里的版本号，手工换上去的镜像和规则只活到下一次完整部署",
+          "source": "AKS-Agent-Runtime系列14：让PoC能交给别人部署",
+          "first_seen": "2026-11-21",
+          "last_updated": "2026-11-23",
+          "confidence": 0.75,
+          "status": "active",
+          "evidence": "一个已上线的页面在下一次完整部署后消失：第一次全量构建时源码还没有这个页面，之后只重建了门户镜像手工换上线，再做完整部署时，部署按 chart 里写的版本号拉镜像，chart 还是第一次构建的那份，门户被换回旧镜像。同一个功能还改了入口网关的两条规则，完整部署把两层一起打回去，只把镜像再换上去，页面能打开、控制台仍进不去。期望状态（chart 与 values）和真实状态（线上在跑什么）的比对是同一结构，手工改动只改了真实状态、没改期望状态，下一次调和就会被纠正回去。对策是让期望状态跟着源码走：改了源码就换一个新版本号、全量构建再部署，单独换镜像只当当天要补全量构建的临时手段；对账时把 ACR 镜像标签、各 Helm release 历史、Deployment 滚动记录三处对起来看。",
+          "evidence_type": "实测经验",
+          "review": ""
+        },
+        {
+          "statement": "不是所有输入都在调和范围里——operator 只在启动时读的配置，改了也不会生效，要靠重启触发重新生成",
+          "source": "AKS-Agent-Runtime系列14：让PoC能交给别人部署",
+          "first_seen": "2026-11-21",
+          "last_updated": "2026-11-23",
+          "confidence": 0.7,
+          "status": "active",
+          "evidence": "常驻 runtime 的 operator 按平台命名空间里的一份平台登记（运行时能力与网络拓扑）给每个 agent 生成 CiliumNetworkPolicy，但它只在启动时读这份登记。补上桌面端口 6080 后只更新 ConfigMap，等了一阵网络策略纹丝不动；重启 operator 后不到半分钟，6080 进入白名单。调和循环只对它 watch 的对象生效，启动时读一次的配置属于循环外的输入，所以部署脚本要在登记内容变化时主动重启 operator。判断一个配置改了会不会生效，先问控制器是 watch 它还是只在启动时读它。",
+          "evidence_type": "实测经验",
+          "review": ""
         }
       ]
     },
@@ -10785,8 +10906,8 @@
       "category": "AI Agent 理论与架构",
       "method_type": null,
       "decision_status": null,
-      "claims_count": 5,
-      "avg_confidence": 0.74,
+      "claims_count": 6,
+      "avg_confidence": 0.72,
       "claims": [
         {
           "statement": "Skill 与 Tool 本质不同",
@@ -10842,6 +10963,17 @@
           "evidence": "不是让模型更聪明，而是作为动态 context loader 定位在 context window 尾部（attention 优势位置）。",
           "evidence_type": "理论（长效）",
           "review": "2026-11-07 长效——依据：库内无矛盾：qmd search 关键词命中的仅为来源文章与本页自身（Notes/ wiki/ paper/ book/），无更新文章反驳"
+        },
+        {
+          "statement": "SKILL.md 是被 agent 当指令读的文本，恶意指令可以藏在里面；只靠规则扫描或只靠 LLM 判断都会大量误报，要加上执行期的行为证据",
+          "source": "",
+          "first_seen": "2026-11-23",
+          "last_updated": "2026-11-23",
+          "confidence": 0.6,
+          "status": "active",
+          "evidence": "在留出测试集（80 个恶意 skill、60 个正常 skill）上比较现有扫描器：YARA 和默认配置的 Cisco Skill Scanner 召回都是 0.91，但 60 个正常 skill 里分别误报 49 个和 33 个；Cisco 加上 LLM 分析（本地 Qwen3:8B）后召回 0.85、误报 40 个，语义更强并没有换来更好的取舍；OSS-Detect-Backdoor 只抓到 80 个里的 26 个。作者的静态 + 动态 + agent 三段式流水线召回同为 0.85，误报降到 5 个（准确率 0.88、F1 0.89），比 Cisco 加 LLM 少 87.5% 的误报。含义：skill 让模型\"看到正确信息\"的同一个机制，也让它看到攻击者写的指令；装第三方 skill 前的检查不能只做文本扫描。这一条讲的是 skill 的分发与安装环节，和本页其余几条讲的认知结构不同层。",
+          "evidence_type": "理论",
+          "review": ""
         }
       ]
     },
@@ -11357,7 +11489,7 @@
       "method_type": null,
       "decision_status": null,
       "claims_count": 13,
-      "avg_confidence": 0.75,
+      "avg_confidence": 0.76,
       "claims": [
         {
           "statement": "实时语音 Agent 涉及三层技术栈",
@@ -11385,12 +11517,12 @@
           "statement": "VAD barge-in 支持对自然对话体验至关重要",
           "source": "Voice-Live系列01：Agent实现架构",
           "first_seen": "2026-04-13",
-          "last_updated": "2026-04-13",
-          "confidence": 0.7,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.8,
+          "status": "active",
           "evidence": "用户说话时打断 Agent 语音输出。Silero VAD（2MB 模型，< 1ms per 32ms audio chunk）实现 IDLE-LISTENING-PROCESSING-SPEAKING 状态机。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：依据：Tavily 限流(429)，Silero 2MB / <1ms 每 32ms 块未能查到官方 README 确认"
+          "review": "2026-11-22 确认——依据：[Silero VAD README](https://github.com/snakers4/silero-vad)：JIT 模型约 2MB，30+ ms 音频块单 CPU 线程处理不到 1ms"
         },
         {
           "statement": "Speech Out 层核心是 G2P 转换与发音控制体系",
@@ -12030,7 +12162,7 @@
       "method_type": null,
       "decision_status": null,
       "claims_count": 4,
-      "avg_confidence": 0.75,
+      "avg_confidence": 0.72,
       "claims": [
         {
           "statement": "viseme 序列比音素序列更接近渲染层——这是口型输出协议选 viseme 时间轴而非音素序列的原因",
@@ -12066,15 +12198,15 @@
           "review": ""
         },
         {
-          "statement": "客户端 viseme 渲染的六条同步工程规则——时间轴是云端计算与本地渲染两个位面的耦合接口",
-          "source": "Blender系列04：口型同步实战——从音量包络到viseme的渐进式改造与三维口型架构",
+          "statement": "viseme 时间轴是云端计算与本地渲染两个位面的耦合接口，客户端自渲染要守六条同步规则",
+          "source": "Blender系列04：人物面试动画实战",
           "first_seen": "2026-09-12",
-          "last_updated": "2026-09-25",
-          "confidence": 0.7,
+          "last_updated": "2026-11-23",
+          "confidence": 0.6,
           "status": "active",
-          "evidence": "Blender 系列独立批次的客户端接入实证：viseme 事件流由云端语音 API 下发、渲染在本地执行，`audio_offset_ms` 时间轴是跨位面耦合接口（相关判据框架见 [[compute-locus-spectrum]]）。工程规则要点：按音频播放时钟对齐而非事件到达时刻、口型过渡需插值平滑、简化方案（音量包络）与精细方案（viseme）的分界在\"是否需要可辨认的发音口型\"。卡通数字人（非人类比例明确不被 photo 头像支持）的唯一出路正是客户端拿 viseme 时间轴自渲染。",
-          "evidence_type": "",
-          "review": ""
+          "evidence": "viseme 事件流由云端语音 API 下发、渲染在本地执行，时间轴（Voice Live 的 `audio_offset_ms`，Azure Speech SDK 的 100 纳秒 tick）是跨位面的耦合接口（相关判据框架见 [[compute-locus-spectrum]]）。**已实做的**是简化方案：60 Hz 音量包络驱动一个开口形态键，说话时张合、停顿时回落，但不认发音，闭唇、圆唇都做不出来，这就是简化口型与精细口型的分界。**只核对了文档、未接入的**是精细方案：Azure Speech 输出 viseme ID 和 55 项面部系数（60 FPS，进 24 fps 要换算），事件按音频时钟对齐，不能用网络回调到达时间当动画时间。文中总结的六条同步规则：① 一次合成是一个完整版本（台词、参数、WAV、事件、音频哈希一起存档）；② 锁定声音之后再定嘴型；③ 音频剪辑与事件用同一个时间映射；④ 区分片段起点和发声起点；⑤ 统一视频时间基准（第 1 帧对应 0 秒）；⑥ 最终合成后再查偏移。其中 ④ 引用的是本片的实际数据（片段起点与发声起点差 0.01 秒）。卡通形象（非人类比例）两类 Voice Live 头像都不支持，出路是客户端拿 viseme 时间轴自渲染。",
+          "evidence_type": "实测经验",
+          "review": "2026-11-23 降级——依据：原来源标题在 git 历史中从未存在，实际出处是 [[Blender系列04：人物面试动画实战]]；该文 §五 明确写\"已核对文档、未接入影片\"，viseme 驱动的客户端渲染只是方案，原 Claim 写成\"客户端接入实证\"说强了，正文列的三条要点也不是文中的六条规则"
         }
       ]
     },
@@ -12190,7 +12322,7 @@
       "method_type": null,
       "decision_status": null,
       "claims_count": 8,
-      "avg_confidence": 0.79,
+      "avg_confidence": 0.8,
       "claims": [
         {
           "statement": "OpenAI 提供两种 VAD 模式——Server VAD（静音检测）和 Semantic VAD（语义分类器）",
@@ -12218,12 +12350,12 @@
           "statement": "Silero VAD 实现轻量级高效 VAD",
           "source": "Voice-Live系列01：Agent实现架构",
           "first_seen": "2026-04-13",
-          "last_updated": "2026-04-13",
-          "confidence": 0.7,
-          "status": "stale",
+          "last_updated": "2026-11-22",
+          "confidence": 0.8,
+          "status": "active",
           "evidence": "2MB 模型，< 1ms per 32ms audio chunk，实现 IDLE-LISTENING-PROCESSING-SPEAKING 状态机，支持 barge-in。",
           "evidence_type": "产品与服务",
-          "review": "2026-11-07 待定——依据：依据：同 29，Tavily 限流"
+          "review": "2026-11-22 确认——依据：[Silero VAD README](https://github.com/snakers4/silero-vad)：JIT 模型约 2MB，30+ ms 音频块单 CPU 线程处理不到 1ms，MIT 许可"
         },
         {
           "statement": "深度学习 VAD 分化为三条路径——Personal VAD / CNN+Attention / NAS-VAD",
@@ -13972,8 +14104,8 @@
       "category": "",
       "method_type": null,
       "decision_status": "active",
-      "claims_count": 6,
-      "avg_confidence": 0.77,
+      "claims_count": 7,
+      "avg_confidence": 0.74,
       "claims": [
         {
           "statement": "端到端已可用于企业生产但控制力较弱——级联与混合式在多语言、自定义声音、interim response 上仍占优",
@@ -14039,6 +14171,17 @@
           "status": "active",
           "evidence": "数字人是平台级输出，四条路线都能挂，但口型由谁驱动取决于\"说\"落在哪——只有 Azure TTS 产 viseme 时间轴。题库文本经 `pre_generated_assistant_message` 走 Azure TTS，在级联与 realtime 宿主上都逐字一致（realtime 宿主耗时 1.4 s 对级联 1.8 s，指示性）。让模型自己念则取决于指令跟随：assistant item 方式两个受测模型都 0/3（把题目当对话输入去回答）；`response.instructions` 要求逐字念，`gpt-realtime-2.1` 1/3、`gpt-5-mini` 3/3——这是两个具体模型各 3 次的指令跟随样本，**不推广为\"realtime 类比 chat 类更易念错\"**，换模型或版本结论可能变。决策含义与模型无关：逐字念题是硬需求，不能寄托在任何模型的指令跟随上，所以留在 `pre_generated`（零推理、3/3）；只要走 Azure TTS 数字人就顺带成立，因此 realtime 配 Azure 音色的混合式可行、纯语音到语音（声音归模型）不合适。此前判断 realtime 不可用，是生产会话用了只在级联可用的文本型 EoU，换音频型后 realtime 整列可达（见 [[end-of-turn-detection]]）。组合原则：speech in 由模型定、speech out 由 `voice` 的家族定、建会话那一刻定死。",
           "evidence_type": "",
+          "review": ""
+        },
+        {
+          "statement": "语音 agent 的瓶颈已经从\"听清\"转到\"该不该动\"——要在感知和推理之外单设一层决策，决定执行、等待、追问还是不出声",
+          "source": "",
+          "first_seen": "2026-11-23",
+          "last_updated": "2026-11-23",
+          "confidence": 0.55,
+          "status": "active",
+          "evidence": "文章列出语音 agent 的典型错误：执行了说给别人听的命令、按听错的内容行动、用户还没说完就动手。它转引 τ-Voice 的数据说明问题出在决策而不在识别：278 个有依据的客服任务上，纯文本推理 agent 成功率 85%，全双工语音 agent 在干净音频下 31%~51%、真实声学环境下 26%~38%，失败里 79%~90% 归因于 agent 的行为；另一项研究里音频模型选对工具的比例是 96%~97%，但同一条命令换一个说话人说时，只有 1% 的情况会保持沉默。作者提出的参考架构是在感知和推理之外加一层显式决策，依据是否在对我说、说话人是谁、内容置信度、工具可靠性、这句话说完没有、动作风险六类证据，在执行、等待、追问、不出声之间选，并论证只看转写置信度不足以决定动手。自己的实验：在录音数据上，显式门控把误执行旁人说话的比例从 41% 降到 7%~10%，同时在追问成功的前提下仍完成 83%~85% 的有效请求，好于只靠提示词的基线。对本决策的含义（推论，文章没有讨论级联与端到端之争）：这一层不管选级联还是端到端都需要；级联的好处是判停、转写、动作之间本来就有接缝，门控有地方插，端到端要靠模型或宿主暴露同类信号。和 [[end-of-turn-detection]] 里\"EOU 只决定何时触发判停、不决定是否放行开轮\"是同一件事往前多走一步。",
+          "evidence_type": "理论",
           "review": ""
         }
       ]
@@ -15557,6 +15700,12 @@
       "description": "出站只剩一条路，路上的判断在网关"
     },
     {
+      "source": "agent-sandbox",
+      "target": "reconciliation-loop",
+      "relation_type": "uses",
+      "description": "agent 网络策略由 operator 按平台登记调和生成"
+    },
+    {
       "source": "agent-search-tools",
       "target": "context-engineering",
       "relation_type": "part-of",
@@ -16038,6 +16187,12 @@
     },
     {
       "source": "claude-code-memory-system",
+      "target": "context-engineering",
+      "relation_type": "implements",
+      "description": "压缩后从磁盘重新注入规则，是\"不删原件、只换工作集\"的上下文压缩做法"
+    },
+    {
+      "source": "claude-code-memory-system",
       "target": "terminal-multiplexer-for-ai",
       "relation_type": "uses",
       "description": "tmux 持久会话与 Session 记忆互补"
@@ -16221,6 +16376,12 @@
       "target": "cybernetics-agent-design",
       "relation_type": "implements",
       "description": "Context 管理是共轭变换（表示层设计）的工程实践"
+    },
+    {
+      "source": "context-engineering",
+      "target": "claude-code-memory-system",
+      "relation_type": "uses",
+      "description": "压缩后从磁盘重新注入指令，与\"压缩 + 完整日志按需取回\"同一思路"
     },
     {
       "source": "context-explosion",
@@ -17745,6 +17906,12 @@
       "target": "feedback-loop",
       "relation_type": "part-of",
       "description": "反馈闭环在运维与平台工程中的具体形态"
+    },
+    {
+      "source": "reconciliation-loop",
+      "target": "agent-sandbox",
+      "relation_type": "uses",
+      "description": "agent 网络策略由 operator 按平台登记调和生成，登记只在启动时读"
     },
     {
       "source": "reconciliation-loop",
