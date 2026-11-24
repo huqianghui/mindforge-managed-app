@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 600" width="1400" height="600" font-family="'Songti SC','STSong','Noto Serif SC',serif">
+  <defs>
+    <filter id="rough" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="3.2"/>
+    </filter>
+    <marker id="ar" viewBox="0 0 12 12" refX="10" refY="6" markerWidth="11" markerHeight="11" orient="auto">
+      <path d="M1,1 L11,6 L1,11" fill="none" stroke="#3b3a36" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+    <style>
+      .paper { fill: #fbf7ee; }
+      .card { fill: #fffdf8; stroke: #3b3a36; stroke-width: 2.2; }
+      .cardB { fill: #eef4fb; stroke: #2a78d6; stroke-width: 2.4; }
+      .cardO { fill: #fdf1ea; stroke: #d9592a; stroke-width: 2.4; }
+      .h { fill: #1f1e1b; font-size: 24px; font-weight: 700; }
+      .role { fill: #6b6a64; font-size: 15px; letter-spacing: 2px; }
+      .t { fill: #3b3a36; font-size: 16px; }
+      .small { fill: #6b6a64; font-size: 14px; }
+      .line { fill: none; stroke: #3b3a36; stroke-width: 2.2; stroke-linecap: round; }
+      .wall { stroke: #c43d33; stroke-width: 2.6; stroke-dasharray: 10 9; stroke-linecap: round; }
+      .wl { fill: #c43d33; font-size: 16px; font-weight: 700; }
+      .title { fill: #1f1e1b; font-size: 28px; font-weight: 700; }
+      .sub { fill: #6b6a64; font-size: 16px; }
+      .tag { fill: #1f1e1b; font-size: 15px; font-family: Menlo, monospace; }
+      .hl { fill: #f6d77a; opacity: 0.75; }
+    </style>
+  </defs>
+  <rect class="paper" width="1400" height="600" rx="10"/>
+  <text class="title" x="48" y="62">名字里只露出两个角色，一次请求其实要经过四个</text>
+  <text class="sub" x="48" y="96">谁开发了模型、谁改了它、谁在运行它、你从哪里调用它，是四个不同的问题</text>
+
+  <rect class="hl" x="46" y="128" width="246" height="30" rx="4" filter="url(#rough)"/>
+  <text class="tag" x="56" y="149">Fal-MiniMax-H3-Max</text>
+  <text class="small" x="306" y="149">← Foundry 目录里的名字：只看得到 fal 和 MiniMax</text>
+
+  <g filter="url(#rough)">
+    <rect class="card" x="48" y="200" width="250" height="250" rx="14"/>
+    <rect class="cardB" x="372" y="200" width="270" height="250" rx="14"/>
+    <rect class="cardO" x="760" y="200" width="270" height="250" rx="14"/>
+    <rect class="card" x="1104" y="200" width="250" height="250" rx="14"/>
+    <path class="line" d="M300,325 L368,325" marker-end="url(#ar)"/>
+    <path class="line" d="M644,325 L756,325" marker-end="url(#ar)"/>
+    <path class="line" d="M1102,325 L1034,325" marker-end="url(#ar)"/>
+  </g>
+  <line class="wall" x1="700" y1="178" x2="700" y2="500"/>
+  <text class="wl" x="712" y="492">数据从这里离开 Microsoft</text>
+
+  <text class="role" x="72" y="236">调用方</text>
+  <text class="h" x="72" y="272">我的应用</text>
+  <text class="t" x="72" y="314">提交 Prompt 和素材</text>
+  <text class="t" x="72" y="342">轮询任务、下载 MP4</text>
+  <text class="small" x="72" y="420">只和 Foundry 打交道</text>
+
+  <text class="role" x="396" y="236">接入平台</text>
+  <text class="h" x="396" y="272">Microsoft Foundry</text>
+  <text class="t" x="396" y="314">部署、身份、计费、配额</text>
+  <text class="t" x="396" y="342">统一的 /providers/falai 路由</text>
+  <text class="small" x="396" y="420">不负责运行模型</text>
+
+  <text class="role" x="784" y="236">推理服务 + 后训练</text>
+  <text class="h" x="784" y="272">fal</text>
+  <text class="t" x="784" y="314">排队、调度 GPU、出片</text>
+  <text class="t" x="784" y="342">H3 Max / Turbo 是它在</text>
+  <text class="t" x="784" y="370">开放权重 H3 上后训练的</text>
+  <text class="small" x="784" y="420">按 fal 的服务条款处理数据</text>
+
+  <text class="role" x="1128" y="236">模型研发方</text>
+  <text class="h" x="1128" y="272">三家厂商</text>
+  <text class="t" x="1128" y="314">快手 · Kling（闭源）</text>
+  <text class="t" x="1128" y="342">Lightricks · LTX（开放）</text>
+  <text class="t" x="1128" y="370">MiniMax · H3（开放）</text>
+  <text class="small" x="1128" y="420">把模型交给 fal 托管</text>
+
+  <text class="small" x="48" y="560">Microsoft 的产品条款、DPA 和合规认证不覆盖红线右边这一段——这是接入前最需要先看清的一点。</text>
+</svg>

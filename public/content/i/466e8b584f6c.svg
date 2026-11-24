@@ -1,23 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 760" width="1400" height="760" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif">
   <defs>
     <style>
-      .bg { fill: #0b1220; }
-      .title { fill: #f8fafc; font-size: 22px; font-weight: 700; }
-      .sub { fill: #94a3b8; font-size: 14px; }
-      .rh { fill: #f1f5f9; font-size: 15px; font-weight: 600; }
-      .rs { fill: #94a3b8; font-size: 13px; }
-      .grid { stroke: #1e293b; stroke-width: 1; }
-      .gl { fill: #64748b; font-size: 13px; text-anchor: middle; }
-      .bG { fill: #0f3d38; stroke: #2dd4bf; stroke-width: 1.5; }
-      .bA { fill: #2a1f0b; stroke: #fbbf24; stroke-width: 1.5; }
-      .bB { fill: #13213a; stroke: #38bdf8; stroke-width: 1.5; }
-      .bR { fill: #3b1518; stroke: #f87171; stroke-width: 1.6; animation: pulse 1.8s ease-in-out infinite; }
-      .bS { fill: #1f1838; stroke: #a78bfa; stroke-width: 1.5; }
-      .v { fill: #f1f5f9; font-size: 14px; font-weight: 700; }
-      .why { fill: #cbd5e1; font-size: 13px; }
-      .lgh { fill: #e2e8f0; font-size: 15px; font-weight: 600; }
-      .lg { fill: #cbd5e1; font-size: 13.5px; }
-      .flowbar { fill: none; stroke: #2dd4bf; stroke-width: 2; stroke-dasharray: 6 6; animation: dash 1.2s linear infinite; }
+      .bg { fill: #fcfcfb; }
+      .title {font-family:"Songti SC","STSong","Noto Serif SC",serif; fill: #315272; font-size: 22px; font-weight: 700; }
+      .sub { fill: #6f6e69; font-size: 14px; }
+      .rh { fill: #315272; font-size: 15px; font-weight: 600; }
+      .rs { fill: #6f6e69; font-size: 13px; }
+      .grid { stroke: #eef1f6; stroke-width: 1; }
+      .gl { fill: #8a8984; font-size: 13px; text-anchor: middle; }
+      .bG { fill: #ebfaf8; stroke: #31d0bc; stroke-width: 1.5; }
+      .bA { fill: #faf4eb; stroke: #f5bb23; stroke-width: 1.5; }
+      .bB { fill: #ecf0f9; stroke: #27b3f2; stroke-width: 1.5; }
+      .bR { fill: #f8eced; stroke: #9c0808; stroke-width: 1.6; animation: pulse 1.8s ease-in-out infinite; }
+      .bS { fill: #efedf7; stroke: #2d079c; stroke-width: 1.5; }
+      .v { fill: #315272; font-size: 14px; font-weight: 700; }
+      .why { fill: #3c5067; font-size: 13px; }
+      .lgh { fill: #384e6c; font-size: 15px; font-weight: 600; }
+      .lg { fill: #3c5067; font-size: 13.5px; }
+      .flowbar { fill: none; stroke: #31d0bc; stroke-width: 2; stroke-dasharray: 6 6; animation: dash 1.2s linear infinite; }
       @keyframes dash { to { stroke-dashoffset: -24; } }
       @keyframes pulse { 0%,100% { stroke-opacity: 1; } 50% { stroke-opacity: 0.35; } }
     </style>

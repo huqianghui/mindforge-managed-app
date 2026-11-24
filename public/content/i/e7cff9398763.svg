@@ -1,30 +1,30 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="1400" height="900" font-family="-apple-system, 'PingFang SC', 'Microsoft YaHei', 'Segoe UI', sans-serif">
   <defs>
     <style>
-      .bg { fill: #0b1220; }
-      .title { fill: #f8fafc; font-size: 22px; font-weight: 700; }
-      .sub { fill: #94a3b8; font-size: 14px; }
-      .lane { fill: #e2e8f0; font-size: 15px; font-weight: 600; }
-      .laneS { fill: #94a3b8; font-size: 13px; }
-      .track { fill: #0f172a; stroke: #1e293b; stroke-width: 1; }
-      .turn { fill: #0f3d38; stroke: #2dd4bf; stroke-width: 1.4; }
-      .ckpt { fill: #1f1838; stroke: #a78bfa; stroke-width: 1.4; }
-      .pause { fill: #2a1f0b; stroke: #fbbf24; stroke-width: 1.4; }
-      .resume { fill: #13213a; stroke: #38bdf8; stroke-width: 1.4; }
-      .pod { fill: #10302d; stroke: #2dd4bf; stroke-width: 1.2; }
-      .gone { fill: #111827; stroke: #475569; stroke-width: 1.2; stroke-dasharray: 5 4; }
-      .bl { fill: #f1f5f9; font-size: 13.5px; font-weight: 600; text-anchor: middle; }
-      .blS { fill: #cbd5e1; font-size: 13px; text-anchor: middle; }
-      .brk { fill: #0b1220; stroke: #475569; stroke-width: 1.2; stroke-dasharray: 3 4; }
-      .brkT { fill: #94a3b8; font-size: 13px; text-anchor: middle; }
-      .axis { stroke: #2dd4bf; stroke-width: 2.4; stroke-dasharray: 10 7; fill: none; animation: dash 1.4s linear infinite; }
-      .ev { stroke: #fbbf24; stroke-width: 2; stroke-dasharray: 4 3; animation: pulse 1.8s ease-in-out infinite; }
-      .evT { fill: #fde68a; font-size: 13px; font-weight: 600; }
-      .lead { stroke: #64748b; stroke-width: 1.2; stroke-dasharray: 3 4; fill: none; }
-      .an { fill: #cbd5e1; font-size: 13.5px; }
-      .tl { fill: #94a3b8; font-size: 13px; text-anchor: middle; }
-      .lgh { fill: #e2e8f0; font-size: 15px; font-weight: 600; }
-      .lg { fill: #cbd5e1; font-size: 13.5px; }
+      .bg { fill: #fcfcfb; }
+      .title {font-family:"Songti SC","STSong","Noto Serif SC",serif; fill: #315272; font-size: 22px; font-weight: 700; }
+      .sub { fill: #6f6e69; font-size: 14px; }
+      .lane { fill: #384e6c; font-size: 15px; font-weight: 600; }
+      .laneS { fill: #6f6e69; font-size: 13px; }
+      .track { fill: #fcfcfb; stroke: #eef1f6; stroke-width: 1; }
+      .turn { fill: #ebfaf8; stroke: #31d0bc; stroke-width: 1.4; }
+      .ckpt { fill: #efedf7; stroke: #2d079c; stroke-width: 1.4; }
+      .pause { fill: #faf4eb; stroke: #f5bb23; stroke-width: 1.4; }
+      .resume { fill: #ecf0f9; stroke: #27b3f2; stroke-width: 1.4; }
+      .pod { fill: #ecf9f7; stroke: #31d0bc; stroke-width: 1.2; }
+      .gone { fill: #fcfcfb; stroke: #8a8984; stroke-width: 1.2; stroke-dasharray: 5 4; }
+      .bl { fill: #315272; font-size: 13.5px; font-weight: 600; text-anchor: middle; }
+      .blS { fill: #3c5067; font-size: 13px; text-anchor: middle; }
+      .brk { fill: #fcfcfb; stroke: #8a8984; stroke-width: 1.2; stroke-dasharray: 3 4; }
+      .brkT { fill: #6f6e69; font-size: 13px; text-anchor: middle; }
+      .axis { stroke: #31d0bc; stroke-width: 2.4; stroke-dasharray: 10 7; fill: none; animation: dash 1.4s linear infinite; }
+      .ev { stroke: #f5bb23; stroke-width: 2; stroke-dasharray: 4 3; animation: pulse 1.8s ease-in-out infinite; }
+      .evT { fill: #a08103; font-size: 13px; font-weight: 600; }
+      .lead { stroke: #8a8984; stroke-width: 1.2; stroke-dasharray: 3 4; fill: none; }
+      .an { fill: #3c5067; font-size: 13.5px; }
+      .tl { fill: #6f6e69; font-size: 13px; text-anchor: middle; }
+      .lgh { fill: #384e6c; font-size: 15px; font-weight: 600; }
+      .lg { fill: #3c5067; font-size: 13.5px; }
       .chip { stroke-width: 1.2; }
       @keyframes dash { to { stroke-dashoffset: -34; } }
       @keyframes pulse { 0%,100% { stroke-opacity: 1; } 50% { stroke-opacity: 0.35; } }
